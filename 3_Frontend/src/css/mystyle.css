@@ -1,0 +1,89 @@
+
+div {
+/*  margin-top: 10px;*/
+  max-width: 1040px;
+  min-width: 200px;
+}
+
+h1 {
+  text-align: left; 
+  max-width: 960px; 
+  padding: 10px ; 
+  position: relative;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+h3 {
+  color: #1EAEDB;
+  font-weight: bold;
+  padding-left: 10px;
+  max-width: 960px; 
+}
+
+header {
+  height: 60px;
+  max-width: 930px;
+  min-width: 200px;
+/*  background-image: url("../images/header2_meitu_1.png");*/
+  padding: 20px 30px;
+}
+
+footer {
+  height: 90px;
+  max-width: 930px;
+  min-width: 200px;
+/*  background-image: url("../images/header2_meitu_1.png");*/
+  padding: 20px 30px;
+  margin-top: 50px;
+}
+
+span {
+  padding-left: 50px
+
+}
+
+/*define style by class*/
+.menu {
+  border: 0px;
+  padding: 20px;
+}
+
+.name {
+  height: 38px;
+}
+
+.subject {
+  width: 300px;
+  height: 38px;
+}
+
+.message {
+  width: 400px;
+  height: 200px;
+}
+
+a.last {
+  text-align: left;
+}
+
+a.next {
+  text-align: right;
+  padding-left: 10px;
+  max-width: 1040px;
+  position: absolute;
+  right: 10px;
+}
+
+/* define style by id*/
+#submitResult {
+  font-size: 20px;
+  color: #4b0082;
+}
+
+#author {
+  font-size: 20px;
+  color: grey;
+  font-weight: bold;
+  padding-left: 10px;
+}
