@@ -99,8 +99,36 @@ def change_staff_status():
 def add_comments():
     return 'Hello, World!'
 
+# operator weekley view
+@app.route('/operator/week/info', methods=["GET"])
+def get_weekly_operator_info():
+    return 'weekly operator info'
 
+@app.route('/operator/week/comment', methods=["POST"])
+def add_weekly_operator_comment():
+    return 'add_weekly_operator_comment'
 
+@app.route('/operator/week/remove', methods=["POST"])
+def remove_operator():
+    return 'remove operator'
 
+@app.route('/operator/week/add', methods=["POST"])
+def add_operator():
+    return 'add operator'
 
+# operator daily view
+@app.route('/operator/day/info', methods=["GET"])
+def get_daily_operator_info():
+    return 'daily operator info'
 
+@app.route('/operator/day/hours', methods=["POST"])
+def change_hours():
+    return 'change_hours'
+
+@app.route('/operator/day/comment', methods=["POST"])
+def add_daily_operator_comment():
+    return 'add_daily_operator_comment'
+
+@app.route('/operator/day/individual', methods=["POST"])
+def add_individual_operator_info():
+    return 'add_individual_operator_info'
