@@ -1,5 +1,7 @@
 from flask import Flask, request, Response
 import json
+from datetime import datetime
+import pendulum
 
 app = Flask(__name__)
 
@@ -7,97 +9,123 @@ app = Flask(__name__)
 def hello_world():
     return 'Hello, World!'
 
-# User Credentials
-@app.route('/menu/', methods=["GET"])
-def get_user_credentials():
+# user credentials
+@app.route('/menu', methods=["GET"])
+def get_user_information():
     data = {}
+    # get from database
     data['username'] = 'bcot'
-    data['password'] = 'bcot'
+    data['name'] = 'bcot'
+    data['email'] = 'bcot'
+    data['role'] = 'bcot'
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/menu/', methods=["PUT"])
+@app.route('/menu', methods=["PUT"])
 def login_in():
     if request.headers['Content-Type'] == 'application/json':
         arguments = request.get_json()
-        username = arguments.get("username")
-        password = arguments.get("password")
     if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
-        username = request.form.get("username")
-        password = request.form.get("password")
-    return Response(None, status=202, mimetype='application/json')
+        arguments = request.form
+    username = arguments.get("username")
+    email = arguments.get("email")
+    password = arguments.get("password")
+    # check with database
+    return Response(None, status=200, mimetype='application/json')
 
-@app.route('/menu/', methods=["POST"])
+@app.route('/menu', methods=["POST"])
 def sign_up():
     if request.headers['Content-Type'] == 'application/json':
         arguments = request.get_json()
-        username = arguments.get("username")
-        password = arguments.get("password")
     if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
-        username = request.form.get("username")
-        password = request.form.get("password")
+        arguments = request.form   
+    username = arguments.get("username")
+    password = arguments.get("password")
+    name = arguments.get("name")
+    email = arguments.get("email")
+    role = arguments.get("role")
+    # add to database
     return Response(None, status=201, mimetype='application/json')
 
-# Schedule weekly
-@app.route('/schedule/week/route/', methods=["GET"])
-def get_weekly_route_schedule():
+
+# schedule weekly view
+@app.route('/schedule/week/route?date=<date>&shift=<shift>', methods=["GET"])
+def get_weekly_route_schedule(date, shift):
+    week_of_month = pendulum.parse(date).week_of_month
     data = {}
-    # Get from database
-    data['Monday_AM'] = {'1A': 'Rogers', '2A': None}
+    data['week_of_month'] = week_of_month
+    data['today'] = datetime.date(datetime.now())
+    # get from database
+    data['monday_am'] = [('1A', 'Rogers', True, 'Completed'),
+                         ('2A', None, False, 'Unassigned')]
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/schedule/week/route/', methods=["POST"])
+@app.route('/schedule/week/route', methods=["POST"])
 def create_new_route():
     if request.headers['Content-Type'] == 'application/json':
         arguments = request.get_json()
-        route = arguments.get("route")
-        driver = arguments.get("driver")
-        date = arguments.get("date")
-        shift = arguments.get("shift")
     if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
-        arguments = request.get_json()
-        route = request.form.get("route")
-        driver = request.form.get("driver")
-        date = request.form.get("date")
-        shift = request.form.get("shift")
-    # Add to database
+        arguments = request.form 
+    route = arguments.get("route")
+    driver = arguments.get("driver")
+    date = arguments.get("date")
+    shift = arguments.get("shift")
+    status = arguments.get("status")
+    # add to database
     return Response(None, status=201, mimetype='application/json')
 
-@app.route('/schedule/week/route/', methods=["PUT"])
+@app.route('/schedule/week/route', methods=["PUT"])
 def modify_route():
-    return 'Hello, World!'
+    if request.headers['Content-Type'] == 'application/json':
+        arguments = request.get_json()
+    if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+        arguments = request.form 
+    route = arguments.get("route")
+    driver = arguments.get("driver")
+    date = arguments.get("date")
+    shift = arguments.get("shift")
+    status = arguments.get("status")
+    # modify database
+    return Response(None, status=200, mimetype='application/json')
 
-@app.route('/schedule/week/staff/', methods=["GET"])
-def get_available_staff():
-    return 'Hello, World!'
+@app.route('/schedule/week/staff', methods=["GET"])
+def get_staff_list():
+    date = datetime.date(datetime.now())
+    data = {}
+    # get from database
+    return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/schedule/week/item/', methods=["GET"])
-def get_route_info_on_click():
-    return 'Hello, World!'
+@app.route('/schedule/week/item?route=<route>&date=<date>&shift=<shift>', methods=["GET"])
+def get_route_info_on_click(route, date, shift):
+    data = {}
+    # get from database
+    return Response(json.dumps(data), status=200, mimetype='application/json')
 
-# Schedule daily
-@app.route('/schedule/day/route/', methods=["GET"])
+
+# schedule daily view
+@app.route('/schedule/day/route', methods=["GET"])
 def get_daily_route_schedule():
     return 'Hello, World!'
 
-@app.route('/schedule/day/weather/', methods=["PUT"])
+@app.route('/schedule/day/weather', methods=["PUT"])
 def modify_weather_condition():
     return 'Hello, World!'
 
-@app.route('/schedule/day/vehicle/', methods=["GET"])
+@app.route('/schedule/day/vehicle', methods=["GET"])
 def get_vehicle_information():
     return 'Hello, World!'
 
-@app.route('/schedule/day/vehicle/', methods=["PUT"])
+@app.route('/schedule/day/vehicle', methods=["PUT"])
 def change_vehicle_status():
     return 'Hello, World!'
 
-@app.route('/schedule/day/staff/', methods=["PUT"])
+@app.route('/schedule/day/staff', methods=["PUT"])
 def change_staff_status():
     return 'Hello, World!'
 
-@app.route('/schedule/day/comments/', methods=["PUT"])
+@app.route('/schedule/day/comments', methods=["PUT"])
 def add_comments():
     return 'Hello, World!'
+
 
 # operator weekley view
 @app.route('/operator/week/info', methods=["GET"])
