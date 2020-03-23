@@ -223,41 +223,236 @@ def get_unplanned_routes():
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 
-# operator weekley view
-@app.route('/operator/week/info', methods=["GET"])
+#operator weekly view
+@app.route('/operator/week', methods=["GET"])
 def get_weekly_operator_info():
-    return 'weekly operator info'
+    date = request.args.get('date')
+    if date == None:
+        date = datetime.now().strftime("%Y-%m-%d")
+    data = {}
+    # get from database
+    data['day'] = [{'name': 'Roger',
+                    'working_hrs': 8,
+                    'leave_hrs': 0,
+                    'acting_hrs': 0,
+                    'standby_hrs': 0,
+                    'overtime_hrs': 0,
+                    'holiday_hrs': 0,
+                    'is_reviewed': True,
+                    'swept_total': 5,
+                    'missed_total': 0},
+                   {'name': 'Michael',
+                    'working_hrs': 3,
+                    'leave_hrs': 5,
+                    'acting_hrs': 1,
+                    'standby_hrs': 1,
+                    'overtime_hrs': 1,
+                    'holiday_hrs': 1,
+                    'is_reviewed': False,
+                    'swept_total': 4,
+                    'missed_total': 1}]
+    data['night'] = [{'name': 'Roger',
+                    'working_hrs': 8,
+                    'leave_hrs': 0,
+                    'acting_hrs': 0,
+                    'standby_hrs': 0,
+                    'overtime_hrs': 0,
+                    'holiday_hrs': 0,
+                    'is_reviewed': True,
+                    'swept_total': 5,
+                    'missed_total': 0},
+                   {'name': 'Michael',
+                    'working_hrs': 3,
+                    'leave_hrs': 5,
+                    'acting_hrs': 1,
+                    'standby_hrs': 1,
+                    'overtime_hrs': 1,
+                    'holiday_hrs': 1,
+                    'is_reviewed': False,
+                    'swept_total': 4,
+                    'missed_total': 1}]
 
-@app.route('/operator/week/comment', methods=["POST"])
-def add_weekly_operator_comment():
-    return 'add_weekly_operator_comment'
+    return Response(json.dumps(data), status=200, mimetype='application/json')
+
+# operator daily view
+@app.route('/operator/day/onduty', methods=["GET"])
+def get_daily_onduty_operator_info():
+    date = request.args.get('date')
+    if not date:
+        date = datetime.now().strftime("%Y-%m-%d")
+    data = {}
+    # get from database
+    data['day'] = [{'name': 'Roger',
+                    'working_hrs': 8,
+                    'leave_hrs': 0,
+                    'acting_hrs': 0,
+                    'standby_hrs': 0,
+                    'overtime_hrs': 0,
+                    'holiday_hrs': 0,
+                    'is_reviewed': True},
+                   {'name': 'Michael',
+                    'working_hrs': 3,
+                    'leave_hrs': 5,
+                    'acting_hrs': 1,
+                    'standby_hrs': 1,
+                    'overtime_hrs': 1,
+                    'holiday_hrs': 1,
+                    'is_reviewed': False}]
+    data['night'] = [{'name': 'Roger',
+                    'working_hrs': 8,
+                    'leave_hrs': 3,
+                    'acting_hrs': 0,
+                    'standby_hrs': 0,
+                    'overtime_hrs': 0,
+                    'holiday_hrs': 0,
+                    'is_reviewed': False},
+                     {'name': 'Roger',
+                      'working_hrs': 8,
+                      'leave_hrs': 3,
+                      'acting_hrs': 0,
+                      'standby_hrs': 0,
+                      'overtime_hrs': 0,
+                      'holiday_hrs': 0,
+                      'is_reviewed': True}]
+    return Response(json.dumps(data), status=200, mimetype='application/json')
+
+@app.route('/operator/day/offduty', methods=["GET"])
+def get_daily_offduty_operator_info():
+    date = request.args.get('date')
+    if not date:
+        date = datetime.now().strftime("%Y-%m-%d")
+    data = {}
+    # get from database
+    data['day'] = [{'employee_id': '1',
+                    'name':'Mike',
+                    'leave': 'Sick'},
+                   {'employee_id': '2',
+                    'name': 'Rick',
+                    'leave': 'Family'}]
+    data['night'] = [{'employee_id': '1',
+                    'name':'Mike',
+                    'leave': 'Sick'},
+                   {'employee_id': '2',
+                    'name': 'Rick',
+                    'leave': 'Family'}]
+    return Response(data, status=200, mimetype='application/json')
+
+@app.route('/operator/day/check', methods=["PUT"])
+def update_review_status():
+    employee_id = request.args.get('employee_id')
+    date = request.args.get('date')
+    # modify database
+    return Response(None, status=200, mimetype='application/json')
+
+@app.route('/operator/day/unassigned', methods=["GET"])
+def get_unassigned_routes():
+    data = {}
+    # get from database
+    data['day'] = ['7A-1', '11A']
+    data['night'] = ['7A-1', '11A']
+    return Response(data, status=200, mimetype='application/json')
+
+@app.route('/operator/day/add', methods=["POST"])
+def add_individual_operator():
+    name = request.args.get('name')
+    shift = request.args.get('shift')
+    routes = request.args.get('routes')
+    # modify database
+    return Response(None, status=200, mimetype='application/json')
+
+
+# operator individual view
+@app.route('/operator/individual/info', methods=["GET"])
+def get_individual_operator_info():
+    employee_id = request.args.get('employee_id')
+    date = request.args.get('date')
+    data = {}
+    # get from database
+    data['name'] = 'Roger'
+    data['status'] = True
+    data['assignments'] = [{'shift': 'AM',
+                            'route': ['7A'],
+                            'working_hrs': 5,
+                            'leave_hrs': 10,
+                            'acting_7.5_hrs': 0,
+                            'acting_12.5_hrs': 0,
+                            'standby_hrs': 0,
+                            'holiday_hrs': 5}]
+    return Response(data, status=200, mimetype='application/json')
+
+@app.route('/operator/individual/history', methods=["GET"])
+def get_individual_operator_history():
+    employee_id = request.args.get('employee_id')
+    year = request.args.get('year')
+    data = {}
+    # get from database
+    data['history'] = [{'week': '1/6-1/10',
+                        'total_scheduled': 20,
+                        'total_swept': 18,
+                        'success_rate': 95,
+                        'total_working_hrs': 100,
+                        'total_leave_hrs': 10}]
+    return Response(data, status=200, mimetype='application/json')
+
+@app.route('/operator/individual/add_leave', methods=["POST"])
+def update_individual_operator_leave():
+    employee_id = request.args.get('employee_id')
+    date = request.args.get('date')
+    stat_time = request.args.get('stat_time')
+    end_time = request.args.get('end_time')
+    reason = request.args.get('reason')
+    # modify database
+    return Response(None, status=200, mimetype='application/json')
+
+@app.route('/operator/day/comment', methods=["PUT"])
+def add_individual_operator_comment():
+    employee_id = request.args.get('employee_id')
+    date = request.args.get('date')
+    shift = request.args.get('shift')
+    # modify database
+    return Response(None, status=200, mimetype='application/json')
+
+@app.route('/operator/individual/update_special', methods=["POST"])
+def update_individual_operator_special_assignment():
+    employee_id = request.args.get('employee_id')
+    date = request.args.get('date')
+    hours = request.args.get('hours')
+    assignment_type = request.args.get('assignment_type')
+    # modify database
+    return Response(None, status=200, mimetype='application/json')
 
 @app.route('/operator/week/remove', methods=["POST"])
 def remove_operator():
-    return 'remove operator'
+    employee_id = request.args.get('employee_id')
+    # modify database
+    return Response(None, status=200, mimetype='application/json')
 
-@app.route('/operator/week/add', methods=["POST"])
-def add_operator():
-    return 'add operator'
+@app.route('/operator/individual/assignment', methods=["GET"])
+def get_operator_assignment():
+    employee_id = request.args.get('employee_id')
+    month = request.args.get('month')
+    data = {}
+    # get from database
+    data['assignment'] = [{'week': 1,
+                           'shift': 'AM',
+                           'route': ['7A', '7A-1']}]
+    return Response(data, status=200, mimetype='application/json')
 
+@app.route('/operator/individual/assign', methods=["POST"])
+def modify_a_weekly_assignment():
+    # assign or unassign
+    action = request.args.get('assigned')
+    employee_id = request.args.get('employee_id')
+    date = request.args.get('date')
+    route = request.args.get('route')
+    # modify database
+    return Response(None, status=200, mimetype='application/json')
 
-# operator daily view
-@app.route('/operator/day/info', methods=["GET"])
-def get_daily_operator_info():
-    return 'daily operator info'
-
-@app.route('/operator/day/hours', methods=["POST"])
-def change_hours():
-    return 'change_hours'
-
-@app.route('/operator/day/comment', methods=["POST"])
-def add_daily_operator_comment():
-    return 'add_daily_operator_comment'
-
-@app.route('/operator/day/individual', methods=["POST"])
-def add_individual_operator_info():
-    return 'add_individual_operator_info'
-
+@app.route('/operator/individual/update_longterm', methods=["POST"])
+def modify_longterm_assignment():
+    action = request.args.get('assignment')
+    # modify database
+    return Response(None, status=200, mimetype='application/json')
 
 # vehicle daily view
 @app.route('/vehicle/day', methods=["GET"])
@@ -287,7 +482,6 @@ def change_vehicle_day():
         status_code = 200
         pass
     return Response(None, status=status_code, mimetype='application/json')
-
 
 # vehicle weekly view
 @app.route('/vehicle/week', methods=["GET"])
