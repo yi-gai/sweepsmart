@@ -1,0 +1,43 @@
+/* sidebar css starts */
+.sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 20%;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  .top-div {
+    margin-top: 40px;
+    margin-bottom: 50px;
+  }
+  
+  .logo svg {
+    width: 100px;
+    height: 100px;
+    display: block;
+    margin: auto;
+  }
+  
+  .logo-text {
+    font-family: Lato;
+    font-style: normal;
+    font-weight: 900;
+    font-size: 25px;
+    line-height: 22px;
+    letter-spacing: 0.15em;
+    color: #70C295;
+    text-align: center;
+  }
+  
+  .MuiListItemText-root	 {
+    font-family: Lato;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 25px;
+    line-height: 22px;
+    /* identical to box height */
+    letter-spacing: 0.05em;
+    color: #9AA7A0;
+  }
+  /* sidebar css ends */
