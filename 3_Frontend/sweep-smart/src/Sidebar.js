@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import './sidebar.css';
 import {Link} from "react-router-dom";
@@ -7,9 +6,50 @@ import {Link} from "react-router-dom";
 import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemText from '@material-ui/core/ListItemText'
+import Button from '@material-ui/core/Button'
 import SvgIcon from '@material-ui/core/SvgIcon';
+import { makeStyles } from '@material-ui/styles';
+import { createMuiTheme, MuiThemeProvider } from "@material-ui/core";
+
+const useStyles = makeStyles({
+  settingbtn: {
+    width: '50%',
+    background: '#70C295',
+    marginTop: 10,
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    "&:hover": {
+      backgroundColor: "#70C295"
+    }
+  },
+  logoutbtn: {
+    width: '50%',
+    color: '#70C295',
+    borderColor : '#70C295',
+    marginTop: 10,
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    "&:hover": {
+      borderColor: "#70C295"
+    }
+  },
+});
+
 
 function Sidebar() {
+  const classes = useStyles();
+  const theme = createMuiTheme({
+    props: {
+      palette: {
+        primary: '#70C295'
+      },
+      // Name of the component
+      MuiButtonBase: {
+        // The properties to apply
+        disableRipple: true // No more ripple, on the whole application!
+      }
+    }
+  });
   return (
     <div className="sidebar">
       <div className="top-div">
@@ -39,6 +79,16 @@ function Sidebar() {
           <ListItemText>Performance</ListItemText>
         </ListItem>
       </List>
+      <div className="button-div">
+        <MuiThemeProvider theme={theme}>
+          <Button className={classes.settingbtn} variant="contained" color="primary" style={{display:'block'}}>
+            Setting
+          </Button>
+          <Button className={classes.logoutbtn} variant="outlined" color="primary" style={{display:'block'}}>
+            Log out
+          </Button>
+        </MuiThemeProvider>
+      </div>
     </div>
   )
 }
