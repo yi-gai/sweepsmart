@@ -135,13 +135,13 @@ CREATE TABLE `ROUTES` (
 -- `Mon1_PM` smallint(6) default 0,
 --
 
-LOCK TABLES `ROUTES` WRITE;
-/*!40000 ALTER TABLE `ROUTES` DISABLE KEYS */;
-INSERT INTO `ROUTES` (route_id, Mon1_AM, Mon3_AM, Thu1_AM, Thu3_AM)VALUES ('1A_dummy',1,1,1,1);
-INSERT INTO `ROUTES` (route_id, Mon1_AM, Mon2_AM, Mon3_AM, Mon4_AM, Thu1_AM, Thu2_AM, Thu3_AM, Thu4_AM)VALUES ('1A_dummy3',1,1,1,1,1,1,1,1);
-INSERT INTO `ROUTES` (route_id, Mon2_PM, Mon4_PM, Thu2_PM, Thu4_PM)VALUES ('1A_dummy2',1,1,1,1);
-/*!40000 ALTER TABLE `ROUTES` ENABLE KEYS */;
-UNLOCK TABLES;
+#LOCK TABLES `ROUTES` WRITE;
+#/*!40000 ALTER TABLE `ROUTES` DISABLE KEYS */;
+#INSERT INTO `ROUTES` (route_id, Mon1_AM, Mon3_AM, Thu1_AM, Thu3_AM)VALUES ('1A_dummy',1,1,1,1);
+#INSERT INTO `ROUTES` (route_id, Mon1_AM, Mon2_AM, Mon3_AM, Mon4_AM, Thu1_AM, Thu2_AM, Thu3_AM, Thu4_AM)VALUES ('1A_dummy3',1,1,1,1,1,1,1,1);
+#INSERT INTO `ROUTES` (route_id, Mon2_PM, Mon4_PM, Thu2_PM, Thu4_PM)VALUES ('1A_dummy2',1,1,1,1);
+#/*!40000 ALTER TABLE `ROUTES` ENABLE KEYS */;
+#UNLOCK TABLES;
 
 --
 -- Table structure for table `STREETS`
@@ -179,7 +179,7 @@ DROP TABLE IF EXISTS `DYNAMAPS`;
 CREATE TABLE `DYNAMAPS` (
   `dynamap_id` int(11) NOT NULL,
   `route_id` varchar(255) NOT NULL,
-  `street_id` varchar(255) NOT NULL,
+  `street_id` varchar(255) default NULL,
   `addr_odd_start` int default NULL,
   `addr_odd_end` int default NULL,
   `addr_even_start` int default NULL,
@@ -199,11 +199,11 @@ CREATE TABLE `DYNAMAPS` (
 -- Dumping data for table `DYNAMAPS`
 --
 
-LOCK TABLES `DYNAMAPS` WRITE;
-/*!40000 ALTER TABLE `DYNAMAPS` DISABLE KEYS */;
-INSERT INTO `DYNAMAPS` (dynamap_id,route_id,street_id,addr_odd_start,addr_odd_end,addr_even_start,addr_even_end) VALUES (123456789,'1A_dummy','sid_1234',1,11,0,10);
-/*!40000 ALTER TABLE `DYNAMAPS` ENABLE KEYS */;
-UNLOCK TABLES;
+#LOCK TABLES `DYNAMAPS` WRITE;
+#/*!40000 ALTER TABLE `DYNAMAPS` DISABLE KEYS */;
+#INSERT INTO `DYNAMAPS` (dynamap_id,route_id,street_id,addr_odd_start,addr_odd_end,addr_even_start,addr_even_end) VALUES (123456789,'1A_dummy','sid_1234',1,11,0,10);
+#/*!40000 ALTER TABLE `DYNAMAPS` ENABLE KEYS */;
+#UNLOCK TABLES;
 
 --
 -- Table structure for table `ROUTE_LOG`
@@ -270,9 +270,23 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `DRIVERS`;
 CREATE TABLE `DRIVERS` (
     #employee_id				name	hours
-  `employee_id` varchar(255) NOT NULL,
-  `name` varchar(255) default NULL,
+  `employee_id` int(11) NOT NULL,
+  `employee_name` varchar(255) default NULL,
   `hours` int(11) default 40,
+  `shift_mon` smallint(6) default 0,
+  `shift_tue` smallint(6) default 0,
+  `shift_wed` smallint(6) default 0,
+  `shift_thu` smallint(6) default 0,
+  `shift_fri` smallint(6) default 0,
+  `shift_sat` smallint(6) default 0,
+  `shift_sun` smallint(6) default 0,
+  `shift_mon_pm` smallint(6) default 0,
+  `shift_tue_pm` smallint(6) default 0,
+  `shift_wed_pm` smallint(6) default 0,
+  `shift_thu_pm` smallint(6) default 0,
+  `shift_fri_pm` smallint(6) default 0,
+  `shift_sat_pm` smallint(6) default 0,
+  `shift_sun_pm` smallint(6) default 0,
   `route_id_Mon1_AM` varchar(11) default NULL,
 `route_id_Mon1_PM` varchar(11) default NULL,
 `route_id_Mon1_night` varchar(11) default NULL,
@@ -387,9 +401,9 @@ CREATE TABLE `DRIVERS` (
 
 LOCK TABLES `DRIVERS` WRITE;
 /*!40000 ALTER TABLE `DRIVERS` DISABLE KEYS */;
-INSERT INTO `DRIVERS` (employee_id,name,hours,route_id_Mon1_AM,route_id_Mon2_PM) VALUES ('eid_1234','Fake Driver',40,'1A_dummy','1A_dummy2');
-INSERT INTO `DRIVERS` (employee_id,name,hours,route_id_Mon1_AM,route_id_Mon2_AM) VALUES ('eid_4567','Bob Employee',40,'1A_dummy3','1A_dummy3');
-INSERT INTO `DRIVERS` (employee_id,name,hours,route_id_Thu1_AM,route_id_Thu2_AM) VALUES ('eid_1111','Joe Person',40,'1A_dummy3','1A_dummy3');
+INSERT INTO `DRIVERS` (employee_id,name,hours,route_id_Mon1_AM,route_id_Mon2_PM) VALUES (1234,'Fake Driver',40,'1A_dummy','1A_dummy2');
+INSERT INTO `DRIVERS` (employee_id,name,hours,route_id_Mon1_AM,route_id_Mon2_AM) VALUES (4567,'Bob Employee',40,'1A_dummy3','1A_dummy3');
+INSERT INTO `DRIVERS` (employee_id,name,hours,route_id_Thu1_AM,route_id_Thu2_AM) VALUES (1111,'Joe Person',40,'1A_dummy3','1A_dummy3');
 
 /*!40000 ALTER TABLE `DRIVERS` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -400,10 +414,16 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `VEHICLES`;
 CREATE TABLE `VEHICLES` (
-  `vehicle_id` varchar(255) NOT NULL,
+  `vehicle_id` int(11) NOT NULL,
   `status_am` varchar(255) default 'available',
   `status_pm` varchar(255) default 'available',
   `status_night` varchar(255) default 'available',
+  `make` varchar(255) default NULL,
+  `description` varchar(255) default NULL,
+  `cng` varchar(255) default NULL,
+  `vehicle_year` int(11) default NULL,
+  `license` varchar(255) default NULL,
+  `v_id_no` varchar(255) default NULL,
   PRIMARY KEY  (`vehicle_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
@@ -413,7 +433,7 @@ CREATE TABLE `VEHICLES` (
 
 LOCK TABLES `VEHICLES` WRITE;
 /*!40000 ALTER TABLE `VEHICLES` DISABLE KEYS */;
-INSERT INTO `VEHICLES` (vehicle_id) VALUES ('vid_1234');
+INSERT INTO `VEHICLES` (vehicle_no) VALUES (1234);
 /*!40000 ALTER TABLE `VEHICLES` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -456,7 +476,9 @@ CREATE TABLE `ABSENCES` (
   `employee_id` varchar(255) NOT NULL,
   `date_absence` date default NULL,
   `shift` varchar(255) default NULL,
-  `hours` int(11) default NULL,
+  #`hours` int(11) default NULL,
+  `time_start` time default NULL,
+  `time_end` time default NULL,
   `comment` varchar(255) default NULL,
   `type_absence_sick` smallint(6) default 0,
   `type_absence_family` smallint(6) default 0,
@@ -470,11 +492,41 @@ CREATE TABLE `ABSENCES` (
 -- Dumping data for table `ABSENCES`
 --
 
-LOCK TABLES `ABSENCES` WRITE;
-/*!40000 ALTER TABLE `ABSENCES` DISABLE KEYS */;
-INSERT INTO `ABSENCES` (absence_id, employee_id,date_absence,shift,hours,comment,type_absence_family) VALUES ('aid_1234','eid_1234','2020-03-04','PM',4,'an absence',1);
-/*!40000 ALTER TABLE `ABSENCES` ENABLE KEYS */;
+#LOCK TABLES `ABSENCES` WRITE;
+#/*!40000 ALTER TABLE `ABSENCES` DISABLE KEYS */;
+#INSERT INTO `ABSENCES` (absence_id, employee_id,date_absence,shift,hours,comment,type_absence_family) VALUES ('aid_1234','eid_1234','2020-03-04','PM',4,'an absence',1);
+#/*!40000 ALTER TABLE `ABSENCES` ENABLE KEYS */;
 UNLOCK TABLES;
+
+
+--
+-- Table structure for table `OVERTIME`
+--
+
+DROP TABLE IF EXISTS `OVERTIME`;
+CREATE TABLE `OVERTIME` (
+    #absence_id	employee_id			date_absence	shift	hours		comment	type_absence_1
+  `overtime_id` varchar(255) NOT NULL,
+  `employee_id` varchar(255) NOT NULL,
+  `date_overtime` date default NULL,
+  `time_start` time default NULL,
+  `time_end` time default NULL,
+  `comment` varchar(255) default NULL,
+
+  PRIMARY KEY  (`overtime_id`),
+  KEY `employee_id` (`employee_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `OVERTIME`
+--
+
+#LOCK TABLES `OVERTIME` WRITE;
+#/*!40000 ALTER TABLE `OVERTIME` DISABLE KEYS */;
+#INSERT INTO `OVERTIME` (overtime_id, employee_id,date_overtime,time_start,time_end) VALUES ('oid_1234','eid_1234','2020-03-04','16:00','18:00');
+#/*!40000 ALTER TABLE `OVERTIME` ENABLE KEYS */;
+#UNLOCK TABLES;
+
 
 --
 -- Table structure for table `CITATIONS`
@@ -507,16 +559,20 @@ UNLOCK TABLES;
 
 
 
-/* Add INSERT STATEMENTS BELOW  */
+/* Add SQL STATEMENTS BELOW  */
 
 select * from ROUTES;
 select route_id from ROUTES where Mon1_AM=1;
+select route_id from ROUTES where Mon1_PM=1;
+select route_id from ROUTES where Tue1_night=1;
+
 
 select * from STREETS;
 select * from STREETS where route_id in (select route_id from ROUTES where Mon1_AM=1);
 
 select * from DRIVERS;
-select employee_id,name,route_id_Mon1_AM from DRIVERS where route_id_Mon1_AM =1;
+select employee_id,employee_name from DRIVERS where shift_mon_pm =1;
+
 
 select * from ROUTE_LOG;
 select * from ROUTE_LOG where date_swept='2020-03-15';
