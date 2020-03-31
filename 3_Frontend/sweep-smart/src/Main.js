@@ -1,5 +1,6 @@
 import React from "react";
 import "./main.css";
+import RouteBlock from "./components/RouteBlock"
 
 class Main extends React.Component {
 	constructor(props) {
@@ -35,6 +36,21 @@ class Main extends React.Component {
 						)}
 					</div>
 					<div className="content-container">
+                        <div>
+                            <h1>Schedule</h1>
+                            <RouteBlock
+                                onClick={() => {console.log("Clicked")}}
+                                style="rtBlock--completed--day"
+                                route="Route 7A-1"
+                                operator="R.Rogers">
+                                Route 10</RouteBlock>
+                            <RouteBlock
+                                onClick={() => {console.log("Clicked")}}
+                                style="rtBlock--completed--night"
+                                route="Route 11"
+                                operator="S.Smith">
+                                Route 10</RouteBlock>
+                        </div>
 					</div>
 				</div>
 			</div>

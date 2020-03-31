@@ -1,0 +1,50 @@
+:root {
+    --assigned--day: rgba(128, 199, 214, 0.3);
+    --completed--day: #80C7D6;
+    --assigned--night: rgba(166, 128, 214, 0.3);
+    --completed--night: #A680D6;
+    --unassigned: #ffffff;
+    --missed: #D68080;
+    --disabled: #DCDCDC;
+}
+
+.rtBlock {
+    width: 150px;
+    height: 40px;
+    font-family: "Lato", sans-serif;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.rtBlock:hover {
+    transform: translateY(-2px);
+}
+
+.rtBlock .routeTxt {
+    font-size: 14px;
+    margin: 0;
+}
+
+.rtBlock .operatorTxt {
+    font-size: 12px;
+    margin: 0;
+}
+
+.rtBlock--assigned--day {
+    background-color: var(--assigned--day);
+    border: var(--completed--day);
+}
+
+.rtBlock--completed--day {
+    background-color: var(--completed--day);
+    color: #ffffff;
+    border: none;
+}
+
+.rtBlock--completed--night {
+    background-color: var(--completed--night);
+    color: #ffffff;
+    border: none;
+}
