@@ -3,7 +3,6 @@ import logo from './logo.svg';
 import './App.css';
 import Sidebar from './Sidebar'
 import Main from './Main'
-
 import {
   BrowserRouter as Router,
   Switch,
