@@ -2,6 +2,7 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 import Sidebar from './Sidebar'
+import RouteBlock from './components/RouteBlock'
 import {
   BrowserRouter as Router,
   Switch,
@@ -39,7 +40,23 @@ export default App;
 
 class Schedule extends React.Component {
   render() {
-    return <h1>Schedule</h1>;
+    return (
+        <div>
+            <h1>Schedule</h1>
+            <RouteBlock
+                onClick={() => {console.log("Clicked")}}
+                style="rtBlock--completed--day"
+                route="Route 7A-1"
+                operator="R.Rogers">
+                Route 10</RouteBlock>
+            <RouteBlock
+                onClick={() => {console.log("Clicked")}}
+                style="rtBlock--completed--night"
+                route="Route 11"
+                operator="S.Smith">
+                Route 10</RouteBlock>
+        </div>
+    );
   }
 }
 
