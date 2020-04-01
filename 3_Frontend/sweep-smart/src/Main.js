@@ -1,4 +1,5 @@
 import React from "react";
+import Grid from '@material-ui/core/Grid';
 import "./main.css";
 import RouteBlock from "./components/RouteBlock"
 
@@ -38,15 +39,45 @@ class Main extends React.Component {
 					<div className="content-container">
                         <div>
                             <h1>Schedule</h1>
+							<RouteBlock
+								onClick={() => {console.log("Clicked")}}
+								shift="day"
+								status="assigned"
+								route="Route 7A-1"
+								operator="R.Rogers">
+								Route 10</RouteBlock>
                             <RouteBlock
                                 onClick={() => {console.log("Clicked")}}
-                                style="rtBlock--completed--day"
+                                shift="day"
+                                status="completed"
                                 route="Route 7A-1"
                                 operator="R.Rogers">
                                 Route 10</RouteBlock>
+							<RouteBlock
+								onClick={() => {console.log("Clicked")}}
+								shift="night"
+								status="disabled"
+								route="Route 11"
+								operator="S.Smith">
+								Route 10</RouteBlock>
                             <RouteBlock
                                 onClick={() => {console.log("Clicked")}}
-                                style="rtBlock--completed--night"
+                                shift="night"
+                                status="completed"
+                                route="Route 11"
+                                operator="S.Smith">
+                                Route 10</RouteBlock>
+                            <RouteBlock
+                                onClick={() => {console.log("Clicked")}}
+                                shift="night"
+                                status="missed"
+                                route="Route 11"
+                                operator="S.Smith">
+                                Route 10</RouteBlock>
+                            <RouteBlock
+                                onClick={() => {console.log("Clicked")}}
+                                shift="night"
+                                status="assigned"
                                 route="Route 11"
                                 operator="S.Smith">
                                 Route 10</RouteBlock>
