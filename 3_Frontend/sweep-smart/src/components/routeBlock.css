@@ -1,8 +1,8 @@
 :root {
-    --assigned--day: rgba(128, 199, 214, 0.3);
-    --completed--day: #80C7D6;
-    --assigned--night: rgba(166, 128, 214, 0.3);
-    --completed--night: #A680D6;
+    --day--assigned: rgba(128, 199, 214, 0.3);
+    --day--completed: #80C7D6;
+    --night--assigned: rgba(166, 128, 214, 0.3);
+    --night--completed: #A680D6;
     --unassigned: #ffffff;
     --missed: #D68080;
     --disabled: #DCDCDC;
@@ -16,6 +16,7 @@
     border-radius: 5px;
     cursor: pointer;
     transition: transform 0.3s ease;
+    margin: 10px 8px;
 }
 
 .rtBlock:hover {
@@ -32,19 +33,44 @@
     margin: 0;
 }
 
-.rtBlock--assigned--day {
-    background-color: var(--assigned--day);
-    border: var(--completed--day);
+.rtBlock--day--assigned {
+    background-color: var(--day--assigned);
+    border: var(--day--completed);
 }
 
-.rtBlock--completed--day {
-    background-color: var(--completed--day);
+.rtBlock--day--unassigned {
+    background-color: var(--unassigned);
+    border: var(--day--completed);
+}
+
+.rtBlock--day--completed {
+    background-color: var(--day--completed);
     color: #ffffff;
     border: none;
 }
 
-.rtBlock--completed--night {
-    background-color: var(--completed--night);
+.rtBlock--night--assigned {
+    background-color: var(--night--assigned);
+    border: var(--night--completed);
+}
+
+.rtBlock--day--unassigned {
+    background-color: var(--unassigned);
+    border: var(--night--completed);
+}
+
+.rtBlock--night--completed {
+    background-color: var(--night--completed);
+    color: #ffffff;
+    border: none;
+}
+
+.rtBlock--day--disabled, .rtBlock--night--disabled {
+    background-color: var(--disabled);
+}
+
+.rtBlock--day--missed, .rtBlock--night--missed {
+    background-color: var(--missed);
     color: #ffffff;
     border: none;
 }
