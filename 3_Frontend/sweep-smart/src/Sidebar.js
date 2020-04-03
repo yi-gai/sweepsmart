@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import './App.css';
 import './sidebar.css';
 import {Link} from "react-router-dom";
@@ -7,7 +7,6 @@ import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemText from '@material-ui/core/ListItemText'
 import Button from '@material-ui/core/Button'
-import SvgIcon from '@material-ui/core/SvgIcon';
 import { ListItemIcon } from '@material-ui/core';
 import { makeStyles } from '@material-ui/styles';
 import { createMuiTheme, MuiThemeProvider } from "@material-ui/core";

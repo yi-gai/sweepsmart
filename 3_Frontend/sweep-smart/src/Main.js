@@ -1,8 +1,7 @@
 import React from "react";
-import Grid from '@material-ui/core/Grid';
 import "./main.css";
-import RouteBlock from "./components/RouteBlock"
-
+import SchedulePage from './components/SchedulePage'
+import OperatorPage from './components/OperatorPage'
 class Main extends React.Component {
 	constructor(props) {
     super(props);
@@ -36,58 +35,28 @@ class Main extends React.Component {
 							}
 						)}
 					</div>
-					<div className="content-container">
-                        <div>
-                            <h1>Schedule</h1>
-							<RouteBlock
-								onClick={() => {console.log("Clicked")}}
-								shift="day"
-								status="assigned"
-								route="Route 7A-1"
-								operator="R.Rogers">
-								Route 10</RouteBlock>
-                            <RouteBlock
-                                onClick={() => {console.log("Clicked")}}
-                                shift="day"
-                                status="completed"
-                                route="Route 7A-1"
-                                operator="R.Rogers">
-                                Route 10</RouteBlock>
-							<RouteBlock
-								onClick={() => {console.log("Clicked")}}
-								shift="night"
-								status="disabled"
-								route="Route 11"
-								operator="S.Smith">
-								Route 10</RouteBlock>
-                            <RouteBlock
-                                onClick={() => {console.log("Clicked")}}
-                                shift="night"
-                                status="completed"
-                                route="Route 11"
-                                operator="S.Smith">
-                                Route 10</RouteBlock>
-                            <RouteBlock
-                                onClick={() => {console.log("Clicked")}}
-                                shift="night"
-                                status="missed"
-                                route="Route 11"
-                                operator="S.Smith">
-                                Route 10</RouteBlock>
-                            <RouteBlock
-                                onClick={() => {console.log("Clicked")}}
-                                shift="night"
-                                status="assigned"
-                                route="Route 11"
-                                operator="S.Smith">
-                                Route 10</RouteBlock>
-                        </div>
-					</div>
+					<MainContent pageName={this.props.pageName}></MainContent>
 				</div>
 			</div>
 		);
 	}
 }
+
+function MainContent(props){
+	if (props.pageName == 'Schedule') {
+		return <SchedulePage/>;
+	}else if(props.pageName === 'Operators'){
+		// TODO: return Operator component
+		return <OperatorPage/>;
+	}else if(props.pageName === 'Vehicles'){
+		// TODO: return Vehicle component
+		return <SchedulePage/>;
+	}else if(props.pageName === 'Performance'){
+		// TODO: return Performance component
+		return <SchedulePage/>;
+	}
+}
+
 
 Main.defaultProps = {
   buttons: []
