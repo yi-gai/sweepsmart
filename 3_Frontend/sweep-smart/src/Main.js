@@ -20,6 +20,19 @@ class Main extends React.Component {
   }
 
 	render() {
+		let mainContent;
+		if (this.props.pageName === 'Schedule') {
+			mainContent = <SchedulePage tab={this.state.currentTab} date={this.state.date}/>;
+		}else if(this.props.pageName === 'Operators' ){
+			// TODO: return Operator component
+			mainContent = <OperatorPage tab={this.state.currentTab} date={this.state.date}/>;
+		}else if(this.props.pageName === 'Vehicles'){
+			// TODO: return Vehicle component
+			mainContent = <SchedulePage />;
+		}else if(this.props.pageName === 'Performance'){
+			// TODO: return Performance component
+			mainContent = <SchedulePage/>;
+		}
 		return (
 			<div className="main">
 				<WeekPicker pageName={this.props.pageName} date={this.state.date}/>
@@ -35,25 +48,10 @@ class Main extends React.Component {
 							}
 						)}
 					</div>
-					<MainContent pageName={this.props.pageName}></MainContent>
+					{mainContent}
 				</div>
 			</div>
 		);
-	}
-}
-
-function MainContent(props){
-	if (props.pageName == 'Schedule') {
-		return <SchedulePage/>;
-	}else if(props.pageName === 'Operators'){
-		// TODO: return Operator component
-		return <OperatorPage/>;
-	}else if(props.pageName === 'Vehicles'){
-		// TODO: return Vehicle component
-		return <SchedulePage/>;
-	}else if(props.pageName === 'Performance'){
-		// TODO: return Performance component
-		return <SchedulePage/>;
 	}
 }
 
