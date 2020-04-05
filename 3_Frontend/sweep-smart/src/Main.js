@@ -2,7 +2,7 @@ import React from "react";
 import "./main.css";
 import SchedulePage from './components/SchedulePage'
 import OperatorPage from './components/OperatorPage'
-import SSDatePicker from "./Calendar"
+import SSDatePicker from './Calendar'
 
 class Main extends React.Component {
 	constructor(props) {

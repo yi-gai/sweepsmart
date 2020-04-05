@@ -6,7 +6,6 @@ class SchdulePage extends React.Component {
 		return (
                 <div className="content-container">
                     <div>
-                        <h1>Schedule</h1>
 						<RouteBlock
 							onClick={() => {console.log("Clicked")}}
 							shift="day"
