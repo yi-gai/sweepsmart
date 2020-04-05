@@ -1,24 +1,32 @@
-import React, { Component }, { useState } from 'react';
+import React, { Component, useState } from 'react';
 import { render } from "react-dom";
 import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
 
 class SSDatePicker extends Component {
-  const [date, setDate] = useState(new Date());
+  constructor(props) {
+    super(props);
+  };
+
+  state = {
+    startDate: new Date()
+  };
  
-  const onChange = date => {
-    setDate(date);
-  }
+  handleChange = date => {
+    this.setState({
+      startDate: date
+    });
+
+    this.props.handleDateChange(date);
+  };
  
   render() {
     return (
-      <div>
-        <DatePicker
-          onChange={this.onChange}
-          selected={date}
-        />
-      </div>
+      <DatePicker
+        selected={this.state.startDate}
+        onChange={this.handleChange}
+      />
     );
   }
 }

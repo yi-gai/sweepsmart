@@ -2,6 +2,7 @@ import React from "react";
 import "./main.css";
 import SchedulePage from './components/SchedulePage'
 import OperatorPage from './components/OperatorPage'
+import SSDatePicker from './Calendar'
 
 class Main extends React.Component {
 	constructor(props) {
@@ -14,10 +15,15 @@ class Main extends React.Component {
     this.state = {currentTab: currentTab,
     							date: date};
     this.handleClick = this.handleClick.bind(this);
+    this.handleDateChange = this.handleDateChange.bind(this);
   }
 
   handleClick(newTab) {
   	this.setState({currentTab: newTab});
+  }
+
+  handleDateChange(date) {
+  	this.setState({date: date});
   }
 
 	render() {
@@ -36,7 +42,7 @@ class Main extends React.Component {
 		}
 		return (
 			<div className="main">
-				<WeekPicker pageName={this.props.pageName} date={this.state.date}/>
+				<WeekPicker pageName={this.props.pageName} date={this.state.date} handleDateChange={this.handleDateChange}/>
 				<div className="main-tab">
 					<div className="button-container">
 						{this.props.buttons.map((value, index) => 
@@ -103,7 +109,8 @@ class WeekPicker extends React.Component {
 					<div className="week-range-display">{GetWeekRange(this.props.date)}</div>
 					<div className="week-picker-arrows"></div>
 				</div>
-				<div className="week-number">{GetWeekNumber(this.props.date)} week</div>
+				
+				<SSDatePicker handleDateChange={this.props.handleDateChange}/>
 			</div>
 		);
 	}
