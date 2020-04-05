@@ -2,6 +2,7 @@ import React from "react";
 import "./main.css";
 import SchedulePage from './components/SchedulePage'
 import OperatorPage from './components/OperatorPage'
+
 class Main extends React.Component {
 	constructor(props) {
     super(props);
