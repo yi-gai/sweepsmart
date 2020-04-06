@@ -1,9 +1,27 @@
+.cur-button > a {
+	color: #3A423E;
+	text-decoration: none;
+}
+
+.not-cur-button > a {
+	color: #9AA7A0;
+	text-decoration: none;
+}
+
+.cur-button > a:hover {
+	color: #000000;
+}
+
+.not-cur-button > a:hover {
+	color: #000000;
+}
+
 .main-tab {
 	position: absolute;
 	width: 950px;
 	height: 750px;
 	left: 60px;
-	top: 120px;
+	top: 90px;
 
 	border-radius: 5px;
 }
@@ -22,7 +40,7 @@
 	width: 20%;
 	height: 60px;
 
-	font-family: Lato;
+	font-family:  'Lato', sans-serif;
 	font-style: normal;
 	font-weight: 900;
 	font-size: 18px;
@@ -40,7 +58,7 @@
 	width: 20%;
 	height: 60px;
 
-	font-family: Lato;
+	font-family:  'Lato', sans-serif;
 	font-style: normal;
 	font-weight: bold;
 	font-size: 18px;
@@ -60,16 +78,41 @@
 	border-radius: 5px;
 }
 
-.week-picker {
+.week-and-day-picker {
 	position: absolute;
-	width: 450px;
-	height: 90px;
+	width: 600px;
+	height: 80px;
 	left: 20px;
 	top: 50px;
+	z-index: 1;
+}
+
+.display-dropdown > div {
+	height: 38px;
+	float: left;
+}
+
+.week-picker > div {
+	float: left;
+}
+
+.day-picker > div {
+	float: left;
+}
+
+.week-picker-arrows {
+	height: 36px;
+	margin-right: 20px;
+}
+
+.day-picker-arrow {
+	height: 36px;
+	margin-right: 20px;
 }
 
 .page-name {
-	font-family: Lato;
+	width: 450px;
+	font-family:  'Lato', sans-serif;
 	font-style: normal;
 	font-weight: bold;
 	font-size: 18px;
@@ -77,25 +120,40 @@
 	color: #7A827F;
 }
 
-.week-range-display {
-	font-family: Lato;
+.week-display {
+	margin-right: 20px;
+	font-family:  'Lato', sans-serif;
 	font-style: normal;
 	font-weight: 900;
 	font-size: 36px;
-	line-height: 43px;
+	line-height: 36px;
 	color: #3A423E;
 }
 
-
-.week-number {
-	font-family: Lato;
+.day-display {
+	margin-right: 20px;
+	font-family:  'Lato', sans-serif;
 	font-style: normal;
-	font-weight: bold;
-	font-size: 24px;
-	line-height: 29px;
-	color: #9AA7A0;
+	font-weight: 900;
+	font-size: 36px;
+	line-height: 36px;
+	color: #3A423E;
 }
 
+.view-type-dropdown {
+	width: 100px;
+}
 
+#svg-left-arrow {
+	margin-top: 8px;
+	margin-right: 15px;
+}
 
+#svg-right-arrow {
+	margin-top: 8px;
+}
+
+#svg-down-arrow {
+	margin-top: 11px;
+}
 
