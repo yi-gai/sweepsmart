@@ -1,0 +1,93 @@
+.vehicle-weekly-vid-head {
+	width: 15%;
+}
+
+.vehicle-weekly-status-head {
+	width: 15%;
+}
+
+.vehicle-weekly-total-head {
+	width: 16%;
+}
+
+.vehicle-weekly-available-head {
+	width: 17%;
+}
+
+.vehicle-weekly-outofservice-head {
+	width: 17%;
+}
+
+.vehicle-weekly-action-head {
+	width: 15%;
+}
+
+.vehicle-daily-vid-head {
+	width: 14%;
+}
+
+.vehicle-daily-am-shift-head {
+	width: 12%;
+}
+
+.vehicle-daily-am-operator-head {
+	width: 12%;
+}
+
+.vehicle-daily-am-status-head {
+	width: 12%;
+}
+
+.vehicle-daily-pm-shift-head {
+	width: 12%;
+}
+
+.vehicle-daily-pm-operator-head {
+	width: 12%;
+}
+
+.vehicle-daily-pm-status-head {
+	width: 12%;
+}
+
+.vehicle-daily-comment-head {
+	width: 14%;
+}
+
+.weekly-status-available {
+	color: #70C295;
+}
+
+.weekly-status-outofservice {
+	color: #D68080;
+}
+
+.linebreak {
+	border-bottom: 1px solid #DCDCDC;
+}
+
+table, th, td {
+	font-family: 'Lato', sans-serif;
+	font-style: normal;
+	text-align: center;
+	font-size: 16px;
+	line-height: 19px;
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+th {
+	height: 60px;
+	color: #7A827F;
+	font-weight: 900;
+	border-bottom: 1px solid #DCDCDC;
+}
+
+td {
+	height: 39px;
+	color: #3A423E;
+	font-weight: bold;
+}

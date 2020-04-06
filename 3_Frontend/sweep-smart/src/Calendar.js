@@ -8,23 +8,15 @@ class SSDatePicker extends Component {
   constructor(props) {
     super(props);
   };
-
-  state = {
-    startDate: new Date()
-  };
  
   handleChange = date => {
-    this.setState({
-      startDate: date
-    });
-
     this.props.handleDateChange(date);
   };
  
   render() {
     return (
       <DatePicker
-        selected={this.state.startDate}
+        selected={this.props.date}
         onChange={this.handleChange}
       />
     );

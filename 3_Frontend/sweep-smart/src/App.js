@@ -39,27 +39,27 @@ export default App;
 class Schedule extends React.Component {
   render() {
     let buttons = ["Day Shift", "Night Shift"];
-    return <Main buttons={buttons} pageName="Schedule"/>;
+    return <Main buttons={buttons} pageName="Schedule" viewType="week"/>;
   }
 }
 
 class Operator extends React.Component {
   render() {
     let buttons = ["Day Shift", "Night Shift"];
-    return <Main buttons={buttons} pageName="Operators"/>;
+    return <Main buttons={buttons} pageName="Operators" viewType="week"/>;
   }
 }
 
 class Vehicle extends React.Component {
   render() {
     let buttons = ["Day Shift", "Night Shift"];
-    return <Main pageName="Vehicles"/>;
+    return <Main buttons={buttons} pageName="Vehicles" viewType="week"/>;
   }
 }
 
 class Performance extends React.Component {
   render() {
     let buttons = ["Month", "Week", "Day"];
-    return <Main buttons={buttons} pageName="Performance"/>;
+    return <Main buttons={buttons} pageName="Performance" viewType="week"/>;
   }
 }
