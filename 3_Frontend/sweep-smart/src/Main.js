@@ -1,9 +1,10 @@
 import React from "react";
 import "./main.css";
-import SchedulePage from './components/SchedulePage'
-import OperatorPage from './components/OperatorPage'
-import VehiclePage from './components/VehiclePage'
-import SSDatePicker from './Calendar'
+import SchedulePage from './components/SchedulePage';
+import OperatorPage from './components/OperatorPage';
+import VehiclePage from './components/VehiclePage';
+import SSDatePicker from './Calendar';
+import StaffPanel from './StaffPanel';
 import Dropdown from 'react-dropdown';
 import 'react-dropdown/style.css';
 
@@ -95,7 +96,11 @@ class Main extends React.Component {
 					{buttons}
 					{mainContent}
 				</div>
+				<div>
+					<StaffPanel/> 
+				</div>
 			</div>
+			
 		);
 	}
 }

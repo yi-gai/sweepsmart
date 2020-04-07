@@ -1,0 +1,34 @@
+
+.staff-container {
+	position: absolute;
+	width: 280px;
+	height: 200px;
+	left: 1020px;
+	top: 162px;
+	background-color: white;
+}
+
+.panel-title {
+	position: absolute;
+	width: 86px;
+	height: 27.48px;
+	left: 1030px;
+	top: 172px;
+
+	font-family: Lato;
+	font-style: normal;
+	font-weight: 900;
+	font-size: 24px;
+	line-height: 29px;
+
+	color: #3A423E;
+}
+
+.expansion-panel {
+	position: absolute;
+	
+	left: 1020px;
+	top: 182px;
+	background-color: white;
+}
+
