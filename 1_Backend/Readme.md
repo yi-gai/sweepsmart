@@ -1,3 +1,15 @@
+oakland_create_db.sql: Creates the tables
+
+db_create_drivers.sql: Populates DRIVERS table with employee info: employee_id, employee_name, and shifts
+
+db_create_routes_day.sql: Populates ROUTES table with route info (both day and night despite name): route_id and scheduled day of week/week of month
+
+db_create_vehicles.sql: Populates VEHICLES table with vehicle info: vehicle_id, status_am/pm/night, and other vehicle info as provided
+
+
+
+-------
+
 1.	Install Docker https://www.docker.com/get-started
 
 a.	Requires DockerID account which will also allow access to docker hub
