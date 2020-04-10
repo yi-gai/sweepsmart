@@ -5,10 +5,11 @@ FROM python:3.8-slim-buster
 WORKDIR /app
 
 # Install additional python packages
-RUN pip install flask Flask-SQLAlchemy PyMySQL
+RUN pip install flask Flask-SQLAlchemy PyMySQL pendulum
 
 # A meta command used to document that any containers should expose port 5000 with the docker run command
 EXPOSE 5000
 
 # Containers will run python on the file: /app/webserver.py
-CMD python ./webserver.py
+# CMD python ./webserver.py
+CMD export FLASK_APP=./webserver.py; flask run

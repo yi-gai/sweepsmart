@@ -14,6 +14,16 @@ db = SQLAlchemy(app)
 def hello_world():
     return 'Hello, World!'
 
+
+def get_wk_start_end(d):
+    # d is the date
+    day_of_wk = d.weekday()
+    #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
+    wk_start = d-day_of_wk
+    wk_end = d-day_of_wk+6
+    return (wk_start,wk_end)
+
+
 # user credentials
 @app.route('/menu', methods=["GET"])
 def get_user_information():
@@ -98,18 +108,14 @@ def get_avaiable_route_list():
     data = []
 
     # get from database
-    # ANNA - what is this supposed to be getting?
-    sched_str = ""
-    for s in wk_route_map[week_of_month]:
-    	sched_str += "{s}=1 or ".format(s=s)
-    routes_db = db.engine.execute("select * from ROUTES where {ss};".format(ss=sched_str[:-4]))
-    #data = {}
+    day_of_wk = date.weekday()
+    #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
+    wk_start = date-day_of_wk
+    wk_end = date-day_of_wk+6
+
+    routes_db = db.engine.execute("select route_id from ROUTE_LOG where date>={ds} and date <= {de} and employee_id=NULL;".format(ds=wk_start,de=wk_end))
     for row in routes_db:
-        route = {}
-        route["route"] = row[1]
-        name["City"] = row[3]
-        name["State"] = row[4]
-        names.append(name)
+        data.append(row)
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
@@ -158,6 +164,7 @@ def get_route_info_on_click():
     data = {}
     # get from database
     # ANNA is this the log info or the route info
+    route_info db.engine.execute("select route_id,monthly_freq from ROUTES where route_id={r};".format(r=route))
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
@@ -172,8 +179,19 @@ def get_staff_list():
         shift = 'am'
     week_of_month = pendulum.parse(date).week_of_month
     data = {}
+
+    wk_start,wk_end = get_wk_start_end(date)
     # get from database
-    # is this route log or route or employees/staff?
+    assigned_staff = []
+    assigned_query = "select employee_name from ROUTE_LOG where route_id={r} and date_swept>={ds} and date_swept<={de};".format(ds=wk_start,de=wk_end)
+    assigned_query_id = "select employee_id from ROUTE_LOG where route_id={r} and date_swept>={ds} and date_swept<={de};".format(ds=wk_start,de=wk_end)
+    staff_assigned = db.engine.execute(assigned_query)
+    
+    staff_unassigned = db.engine.execute("select employee_name from DRIVERS where employee_id not in ({a});".format(a=assigned_query_id))
+
+    data['assigned'] = staff_assigned
+    data['unassigned'] = staff_unassigned
+
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
@@ -219,7 +237,7 @@ def weather_condition():
         # retrieve weather from database
         weather = db.engine.execute("select weather from DAY_LOG where log_date={d};".format(d=date))
     elif request.method == 'PUT':
-    	date = request.args.get('date')
+        date = request.args.get('date')
         if date == None:
             date = datetime.now().strftime("%Y-%m-%d")
         if request.headers['Content-Type'] == 'application/json':
@@ -251,10 +269,12 @@ def get_daily_route_schedule():
                    'vehicle': None}]
     
     # get from database
-    route_db = db.engine.execute("select r.route_id, r.completion, r.vehicle_id, r.shift, D.employee_name from ROUTE_LOG r join DRIVERS D on r.employee_id = D.employee_id where date_swept={d} and shift='AM';".format(d=date))
+    route_log_db_query = "select route_id,employee_id,employee_status,vehicle_id,completion,shift from ROUTE_LOG where date_swept={d};".format(date)
+    route_db = db.engine.execute(route_log_db_query)
+    #route_db = db.engine.execute("select r.route_id, r.completion, r.vehicle_id, r.shift, D.employee_name from ROUTE_LOG r join DRIVERS D on r.employee_id = D.employee_id where date_swept={d} and shift='AM';".format(d=date))
     for route_log in route_db:
-    	route_id, route_status, vehicle, shift, driver = route_log
-    	data[shift].append({'route':route_id,'driver':driver,'route_status':route_status,'vehicle':vehicle})
+        route_id, driver, driver_status, vehicle, route_status, shift  = route_log
+        data[shift].append({'route':route_id,'driver':driver,'driver_status':driver_status,'route_status':route_status,'vehicle':vehicle})
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
@@ -282,13 +302,24 @@ def change_route_day():
 
     return Response(None, status=200, mimetype='application/json')
 
-@app.route('/schedule/day/vehicle', methods=["GET"]) # ANNA is this maintenance?
+@app.route('/schedule/day/vehicle', methods=["GET"]) 
 def get_vehicle_list():
     date = request.args.get('date')
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     data = {}
     # get from database
+    # in use: in ROUTE_LOG for day
+    # available: not in maintenance and not in ROUTE_LOG for day
+    # unavailable: in maintenance
+    maint_query = "select vehicle_id from VEHICLE_MAINTENANCE where date_service={date} or (date_service<={date} and date_end>={date}".format(date=date)
+    route_log_query = "select vehicle_id from ROUTE_LOG where date_swept={d}".format(d=date)
+    available_vehicles = db.engine.execute("select vehicle_id from VEHICLES where vehicle_id not in (maint_query) and vehicle_id not in (route_log_query);")
+    in_use_vehicles = db.engine.execute(route_log_query)
+    maintenance_vehicles = db.engine.execute(maint_query)
+    data['available'] = available_vehicles
+    data['in_use'] = in_use_vehicles
+    data['maintenance'] = maintenance_vehicles
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 @app.route('/schedule/day/unplanned', methods=["PUT"])  # ANNA what is this
@@ -296,8 +327,20 @@ def get_unplanned_routes():
     date = request.args.get('date')
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
-    data = {}
+    data = {'unplanned':[],'planned':[]}
     # get from database
+    day_of_wk = date.weekday()
+    days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
+    wk_of_month = pendulum.parse(date).week_of_month
+    routes_today = db.engine.execute("select route_id from ROUTE_LOG where date_swept={d}".format(d=date))
+    for route in routes_today:
+        route_today = db.engine.execute("select {d}{w}_AM,{d}{w}_PM,{d}{w}_night from ROUTES where route_id={r};".format(r=route))
+        if route_today[0] == None and route_today[1] == None and route_today[2] == None:
+            data['unplanned'].append(route)
+        else:
+            data['planned'].append(route)
+
+
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 
@@ -314,8 +357,7 @@ def get_weekly_operator_info():
     data = {'day':[],'night':[]}
     # get from database
 
-    # ANNA do weeks start/end on sun-sat or mon-sun ?
-    day_of_wk = datetime.today().weekday()
+    day_of_wk = date.weekday()
     #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
     wk_start = date-day_of_wk
     wk_end = date-day_of_wk+6
