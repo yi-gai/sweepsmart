@@ -1,4 +1,4 @@
-oakland_create_db.sql: Creates the tables
+oakland_create_db.sql: Creates the tables - Run this first
 
 db_create_drivers.sql: Populates DRIVERS table with employee info: employee_id, employee_name, and shifts
 
