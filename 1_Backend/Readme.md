@@ -1,3 +1,5 @@
+Files to be run (either in DataGrip or command line, datagrip is easier, just File-> Open, highlight the whole file and click the green execute button):
+
 oakland_create_db.sql: Creates the tables - Run this first
 
 db_create_drivers.sql: Populates DRIVERS table with employee info: employee_id, employee_name, and shifts
