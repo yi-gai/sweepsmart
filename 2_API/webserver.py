@@ -723,25 +723,37 @@ def get_weekly_vehicle_infomation():
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     data = {}
-    vehicles = db.engine.execute("select * from VEHICLES;")
+    vehicles = db.engine.execute("select * from VEHICLES ORDER BY vehicle_id;")
     maintenance_v = db.engine.execute("select vehicle_id from VEHICLE_MAINTENANCE where date_service <= '{}' and date_end >= '{}';".format(date, date))
     #not sure which fields we need
+    unavailable_vids = [row[0] for row in maintenance_v]
+    availables = []
+    unavailables = []
     for row in vehicles:
-        data[row[0]] = {
-            'status_am':row[1],
-            'status_pm':row[2],
-            'status_night':row[3],
-            'make':row[4],
-            'description':row[5],
-            'year':row[7],
-            'license':row[8],
-            'id_no':row[9]
-        }
-    for row in maintenance_v:
-        if row[0] in data:
-            data[row[0]]['status_am'] = 'out-of-service'
-            data[row[0]]['status_pm'] = 'out-of-service'
-            data[row[0]]['status_night'] = 'out-of-service'
+        vid = row[0]
+        if vid not in unavailable_vids:
+            availables.append({
+                'vehicle_id':vid,
+                'status':'available',
+                'make':row[4],
+                'description':row[5],
+                'year':row[7],
+                'license':row[8],
+                'id_no':row[9]
+            })
+        else:
+            unavailables.append({
+                'vehicle_id':vid,
+                'status':'out-of-service',
+                'make':row[4],
+                'description':row[5],
+                'year':row[7],
+                'license':row[8],
+                'id_no':row[9]
+            })
+    data = {'data': availables + unavailables,
+            'num_availables': len(availables),
+            'num_unavailables': len(unavailables)}
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 @app.route('/vehicle/week/action', methods=["DELETE"])
