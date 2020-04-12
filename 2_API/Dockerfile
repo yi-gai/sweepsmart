@@ -11,5 +11,5 @@ RUN pip install flask Flask-SQLAlchemy PyMySQL pendulum
 EXPOSE 5000
 
 # Containers will run python on the file: /app/webserver.py
-# CMD python ./webserver.py
-CMD export FLASK_APP=./webserver.py; flask run
+ENTRYPOINT ["flask"]
+CMD ["run", "--host=0.0.0.0"]

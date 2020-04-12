@@ -3,6 +3,8 @@ import json
 from datetime import datetime
 import pendulum
 from collections import defaultdict
+from flask_sqlalchemy import SQLAlchemy
+import pymysql
 
 app = Flask(__name__)
 # NOTE: switch out mypass with your own docker password
@@ -12,7 +14,7 @@ db = SQLAlchemy(app)
 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!'
+    return 'Hello, aWorld!'
 
 
 def get_wk_start_end(d):
@@ -164,7 +166,7 @@ def get_route_info_on_click():
     data = {}
     # get from database
     # ANNA is this the log info or the route info
-    route_info db.engine.execute("select route_id,monthly_freq from ROUTES where route_id={r};".format(r=route))
+    route_info = db.engine.execute("select route_id,monthly_freq from ROUTES where route_id={r};".format(r=route))
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
