@@ -49,3 +49,28 @@ e.	When prompted, Download “missing driver files” to extend DataGrip to supp
 
 
 5.	Import the database file then execute 
+
+
+-------
+
+
+To run the API container, we need to make sure both database and API containers are in the same network, so run this to create a network:
+docker network create db-network
+
+Connect the database to the network:
+docker network connect db-network mariadb-bcot
+
+Then cd to the 2_API folder to build and run the API container.
+
+1. Build docker image:
+docker build -t python-flask .
+
+2. Run docker container:
+docker run -e FLASK_APP=webserver.py -p 5000:5000 --network db-network --name server-bcot python-flask
+
+If you kill the container and want to restart it, run:
+docker start server-bcot
+
+To follow the logs of the container:
+docker logs -f server-bcot
+
