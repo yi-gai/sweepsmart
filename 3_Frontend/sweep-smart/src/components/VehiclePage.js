@@ -24,6 +24,24 @@ class VehiclePage extends React.Component {
 class WeeklyTable extends React.Component {
 	constructor(props) {
 		super(props);
+		this.state = {
+			onScreenData: [],
+			data: null
+		}
+	}
+
+	componentDidMount() {
+    fetch("/vehicle/week")
+      .then(res => res.json())
+      .then(
+        (result) => {
+          console.log(result)
+          this.setState({data: result, onScreenData: result});
+        },
+        (error) => {
+          console.log(error)
+        }
+      )
 	}
 
 	render() {

@@ -5,16 +5,16 @@ import pendulum
 from collections import defaultdict
 from flask_sqlalchemy import SQLAlchemy
 import pymysql
+import sys
 
 app = Flask(__name__)
 # NOTE: switch out mypass with your own docker password
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:mypass@mariadb-bcot.db-network/OAKLAND_STREET_SWEEPING'
 db = SQLAlchemy(app)
 
-
 @app.route('/')
 def hello_world():
-    return 'Hello, aWorld!'
+    return 'Hello, World!'
 
 
 def get_wk_start_end(d):
@@ -677,9 +677,22 @@ def get_daily_vehicle_infomation():
     vehicles = db.engine.execute("select * from VEHICLES;")
     maintenance_v = db.engine.execute("select vehicle_id from VEHICLE_MAINTENANCE where date_service={d} or (date_service <={d} and date_end >={d});".format(d=date))
     #not sure which fields we need
-    for v in vehicles:
-        if v[0] not in maintenance_v:
-            data[v[0]] = {'status_am':v[1],'status_pm':v[2],'status_night':v[3],'make':v[4],'description':v[5],'year':v[7],'license':v[8],'id_no':v[9]}
+    for row in vehicles:
+        data[row[0]] = {
+            'status_am':row[1],
+            'status_pm':row[2],
+            'status_night':row[3],
+            'make':row[4],
+            'description':row[5],
+            'year':row[7],
+            'license':row[8],
+            'id_no':row[9]
+        }
+    for row in maintenance_v:
+        if row[0] in data:
+            data[row[0]]['status_am'] = 'out-of-service'
+            data[row[0]]['status_pm'] = 'out-of-service'
+            data[row[0]]['status_night'] = 'out-of-service'
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
@@ -710,24 +723,62 @@ def get_weekly_vehicle_infomation():
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     data = {}
-    # get from database
-    data[7178] = {'vehicle_status': 'available',
-                  'maps_swept': 20,
-                  'days_available': 312,
-                  'days_out_of_service': 12}
+    vehicles = db.engine.execute("select * from VEHICLES;")
+    maintenance_v = db.engine.execute("select vehicle_id from VEHICLE_MAINTENANCE where date_service <= '{}' and date_end >= '{}';".format(date, date))
+    #not sure which fields we need
+    for row in vehicles:
+        data[row[0]] = {
+            'status_am':row[1],
+            'status_pm':row[2],
+            'status_night':row[3],
+            'make':row[4],
+            'description':row[5],
+            'year':row[7],
+            'license':row[8],
+            'id_no':row[9]
+        }
+    for row in maintenance_v:
+        if row[0] in data:
+            data[row[0]]['status_am'] = 'out-of-service'
+            data[row[0]]['status_pm'] = 'out-of-service'
+            data[row[0]]['status_night'] = 'out-of-service'
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/vehicle/week/action', methods=["PUT"])
-def change_vehicle_week():
+@app.route('/vehicle/week/action', methods=["DELETE"])
+def delete_vehicle():
     if request.headers['Content-Type'] == 'application/json':
         arguments = request.get_json()
     if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
         arguments = request.form
-    vehicle = arguments.get("vehicle")
-    vehicle_status = arguments.get("vehicle_status")
+    vehicle_id = arguments.get("vehicle")
+    db.engine.execute("delete * from VEHICLES where vehicle_id={};".format(vehicle_id))
     # modify database
     return Response(None, status=200, mimetype='application/json')
 
+@app.route('/vehicle/add', methods=["POST"])
+def add_vehicle():
+    if request.headers['Content-Type'] == 'application/json':
+        arguments = request.get_json()
+    if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+        arguments = request.form
+    vehicle_id = arguments.get("vehicle_id")
+    cng = arguments.get("cng", default='')
+    make = arguments.get("make", default='')
+    description = arguments.get("description", default='')
+    year = arguments.get("year", default='')
+    license = arguments.get("license", default='')
+    id_no = arguments.get("id_no", default='')
+    status_am = arguments.get("status_am", default='available')
+    status_pm = arguments.get("status_pm", default='available')
+    status_night = arguments.get("status_night", default='available')
+    query = '''
+    INSERT INTO `VEHICLES`
+    (vehicle_id,cng,make,description,vehicle_year,license,v_id_no,status_am,status_pm,status_night)
+    VALUES ({vid},{cng},{make},{description},{year},{license},{id_no},{sam},{spm},{snight});
+    '''.format(vehicle_id, cng, make, description, year, license, id_no, status_am, status_pm, status_night)
+    db.engine.execute(query)
+    # modify database
+    return Response(None, status=200, mimetype='application/json')
 
 # performance
 @app.route('/performance/month', methods=["GET"])
@@ -806,3 +857,7 @@ def get_daily_performance():
                   'times_missed': 1,
                   'success_rate': 3/(3+1)}
     return Response(None, status=200, mimetype='application/json')
+
+if __name__ == '__main__':
+    print('If you want to print to logs, use sys.stderr!!', file=sys.stderr)
+    app.run(debug=True, host='0.0.0.0')
