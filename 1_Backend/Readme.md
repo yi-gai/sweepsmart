@@ -22,7 +22,7 @@ a. Requires DockerID account which will also allow access to docker hub
 
 a. ```docker build -t mariadb-local .```
 
-b. ```docker run -d --name mariadb-bcot -p 3306:3306 -e MYSQL_ROOT_PASSWORD=mypass --mount type=volume,source=mysqlDB,target=/var/lib/mysql --mount type=bind,source="${PWD}"/datadir,target=/home/ --restart always mariadb-local```
+b. ```docker run -d --name mariadb-bcot -p 3306:3306 -e MYSQL_ROOT_PASSWORD=mypass --mount type=volume,source=mysqlDB,target=/var/lib/mysql --mount type=bind,source="${PWD}",target=/home/ --restart always mariadb-local```
 
 
 
