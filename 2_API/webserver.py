@@ -1,6 +1,6 @@
 from flask import Flask, request, Response
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import pendulum
 from collections import defaultdict
 from flask_sqlalchemy import SQLAlchemy
@@ -21,8 +21,8 @@ def get_wk_start_end(d):
     # d is the date
     day_of_wk = d.weekday()
     #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
-    wk_start = d-day_of_wk
-    wk_end = d-day_of_wk+6
+    wk_start = date-timedelta(days=day_of_wk).strftime("%Y-%m-%d")
+    wk_end = date-timedelta(days=day_of_wk)+timedelta(days=6).strftime("%Y-%m-%d")
     return (wk_start,wk_end)
 
 
@@ -103,6 +103,7 @@ def get_weekly_route_schedule():
 def get_avaiable_route_list():
     date = request.args.get('date')
     shift = request.args.get('shift')
+    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
         shift = 'day'
@@ -112,8 +113,7 @@ def get_avaiable_route_list():
     # get from database
     day_of_wk = date.weekday()
     #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
-    wk_start = date-day_of_wk
-    wk_end = date-day_of_wk+6
+    wk_start, wk_end = get_wk_start_end(date_dt)
 
     routes_db = db.engine.execute("select route_id from ROUTE_LOG where date>={ds} and date <= {de} and employee_id=NULL;".format(ds=wk_start,de=wk_end))
     for row in routes_db:
@@ -166,7 +166,10 @@ def get_route_info_on_click():
     data = {}
     # get from database
     # ANNA is this the log info or the route info
-    route_info = db.engine.execute("select route_id,monthly_freq from ROUTES where route_id={r};".format(r=route))
+    #date_dt = datetime.now()
+    #wk_start, wk_end = get_wk_start_end(date_dt)
+    route_info = db.engine.execute("select route_id,monthly_freq,shift_AM,shift_PM,shift_night from ROUTES where route_id={r};".format(r=route))
+    data[route_info[0]] = {'freq':route_info[1],'AM':route_info[2],'PM':route_info[3],'night':route_info[4]}
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
@@ -176,13 +179,14 @@ def get_staff_list():
     date = request.args.get('date')
     shift = request.args.get('shift')
     status = request.args.get('status')
+    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
         shift = 'am'
     week_of_month = pendulum.parse(date).week_of_month
     data = {}
 
-    wk_start,wk_end = get_wk_start_end(date)
+    wk_start,wk_end = get_wk_start_end(date_dt)
     # get from database
     assigned_staff = []
     assigned_query = "select employee_name from ROUTE_LOG where route_id={r} and date_swept>={ds} and date_swept<={de};".format(ds=wk_start,de=wk_end)
@@ -316,7 +320,7 @@ def get_vehicle_list():
     # unavailable: in maintenance
     maint_query = "select vehicle_id from VEHICLE_MAINTENANCE where date_service={date} or (date_service<={date} and date_end>={date}".format(date=date)
     route_log_query = "select vehicle_id from ROUTE_LOG where date_swept={d}".format(d=date)
-    available_vehicles = db.engine.execute("select vehicle_id from VEHICLES where vehicle_id not in (maint_query) and vehicle_id not in (route_log_query);")
+    available_vehicles = db.engine.execute("select vehicle_id from VEHICLES where vehicle_id not in ({m}) and vehicle_id not in ({r});".format(m=maint_query,r=route_log_query))
     in_use_vehicles = db.engine.execute(route_log_query)
     maintenance_vehicles = db.engine.execute(maint_query)
     data['available'] = available_vehicles
@@ -324,7 +328,7 @@ def get_vehicle_list():
     data['maintenance'] = maintenance_vehicles
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/schedule/day/unplanned', methods=["PUT"])  # ANNA what is this
+@app.route('/schedule/day/unplanned', methods=["PUT"])  
 def get_unplanned_routes():
     date = request.args.get('date')
     if date == None:
@@ -354,15 +358,15 @@ driver_day_where = "shift_mon=1 or shift_tue=1 or shift_wed=1 or shift_thu=1 or 
 @app.route('/operator/week', methods=["GET"])
 def get_weekly_operator_info():
     date = request.args.get('date')
+    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     data = {'day':[],'night':[]}
     # get from database
 
-    day_of_wk = date.weekday()
+    day_of_wk = date_dt.weekday()
     #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
-    wk_start = date-day_of_wk
-    wk_end = date-day_of_wk+6
+    wk_start, wk_end = get_wk_start_end(date_dt)
 
     # not sure how we're calculating these global holidays where no one works
     holidays = db.engine.execute("select count(*) from HOLIDAY where holiday_date>={hs} and holiday_date<={he};".format(hs=wk_start,he=wk_end))
@@ -819,6 +823,7 @@ def get_monthly_performance():
 @app.route('/performance/week', methods=["GET"])
 def get_weekly_performance():
     date = request.args.get('date')
+    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     data = []
@@ -827,16 +832,17 @@ def get_weekly_performance():
     # get day of week from date
     day_of_wk = date.weekday()
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
-    start_date = date-days[day_of_wk]
-    end_date = date-days[day_of_wk]+6
+    #start_date = date-days[day_of_wk]
+    #end_date = date-days[day_of_wk]+6
+    wk_start, wk_end = get_wk_start_end(date_dt)
 
     swept_query = "select sum(*) from ROUTE_LOG where route_id={r} and completion={c} and date_swept>={sd} and date_swept<={ed};"
     routes = db.engine.execute("select route_id,monthly_freq from ROUTES;")
     for route_info in routes:
         route = route_info[0]
         freq = route_info[1]
-        num_swept = db.engine.execute(swept_query.format(r=route,c='completed',sd=start_date,ed=end_date))
-        num_missed = db.engine.execute(swept_query.format(r=route,c='missed',sd=start_date,ed=end_date))
+        num_swept = db.engine.execute(swept_query.format(r=route,c='completed',sd=wk_start,ed=wk_end))
+        num_missed = db.engine.execute(swept_query.format(r=route,c='missed',sd=wk_start,ed=wk_end))
         date[route] = {'route_family':route[0],'frequency':freq,'times_swept':num_swept,'times_missed':num_missed,'success_rate':num_swept/(num_swept+num_missed)}
 
     data['3A'] = {'route_family': 3,
