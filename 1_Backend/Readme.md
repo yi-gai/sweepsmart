@@ -18,7 +18,7 @@ a. Requires DockerID account which will also allow access to docker hub
 
 
 
-2.	Build and Run docker, use terminal to execute commands:
+2.	In 1_Backend folder, build and run docker, use terminal to execute commands:
 
 a. ```docker build -t mariadb-local .```
 
@@ -78,13 +78,13 @@ b. Run docker container:
 
 
 
-3. If you kill the container and want to restart it, run:
+Notes:
+
+If you kill the container and want to restart it, run:
 
 ```docker start server-bcot```
 
-
-
-4. To follow the logs of the container:
+To follow the logs of the container:
 
 ```docker logs -f server-bcot```
 
