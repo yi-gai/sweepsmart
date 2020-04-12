@@ -20,9 +20,9 @@ db_create_vehicles.sql: Populates VEHICLES table with vehicle info: vehicle_id, 
 
 2.	Build and Run docker, use terminal to execute commands:
 
-  a. docker build -t mariadb-local .
+  a. ```docker build -t mariadb-local .```
 
-  b. docker run -d --name mariadb-bcot -p 3306:3306 -e MYSQL_ROOT_PASSWORD=mypass --mount type=volume,source=mysqlDB,target=/var/lib/mysql --mount type=bind,source="${PWD}"/datadir,target=/home/ --restart always mariadb-local
+  b. ```docker run -d --name mariadb-bcot -p 3306:3306 -e MYSQL_ROOT_PASSWORD=mypass --mount type=volume,source=mysqlDB,target=/var/lib/mysql --mount type=bind,source="${PWD}"/datadir,target=/home/ --restart always mariadb-local```
 
 
 
@@ -58,11 +58,11 @@ db_create_vehicles.sql: Populates VEHICLES table with vehicle info: vehicle_id, 
 
   a. Create a network:
 
-    docker network create db-network
+    ```docker network create db-network```
 
   b. Connect the database container to the network:
 
-    docker network connect db-network mariadb-bcot
+    ```docker network connect db-network mariadb-bcot```
 
 
 
@@ -70,22 +70,22 @@ db_create_vehicles.sql: Populates VEHICLES table with vehicle info: vehicle_id, 
 
   a. Build docker image:
 
-    docker build -t python-flask .
+    ```docker build -t python-flask .```
 
   b. Run docker container:
 
-    docker run -e FLASK_APP=webserver.py -p 5000:5000 --network db-network --name server-bcot python-flask
+    ```docker run -e FLASK_APP=webserver.py -p 5000:5000 --network db-network --name server-bcot python-flask```
 
 
 
 3. If you kill the container and want to restart it, run:
 
-  docker start server-bcot
+    ```docker start server-bcot```
 
 
 
 4. To follow the logs of the container:
 
-  docker logs -f server-bcot
+    ```docker logs -f server-bcot```
 
 
