@@ -1,4 +1,4 @@
-Files to be run (either in DataGrip or command line, datagrip is easier, just File-> Open, highlight the whole file and click the green execute button):
+Files to be run (either in DataGrip or command line, DataGrip is easier, just File->Open, highlight the whole file and click the green execute button):
 
 oakland_create_db.sql: Creates the tables - Run this first
 
@@ -54,23 +54,38 @@ e.	When prompted, Download “missing driver files” to extend DataGrip to supp
 -------
 
 
-To run the API container, we need to make sure both database and API containers are in the same network, so run this to create a network:
+1. To run the API container, we need to make sure both database and API containers are in the same network.
+
+a. Create a network:
+
 docker network create db-network
 
-Connect the database to the network:
+b. Connect the database container to the network:
+
 docker network connect db-network mariadb-bcot
 
-Then cd to the 2_API folder to build and run the API container.
 
-1. Build docker image:
+
+2. Then cd to the 2_API folder to build and run the API container.
+
+a. Build docker image:
+
 docker build -t python-flask .
 
-2. Run docker container:
+b. Run docker container:
+
 docker run -e FLASK_APP=webserver.py -p 5000:5000 --network db-network --name server-bcot python-flask
 
-If you kill the container and want to restart it, run:
+
+
+3. If you kill the container and want to restart it, run:
+
 docker start server-bcot
 
-To follow the logs of the container:
+
+
+4. To follow the logs of the container:
+
 docker logs -f server-bcot
+
 
