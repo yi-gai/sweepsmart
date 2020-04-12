@@ -12,17 +12,17 @@ db_create_vehicles.sql: Populates VEHICLES table with vehicle info: vehicle_id, 
 
 -------
 
-1.	Install Docker https://www.docker.com/get-started
+_1.	Install Docker https://www.docker.com/get-started
 
-*	a. Requires DockerID account which will also allow access to docker hub
+__a. Requires DockerID account which will also allow access to docker hub
 
 
 
-2.	Build and Run docker, use terminal to execute commands:
+_2.	Build and Run docker, use terminal to execute commands:
 
-* a. docker build -t mariadb-local .
+__a. docker build -t mariadb-local .
 
-* b. docker run -d --name mariadb-bcot -p 3306:3306 -e MYSQL_ROOT_PASSWORD=mypass --mount type=volume,source=mysqlDB,target=/var/lib/mysql --mount type=bind,source="${PWD}"/datadir,target=/home/ --restart always mariadb-local
+__b. docker run -d --name mariadb-bcot -p 3306:3306 -e MYSQL_ROOT_PASSWORD=mypass --mount type=volume,source=mysqlDB,target=/var/lib/mysql --mount type=bind,source="${PWD}"/datadir,target=/home/ --restart always mariadb-local
 
 
 
