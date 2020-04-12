@@ -74,7 +74,7 @@ a. Build docker image:
 
 b. Run docker container:
 
-```docker run -e FLASK_APP=webserver.py -p 5000:5000 --network db-network --name server-bcot python-flask```
+```docker run --name server-bcot -p 5000:5000 --network db-network -v "${PWD}":/app python-flask```
 
 
 
