@@ -5,8 +5,8 @@ import OperatorPage from './components/OperatorPage';
 import VehiclePage from './components/VehiclePage';
 import SSDatePicker from './Calendar';
 import StaffPanel from './StaffPanel';
-import Dropdown from 'react-dropdown';
-import 'react-dropdown/style.css';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
 
 class Main extends React.Component {
 	constructor(props) {
@@ -26,6 +26,8 @@ class Main extends React.Component {
 	this.handleClickRight = this.handleClickRight.bind(this);
   }
 
+
+
   handleClick(newTab) {
   	this.setState({currentTab: newTab});
   }
@@ -34,8 +36,8 @@ class Main extends React.Component {
   	this.setState({date: date});
   }
 
-  handleViewTypeChange(type) {
-  	this.setState({viewType: type});
+  handleViewTypeChange(event) {
+  	this.setState({viewType: event.target.value});
   }
 
   handleClickLeft(params) {
@@ -140,10 +142,6 @@ class NotCurButton extends React.Component {
 class WeekAndDayPicker extends React.Component {
 	constructor(props) {
 		super(props);
-		this.handleSelect = this.handleSelect.bind(this);
-	}
-	handleSelect(item) {
-		this.props.handleViewTypeChange(item["value"]);
 	}
 
 	render() {
@@ -163,10 +161,13 @@ class WeekAndDayPicker extends React.Component {
 				<div className="page-name">{this.props.pageName}</div>
 				<div className="display-dropdown">
 					{weekAndDayPicker}
-					<Dropdown className="view-type-dropdown"
-						options={options}
-						onChange={this.handleSelect}
-						value={this.props.viewType} />
+					<Select
+					  class="view-type-dropdown"
+			          value={this.props.viewType}
+			          onChange={this.props.handleViewTypeChange} >
+			          <MenuItem value="week">Week</MenuItem>
+			          <MenuItem value="day">Day</MenuItem>
+			        </Select>
 				</div>
 				<SSDatePicker date={this.props.date} handleDateChange={this.props.handleDateChange}/>
 			</div>
