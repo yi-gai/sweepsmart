@@ -21,9 +21,9 @@ def get_wk_start_end(d):
     # d is the date
     day_of_wk = d.weekday()
     #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
-    wk_start = date-timedelta(days=day_of_wk).strftime("%Y-%m-%d")
-    wk_end = date-timedelta(days=day_of_wk)+timedelta(days=6).strftime("%Y-%m-%d")
-    return (wk_start,wk_end)
+    wk_start = d-timedelta(days=day_of_wk)
+    wk_end = d-timedelta(days=day_of_wk)+timedelta(days=6)
+    return (wk_start.strftime("%Y-%m-%d"),wk_end.strftime("%Y-%m-%d"))
 
 
 # user credentials
@@ -111,7 +111,7 @@ def get_avaiable_route_list():
     data = []
 
     # get from database
-    day_of_wk = date.weekday()
+    day_of_wk = date_dt.weekday()
     #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
     wk_start, wk_end = get_wk_start_end(date_dt)
 
@@ -189,8 +189,8 @@ def get_staff_list():
     wk_start,wk_end = get_wk_start_end(date_dt)
     # get from database
     assigned_staff = []
-    assigned_query = "select employee_name from ROUTE_LOG where route_id={r} and date_swept>={ds} and date_swept<={de};".format(ds=wk_start,de=wk_end)
-    assigned_query_id = "select employee_id from ROUTE_LOG where route_id={r} and date_swept>={ds} and date_swept<={de};".format(ds=wk_start,de=wk_end)
+    assigned_query = "select employee_name from ROUTE_LOG where route_id={r} and date_swept>={ds} and date_swept<={de};".format(r=route,ds=wk_start,de=wk_end)
+    assigned_query_id = "select employee_id from ROUTE_LOG where route_id={r} and date_swept>={ds} and date_swept<={de};".format(r=route,ds=wk_start,de=wk_end)
     staff_assigned = db.engine.execute(assigned_query)
     
     staff_unassigned = db.engine.execute("select employee_name from DRIVERS where employee_id not in ({a});".format(a=assigned_query_id))
@@ -205,6 +205,7 @@ def get_staff_list():
 @app.route('/schedule/day/overview', methods=["GET"])
 def get_daily_overview():
     date = request.args.get('date')
+    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     week_of_month = pendulum.parse(date).week_of_month
@@ -212,7 +213,7 @@ def get_daily_overview():
     
     # get from database
     # get day of week from date
-    day_of_wk = date.weekday()#datetime.today().weekday()
+    day_of_wk = date_dt.weekday()#datetime.today().weekday()
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
 
     routes_db = db.engine.execute("select * from ROUTES where {d}{w}_AM=1 or {d}{w}_PM=1".format(d=days[day_of_wk],w=week_of_month))
@@ -275,7 +276,7 @@ def get_daily_route_schedule():
                    'vehicle': None}]
     
     # get from database
-    route_log_db_query = "select route_id,employee_id,employee_status,vehicle_id,completion,shift from ROUTE_LOG where date_swept={d};".format(date)
+    route_log_db_query = "select route_id,employee_id,employee_status,vehicle_id,completion,shift from ROUTE_LOG where date_swept={d};".format(d=date)
     route_db = db.engine.execute(route_log_db_query)
     #route_db = db.engine.execute("select r.route_id, r.completion, r.vehicle_id, r.shift, D.employee_name from ROUTE_LOG r join DRIVERS D on r.employee_id = D.employee_id where date_swept={d} and shift='AM';".format(d=date))
     for route_log in route_db:
@@ -331,11 +332,12 @@ def get_vehicle_list():
 @app.route('/schedule/day/unplanned', methods=["PUT"])  
 def get_unplanned_routes():
     date = request.args.get('date')
+    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     data = {'unplanned':[],'planned':[]}
     # get from database
-    day_of_wk = date.weekday()
+    day_of_wk = date_dt.weekday()
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
     wk_of_month = pendulum.parse(date).week_of_month
     routes_today = db.engine.execute("select route_id from ROUTE_LOG where date_swept={d}".format(d=date))
@@ -498,7 +500,7 @@ def get_daily_offduty_operator_info():
     data = {'day':[],'night':[]}
     # get from database
     absences_query = "select a.employee_id,d.employee_name,a.type,d.shift from ABSENCES a join DRIVERS d on a.employee_id=d.employee_id where date_absence={d};".format(d=date)
-    absences = db.engine.execute(absences_query.format(ds=wk_start,de=wk_end,e=driver_id,c='missed'))
+    absences = db.engine.execute(absences_query.format(d=date))
 
     for a in absences:
         data[a[3]].append({'employee_id':a[0],'name':a[1],'leave':a[2]})
@@ -548,12 +550,15 @@ def add_individual_operator():
 def get_individual_operator_info():
     employee_id = request.args.get('employee_id')
     date = request.args.get('date')
+    if not date:
+    	date = datetime.now().strftime("%Y-%m-%d")
     data = {}
     # get from database
     day_of_wk = datetime.today().weekday()
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
     wk_of_month = pendulum.parse(date).week_of_month
-    operator = db.engine.execute("select name,shift,hours,route_id_{d}{w}_AM,route_id_{d}{w}_PM,route_id_{d}{w}_night from DRIVERS where employee_id={e}".format(d=days[day_of_wk],w=wk_of_month,e=employee_id))
+    operator_info = db.engine.execute("select name,shift,hours,route_id_{d}{w}_AM,route_id_{d}{w}_PM,route_id_{d}{w}_night from DRIVERS where employee_id={e}".format(d=days[day_of_wk],w=wk_of_month,e=employee_id))
+    operator = operator_info[0]
 
     absences_query = "select sum(time_missed) from ABSENCES where date_absence={d} and employee_id={e};"
     leave_hrs = db.engine.execute(absences_query.format(d=date,e=employee_id))
@@ -567,7 +572,7 @@ def get_individual_operator_info():
     for o in operator[3:]:
         if o:
             operator_routes.append(o)
-    routes = operator[2]+','+operator[3]+','+operator[4]
+    routes = operator[3]+','+operator[4]+','+operator[5]
     data['assignments'] = [{'shift': operator[1],#'AM',
                             'route': operator_routes,#['7A'], 
 
@@ -830,7 +835,7 @@ def get_weekly_performance():
     # get from database
     week_of_month = pendulum.parse(date).week_of_month
     # get day of week from date
-    day_of_wk = date.weekday()
+    day_of_wk = date_dt.weekday()
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
     #start_date = date-days[day_of_wk]
     #end_date = date-days[day_of_wk]+6
