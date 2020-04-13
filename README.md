@@ -1,3 +1,3 @@
 ![Banner](pictures/banner.png)
 
-# sweepsmart
+# Sweep Smart
