@@ -1,4 +1,10 @@
 import React from 'react';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
 import './vehiclePage.css';
 
 class VehiclePage extends React.Component {
@@ -24,51 +30,66 @@ class VehiclePage extends React.Component {
 class WeeklyTable extends React.Component {
 	constructor(props) {
 		super(props);
+		this.state = {
+			onScreenData: [],
+			data: null
+		}
+	}
+
+	componentDidMount() {
+    fetch("/vehicle/week")
+      .then(res => res.json())
+      .then(
+        (result) => {
+          console.log(result)
+          this.setState({data: result, onScreenData: result.data});
+        },
+        (error) => {
+          console.log(error)
+        }
+      )
 	}
 
 	render() {
-		let data = [[7171, "Available", 20, 5, 0],
-					[7172, "Available", 20, 5, 0],
-					[7173, "Available", 22, 5, 0],
-					[7174, "Available", 21, 5, 0],
-					[7175, "Available", 20, 5, 0],
-					[7176, "Available", 20, 5, 0],
-					[7177, "Available", 16, 4, 1],
-					[7178, "Available", 16, 5, 0],
-					[7271, "Available", 20, 5, 0],
-					[7272, "Available", 20, 5, 0],
-					[7273, "Available", 22, 5, 0],
-					[7274, "Available", 21, 5, 0],
-					[7275, "Available", 0, 5, 0],
-					[7276, "Out-of-service", 0, 0, 0],
-					[7277, "Out-of-service", 0, 0, 5]];
-		let content = data.map((value, _) =>
-			<tr>
-				{value.map((item, _) => {
-					if (item == "Available") {
-						return (<td className="weekly-status-available">{item}</td>);
-					} else if (item == "Out-of-service") {
-						return (<td className="weekly-status-outofservice">{item}</td>);
-					} else {
-						return (<td>{item}</td>);
-					}
-				})}
-				<td><TrashIcon /></td>
-			</tr>
+		let content = this.state.onScreenData.map((value, _) => 
+			<TableRow>
+				<TableCell align="center" size="small">{value.vehicle_id}</TableCell>
+				{GetWeeklyStatusFormat(value.status)}
+				<TableCell align="center" size="small">20</TableCell>
+				<TableCell align="center" size="small">5</TableCell>
+				<TableCell align="center" size="small">0</TableCell>
+				<TableCell align="center" size="small"><TrashIcon /></TableCell>
+			</TableRow>
 		);
 		return (
-			<table className="vehicle-weekly-table">
-			  <tr>
-			    <th className="vehicle-weekly-vid-head">Vehicle #</th>
-			    <th className="vehicle-weekly-status-head">Status</th> 
-			    <th className="vehicle-weekly-total-head">Total maps swept</th>
-			    <th className="vehicle-weekly-available-head">Available days</th>
-			    <th className="vehicle-weekly-outofservice-head">Out-of-service days</th>
-			    <th className="vehicle-weekly-action-head">Actions</th>
-			  </tr>
+			<TableContainer>
+			<Table class="vehicle-weekly-table">
+			<TableHead>
+			  <TableRow>
+			    <TableCell class="vehicle-weekly-vid-head">Vehicle #</TableCell>
+			    <TableCell class="vehicle-weekly-status-head">Status</TableCell>
+			    <TableCell class="vehicle-weekly-total-head">Total maps swept</TableCell>
+			    <TableCell class="vehicle-weekly-available-head">Available days</TableCell>
+			    <TableCell class="vehicle-weekly-outofservice-head">Out-of-service days</TableCell>
+			    <TableCell class="vehicle-weekly-action-head">Actions</TableCell>
+			  </TableRow>
+			</TableHead>
+			<TableBody>
 			  {content}
-			</table>
+			</TableBody>
+			</Table>
+			</TableContainer>
 		);
+	}
+}
+
+function GetWeeklyStatusFormat(status) {
+	if (status == 'available') {
+		return <TableCell  align="center"  size="small" class="weekly-status-available">Available</TableCell>
+	} else if (status == 'out-of-service') {
+		return <TableCell  align="center"  size="small" class="weekly-status-outofservice">Out-of-service</TableCell>
+	} else {
+		return <TableCell>{status}</TableCell>
 	}
 }
 
@@ -97,54 +118,60 @@ class DailyTable extends React.Component {
 		let content = data.map((value, index) => {
 			if (linebreaks.includes(index)) {
 				return (
-					<tr className="linebreak">
+					<TableRow class="linebreak">
 					{value.map((item, _) => {
 						if (item == "in-use") {
-							return (<td><InUseIcon/></td>);
+							return (<TableCell><InUseIcon/></TableCell>);
 						} else if (item == "available") {
-							return (<td><AvailableIcon/></td>);
+							return (<TableCell><AvailableIcon/></TableCell>);
 						} else if (item == "out-of-service") {
-							return (<td><OutOfServiceIcon/></td>);
+							return (<TableCell><OutOfServiceIcon/></TableCell>);
 						} else {
-							return (<td>{item}</td>);
+							return (<TableCell>{item}</TableCell>);
 						}
 					})}
-					<td><CommentIcon/></td>
-					</tr>
+					<TableCell><CommentIcon/></TableCell>
+					</TableRow>
 				);
 			} else {
 				return (
-					<tr>
+					<TableRow>
 					{value.map((item, _) => {
 						if (item == "in-use") {
-							return (<td><InUseIcon/></td>);
+							return (<TableCell><InUseIcon/></TableCell>);
 						} else if (item == "available") {
-							return (<td><AvailableIcon/></td>);
+							return (<TableCell><AvailableIcon/></TableCell>);
 						} else if (item == "out-of-service") {
-							return (<td><OutOfServiceIcon/></td>);
+							return (<TableCell><OutOfServiceIcon/></TableCell>);
 						} else {
-							return (<td>{item}</td>);
+							return (<TableCell>{item}</TableCell>);
 						}
 					})}
-					<td><CommentIcon/></td>
-					</tr>
+					<TableCell><CommentIcon/></TableCell>
+					</TableRow>
 				);
 			}
 		});
 		return (
-			<table className="vehicle-daily-table">
-			  <tr>
-			    <th className="vehicle-daily-vid-head">Vehicle #</th>
-			    <th className="vehicle-daily-am-shift-head">8-12<br/>shift</th> 
-			    <th className="vehicle-daily-am-operator-head">8-12<br/>operator</th>
-			    <th className="vehicle-daily-am-status-head">8-12<br/>status</th>
-			    <th className="vehicle-daily-pm-shift-head">12-4<br/>shift</th> 
-			    <th className="vehicle-daily-pm-operator-head">12-4<br/>operator</th>
-			    <th className="vehicle-daily-pm-status-head">12-4<br/>status</th>
-			    <th className="vehicle-daily-comment-head">Comment</th>
-			  </tr>
+			<TableContainer>
+			<Table class="vehicle-daily-table">
+			  <TableHead>
+			  <TableRow>
+			    <TableCell class="vehicle-daily-vid-head">Vehicle #</TableCell>
+			    <TableCell class="vehicle-daily-am-shift-head">8-12<br/>shift</TableCell>
+			    <TableCell class="vehicle-daily-am-operator-head">8-12<br/>operator</TableCell>
+			    <TableCell class="vehicle-daily-am-status-head">8-12<br/>status</TableCell>
+			    <TableCell class="vehicle-daily-pm-shift-head">12-4<br/>shift</TableCell>
+			    <TableCell class="vehicle-daily-pm-operator-head">12-4<br/>operator</TableCell>
+			    <TableCell class="vehicle-daily-pm-status-head">12-4<br/>status</TableCell>
+			    <TableCell class="vehicle-daily-comment-head">Comment</TableCell>
+			  </TableRow>
+			  </TableHead>
+			  <TableBody>
 			  {content}
-			</table>
+			  </TableBody>
+			</Table>
+			</TableContainer>
 		);
 	}
 }

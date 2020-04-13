@@ -122,6 +122,7 @@ CREATE TABLE `ROUTES` (
 `Sun5_AM` smallint(6) default 0,
 `Sun5_PM` smallint(6) default 0,
 `Sun5_night` smallint(6) default 0,
+`monthly_freq` int(11) AS (Mon1_AM+Mon1_PM+Mon1_night+Tue1_AM+Tue1_PM+Tue1_night+Wed1_AM+Wed1_PM+Wed1_night+Thu1_AM+Thu1_PM+Thu1_night+Fri1_AM+Fri1_PM+Fri1_night+Sat1_AM+Sat1_PM+Sat1_night+Sun1_AM+Sun1_PM+Sun1_night+Mon2_AM+Mon2_PM+Mon2_night+Tue2_AM+Tue2_PM+Tue2_night+Wed2_AM+Wed2_PM+Wed2_night+Thu2_AM+Thu2_PM+Thu2_night+Fri2_AM+Fri2_PM+Fri2_night+Sat2_AM+Sat2_PM+Sat2_night+Sun2_AM+Sun2_PM+Sun2_night+Mon3_AM+Mon3_PM+Mon3_night+Tue3_AM+Tue3_PM+Tue3_night+Wed3_AM+Wed3_PM+Wed3_night+Thu3_AM+Thu3_PM+Thu3_night+Fri3_AM+Fri3_PM+Fri3_night+Sat3_AM+Sat3_PM+Sat3_night+Sun3_AM+Sun3_PM+Sun3_night+Mon4_AM+Mon4_PM+Mon4_night+Tue4_AM+Tue4_PM+Tue4_night+Wed4_AM+Wed4_PM+Wed4_night+Thu4_AM+Thu4_PM+Thu4_night+Fri4_AM+Fri4_PM+Fri4_night+Sat4_AM+Sat4_PM+Sat4_night+Sun4_AM+Sun4_PM+Sun4_night+Mon5_AM+Mon5_PM+Mon5_night+Tue5_AM+Tue5_PM+Tue5_night+Wed5_AM+Wed5_PM+Wed5_night+Thu5_AM+Thu5_PM+Thu5_night+Fri5_AM+Fri5_PM+Fri5_night+Sat5_AM+Sat5_PM+Sat5_night+Sun5_AM+Sun5_PM+Sun5_night),
   PRIMARY KEY  (`route_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
@@ -211,9 +212,10 @@ CREATE TABLE `DYNAMAPS` (
 
 DROP TABLE IF EXISTS `ROUTE_LOG`;
 CREATE TABLE `ROUTE_LOG` (
-  `log_id` varchar(255) NOT NULL,
+  `log_id` int(11) NOT NULL,
   `route_id` varchar(255) NOT NULL,
-  `employee_id` varchar(255) NOT NULL,
+  `employee_id` int(11) default NULL,
+  `employee_status` varchar(255) default NULL,
   `vehicle_id` varchar(255) NOT NULL,
   `date_swept` date NOT NULL,
   `shift` varchar(255) default NULL,
@@ -232,9 +234,9 @@ CREATE TABLE `ROUTE_LOG` (
 
 LOCK TABLES `ROUTE_LOG` WRITE;
 /*!40000 ALTER TABLE `ROUTE_LOG` DISABLE KEYS */;
-INSERT INTO `ROUTE_LOG` (log_id,route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('lid_1234','1A_dummy','eid_1234','vid_1234','2020-03-15','AM','completed');
-INSERT INTO `ROUTE_LOG` (log_id,route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('lid_5678','1A_dummy2','eid_1234','vid_1234','2020-03-15','PM','completed');
-INSERT INTO `ROUTE_LOG` (log_id,route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('lid_1111','1A_dummy','eid_4567','vid_1234','2020-03-20','AM','completed');
+INSERT INTO `ROUTE_LOG` (log_id,route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES (0,'1A_dummy',1234,'vid_1234','2020-03-15','AM','completed');
+INSERT INTO `ROUTE_LOG` (log_id,route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES (1,'1A_dummy2',1234,'vid_1234','2020-03-15','PM','completed');
+INSERT INTO `ROUTE_LOG` (log_id,route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES (2,'1A_dummy',4567,'vid_1234','2020-03-20','AM','completed');
 
 /*!40000 ALTER TABLE `ROUTE_LOG` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -246,9 +248,10 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `DAY_LOG`;
 CREATE TABLE `DAY_LOG` (
     #log_id_day				weather	logs	holiday
-  `log_id_day` varchar(255) default NULL,
+  `log_id_day` int(11) default NULL,
+  `log_date` date default NULL,
   `logs` varchar(255) default NULL,
-  `weather` varchar(255) default NULL,
+  `weather` varchar(255) default 'Sunny',
   `holiday` smallint(6) default 0,
   PRIMARY KEY `log_id_day` (`log_id_day`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
@@ -259,9 +262,25 @@ CREATE TABLE `DAY_LOG` (
 
 LOCK TABLES `DAY_LOG` WRITE;
 /*!40000 ALTER TABLE `DAY_LOG` DISABLE KEYS */;
-INSERT INTO `DAY_LOG` (log_id_day, logs) VALUES ('did_1234','lid_1234,lid_5678');
+INSERT INTO `DAY_LOG` (log_id_day, logs) VALUES (1234,'lid_1234,lid_5678');
 /*!40000 ALTER TABLE `DAY_LOG` ENABLE KEYS */;
 UNLOCK TABLES;
+
+
+--
+-- Table structure for table `VEHICLE_DAY_LOG`
+--
+
+DROP TABLE IF EXISTS `VEHICLE_DAY_LOG`;
+CREATE TABLE `VEHICLE_DAY_LOG` (
+    #log_id_day				weather	logs	holiday
+  `vehicle_log_id` int(11) NOT NULL,
+  `log_date` date default NULL,
+  `vehicle_id` int(11) default NULL,
+  `comment` varchar(255) default NULL,
+  PRIMARY KEY `vehicle_log_id` (`vehicle_log_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 
 --
 -- Table structure for table `DRIVERS`
@@ -273,6 +292,7 @@ CREATE TABLE `DRIVERS` (
   `employee_id` int(11) NOT NULL,
   `employee_name` varchar(255) default NULL,
   `hours` int(11) default 40,
+  `shift` varchar(11) default 'day',
   `shift_mon` smallint(6) default 0,
   `shift_tue` smallint(6) default 0,
   `shift_wed` smallint(6) default 0,
@@ -401,9 +421,9 @@ CREATE TABLE `DRIVERS` (
 
 LOCK TABLES `DRIVERS` WRITE;
 /*!40000 ALTER TABLE `DRIVERS` DISABLE KEYS */;
-INSERT INTO `DRIVERS` (employee_id,name,hours,route_id_Mon1_AM,route_id_Mon2_PM) VALUES (1234,'Fake Driver',40,'1A_dummy','1A_dummy2');
-INSERT INTO `DRIVERS` (employee_id,name,hours,route_id_Mon1_AM,route_id_Mon2_AM) VALUES (4567,'Bob Employee',40,'1A_dummy3','1A_dummy3');
-INSERT INTO `DRIVERS` (employee_id,name,hours,route_id_Thu1_AM,route_id_Thu2_AM) VALUES (1111,'Joe Person',40,'1A_dummy3','1A_dummy3');
+INSERT INTO `DRIVERS` (employee_id,employee_name,hours,route_id_Mon1_AM,route_id_Mon2_PM) VALUES (1234,'Fake Driver',40,'1A_dummy','1A_dummy2');
+INSERT INTO `DRIVERS` (employee_id,employee_name,hours,route_id_Mon1_AM,route_id_Mon2_AM) VALUES (4567,'Bob Employee',40,'1A_dummy3','1A_dummy3');
+INSERT INTO `DRIVERS` (employee_id,employee_name,hours,route_id_Thu1_AM,route_id_Thu2_AM) VALUES (1111,'Joe Person',40,'1A_dummy3','1A_dummy3');
 
 /*!40000 ALTER TABLE `DRIVERS` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -433,7 +453,7 @@ CREATE TABLE `VEHICLES` (
 
 LOCK TABLES `VEHICLES` WRITE;
 /*!40000 ALTER TABLE `VEHICLES` DISABLE KEYS */;
-INSERT INTO `VEHICLES` (vehicle_no) VALUES (1234);
+INSERT INTO `VEHICLES` (vehicle_id) VALUES (1234);
 /*!40000 ALTER TABLE `VEHICLES` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -453,7 +473,7 @@ CREATE TABLE `VEHICLE_MAINTENANCE` (
   `comment` varchar(255) default NULL,
   PRIMARY KEY  (`maint_id`),
   KEY `vehicle_id` (`vehicle_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;d
 
 --
 -- Dumping data for table `VEHICLE_MAINTENANCE`
@@ -472,16 +492,16 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `ABSENCES`;
 CREATE TABLE `ABSENCES` (
     #absence_id	employee_id			date_absence	shift	hours		comment	type_absence_1
-  `absence_id` varchar(255) NOT NULL,
+  `absence_id` int(11) NOT NULL,
   `employee_id` varchar(255) NOT NULL,
   `date_absence` date default NULL,
   `shift` varchar(255) default NULL,
   #`hours` int(11) default NULL,
   `time_start` time default NULL,
   `time_end` time default NULL,
+  `time_missed` time AS (time_start-time_end),
   `comment` varchar(255) default NULL,
-  `type_absence_sick` smallint(6) default 0,
-  `type_absence_family` smallint(6) default 0,
+  `type` varchar(255) default NULL, # type of absence, e.g. sick, family, etc.
   # TODO add other absence types
 
   PRIMARY KEY  (`absence_id`),
@@ -492,12 +512,21 @@ CREATE TABLE `ABSENCES` (
 -- Dumping data for table `ABSENCES`
 --
 
-#LOCK TABLES `ABSENCES` WRITE;
-#/*!40000 ALTER TABLE `ABSENCES` DISABLE KEYS */;
-#INSERT INTO `ABSENCES` (absence_id, employee_id,date_absence,shift,hours,comment,type_absence_family) VALUES ('aid_1234','eid_1234','2020-03-04','PM',4,'an absence',1);
-#/*!40000 ALTER TABLE `ABSENCES` ENABLE KEYS */;
+LOCK TABLES `ABSENCES` WRITE;
+/*!40000 ALTER TABLE `ABSENCES` DISABLE KEYS */;
+#INSERT INTO `ABSENCES` (absence_id, employee_id,date_absence,shift,hours,comment,type) VALUES (1,1111,'2020-03-04','PM',4,'an absence',1);
+/*!40000 ALTER TABLE `ABSENCES` ENABLE KEYS */;
 UNLOCK TABLES;
 
+--
+-- Table structure for table `HOLIDAY`
+--
+
+DROP TABLE IF EXISTS `HOLIDAY`;
+CREATE TABLE `HOLIDAY` (
+  `holiday_date` date NOT NULL,
+  PRIMARY KEY  (`holiday_date`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 --
 -- Table structure for table `OVERTIME`
@@ -511,6 +540,7 @@ CREATE TABLE `OVERTIME` (
   `date_overtime` date default NULL,
   `time_start` time default NULL,
   `time_end` time default NULL,
+  `time_over` time AS (time_start-time_end),
   `comment` varchar(255) default NULL,
 
   PRIMARY KEY  (`overtime_id`),
