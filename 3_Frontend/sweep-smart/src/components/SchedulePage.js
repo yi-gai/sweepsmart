@@ -1,10 +1,14 @@
 import React from 'react';
 import RouteBlock from "./RouteBlock";
+import SwipeableTemporaryDrawer from "./Drawer"
 
 class SchdulePage extends React.Component {
     render() {
 		return (
                 <div className="content-container">
+                    <div> 
+                        <SwipeableTemporaryDrawer />
+                    </div>
                     <div>
 						<RouteBlock
 							onClick={() => {console.log("Clicked")}}
