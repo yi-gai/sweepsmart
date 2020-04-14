@@ -1,6 +1,6 @@
 from flask import Flask, request, Response
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import pendulum
 from collections import defaultdict
 from flask_sqlalchemy import SQLAlchemy
@@ -21,9 +21,9 @@ def get_wk_start_end(d):
     # d is the date
     day_of_wk = d.weekday()
     #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
-    wk_start = d-day_of_wk
-    wk_end = d-day_of_wk+6
-    return (wk_start,wk_end)
+    wk_start = d-timedelta(days=day_of_wk)
+    wk_end = d-timedelta(days=day_of_wk)+timedelta(days=6)
+    return (wk_start.strftime("%Y-%m-%d"),wk_end.strftime("%Y-%m-%d"))
 
 
 # user credentials
@@ -84,25 +84,21 @@ def get_weekly_route_schedule():
     wk_days = wk_route_map[week_of_month]
     for d in wk_days:
         if len(d) >7: #night
-            s=d[:3]+"_night"
+            s=d[:3]+str(week_of_month)+"_night"
         else:
-            s = d[:3]+d[-3:]
-        routes_db = db.engine.execute("select ro.route_id, d.employee_name, r.completed from ROUTES ro join ROUTE_LOG r on ro.route_id = r.route_id join DRIVERS d on r.employee_id = d.employee_id where ro.{d}=1;".format(d=d))
-        data[s].append({'route':routes_db[0], 'driver':routes_db[1], 'route_status':routes_db[2]})
+            s = d[:3]+str(week_of_month)+d[-3:]
+        routes_db = db.engine.execute("select ro.route_id, d.employee_name, r.completion from ROUTES ro join ROUTE_LOG r on ro.route_id = r.route_id join DRIVERS d on r.employee_id = d.employee_id where ro.{d}=1;".format(d=s))
+        for r in routes_db:
+            data[s].append({'route':r[0], 'driver':r[1], 'route_status':r[2]})
 
 
-    data['monday_am'] = [{'route': '1A',
-                          'driver': 'Rogers',
-                          'route_status': 'completed'},
-                         {'route': '2A',
-                          'driver': None,
-                          'route_status': 'disabled'}]
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 @app.route('/schedule/week/route/available', methods=["GET"])
 def get_avaiable_route_list():
     date = request.args.get('date')
     shift = request.args.get('shift')
+    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
         shift = 'day'
@@ -110,14 +106,13 @@ def get_avaiable_route_list():
     data = []
 
     # get from database
-    day_of_wk = date.weekday()
+    day_of_wk = date_dt.weekday()
     #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
-    wk_start = date-day_of_wk
-    wk_end = date-day_of_wk+6
+    wk_start, wk_end = get_wk_start_end(date_dt)
 
-    routes_db = db.engine.execute("select route_id from ROUTE_LOG where date>={ds} and date <= {de} and employee_id=NULL;".format(ds=wk_start,de=wk_end))
+    routes_db = db.engine.execute("select route_id from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and employee_id is NULL;".format(ds=wk_start,de=wk_end))
     for row in routes_db:
-        data.append(row)
+        data.append(row[0])
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
@@ -140,7 +135,7 @@ def change_route_week():
         last_id = db.engine.execute("select MAX(log_id) from ROUTE_LOG;")
         employee_id = db.engine.execute("select employee_id from DRIVERS where employee_name='{n}';".format(n=driver))
         db.engine.execute("insert into ROUTE_LOG (log_id,date_swept,route_id,shift,employee_id,completion) VALUES "
-            "({id},{d},{r},{s},{e},{v},{c},{n});".format(id=last_id+1,d=date,r=route,s=shift,e=employee_id,c=status))
+            "({id},'{d}','{r}','{s}',{e},'{c}');".format(id=last_id+1,d=date,r=route,s=shift,e=employee_id,c=status))
         status_code = 201
     elif request.method == 'PUT':
         # modify database
@@ -161,12 +156,23 @@ def change_route_week():
 @app.route('/schedule/week/route/item', methods=["GET"])
 def get_route_info_on_click():
     route = request.args.get('route')
+    if not route:
+        route = '1A-1' # dummy
     date = request.args.get('date')
     shift = request.args.get('shift')
     data = {}
     # get from database
     # ANNA is this the log info or the route info
-    route_info = db.engine.execute("select route_id,monthly_freq from ROUTES where route_id={r};".format(r=route))
+    #date_dt = datetime.now()
+    #wk_start, wk_end = get_wk_start_end(date_dt)
+    r_info = db.engine.execute("select route_id,monthly_freq,shift_AM,shift_PM,shift_night from ROUTES where route_id='{r}';".format(r=route))
+    route_info = []
+    for r in r_info:
+        route_info = r
+    if not route_info:
+        data[route] = 'No route info'
+    else:
+        data[route_info[0]] = {'freq':route_info[1],'AM':route_info[2],'PM':route_info[3],'night':route_info[4]}
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
@@ -176,23 +182,31 @@ def get_staff_list():
     date = request.args.get('date')
     shift = request.args.get('shift')
     status = request.args.get('status')
+    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
         shift = 'am'
     week_of_month = pendulum.parse(date).week_of_month
     data = {}
 
-    wk_start,wk_end = get_wk_start_end(date)
+    wk_start,wk_end = get_wk_start_end(date_dt)
     # get from database
     assigned_staff = []
-    assigned_query = "select employee_name from ROUTE_LOG where route_id={r} and date_swept>={ds} and date_swept<={de};".format(ds=wk_start,de=wk_end)
-    assigned_query_id = "select employee_id from ROUTE_LOG where route_id={r} and date_swept>={ds} and date_swept<={de};".format(ds=wk_start,de=wk_end)
-    staff_assigned = db.engine.execute(assigned_query)
+    assigned_query = "select employee_id from ROUTE_LOG where route_id='{r}' and date_swept>='{ds}' and date_swept<='{de}'".format(r=route,ds=wk_start,de=wk_end)
+    assigned_query_id = "select employee_id from ROUTE_LOG where route_id='{r}' and date_swept>='{ds}' and date_swept<='{de}'".format(r=route,ds=wk_start,de=wk_end)
+    staff_assigned = db.engine.execute(assigned_query+';')
     
     staff_unassigned = db.engine.execute("select employee_name from DRIVERS where employee_id not in ({a});".format(a=assigned_query_id))
 
-    data['assigned'] = staff_assigned
-    data['unassigned'] = staff_unassigned
+    assigned_list = []
+    unassigned_list = []
+    for s in staff_assigned:
+        assigned_list.append(s[0])
+    for s in staff_unassigned:
+        unassigned_list.append(s[0])
+
+    data['assigned'] = assigned_list
+    data['unassigned'] = unassigned_list
 
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
@@ -201,6 +215,7 @@ def get_staff_list():
 @app.route('/schedule/day/overview', methods=["GET"])
 def get_daily_overview():
     date = request.args.get('date')
+    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     week_of_month = pendulum.parse(date).week_of_month
@@ -208,15 +223,15 @@ def get_daily_overview():
     
     # get from database
     # get day of week from date
-    day_of_wk = date.weekday()#datetime.today().weekday()
+    day_of_wk = date_dt.weekday()#datetime.today().weekday()
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
 
     routes_db = db.engine.execute("select * from ROUTES where {d}{w}_AM=1 or {d}{w}_PM=1".format(d=days[day_of_wk],w=week_of_month))
-    num_am = db.engine.execute("select count(*) from ROUTES where {d}{w}_AM=1".format(d=days[day_of_wk],w=week_of_month))
-    num_pm = db.engine.execute("select count(*) from ROUTES where {d}{w}_PM=1".format(d=days[day_of_wk],w=week_of_month))
-    maps_served = db.engine.execute("select count(*) from ROUTE_LOG where date={date} and completion='completed';".format(date=date))
-    maps_missed = db.engine.execute("select count(*) from ROUTE_LOG where date={date} and completion='missed';".format(date=date))
-    maps_holiday = db.engine.execute("select count(*) from ROUTE_LOG where date={date} and completion='holiday';".format(date=date))
+    num_am = db.engine.execute("select count(*) from ROUTES where {d}{w}_AM=1".format(d=days[day_of_wk],w=week_of_month)).fetchone()[0]
+    num_pm = db.engine.execute("select count(*) from ROUTES where {d}{w}_PM=1".format(d=days[day_of_wk],w=week_of_month)).fetchone()[0]
+    maps_served = db.engine.execute("select count(*) from ROUTE_LOG where date_swept={date} and completion='completed';".format(date=date)).fetchone()[0]
+    maps_missed = db.engine.execute("select count(*) from ROUTE_LOG where date_swept={date} and completion='missed';".format(date=date)).fetchone()[0]
+    maps_holiday = db.engine.execute("select count(*) from ROUTE_LOG where date_swept={date} and completion='holiday';".format(date=date)).fetchone()[0]
     # ANNA not sure what the completion status fill values will be (e.g. completed, missed, holiday, etc)
 
     data['date'] = date
@@ -237,7 +252,10 @@ def weather_condition():
         if date == None:
             date = datetime.now().strftime("%Y-%m-%d")
         # retrieve weather from database
-        weather = db.engine.execute("select weather from DAY_LOG where log_date={d};".format(d=date))
+        w_db = db.engine.execute("select weather from DAY_LOG where log_date='{d}';".format(d=date))
+        weather = 'Sunny' # in case of no entries for day
+        for w in w_db:
+            weather = w[0]
     elif request.method == 'PUT':
         date = request.args.get('date')
         if date == None:
@@ -271,7 +289,7 @@ def get_daily_route_schedule():
                    'vehicle': None}]
     
     # get from database
-    route_log_db_query = "select route_id,employee_id,employee_status,vehicle_id,completion,shift from ROUTE_LOG where date_swept={d};".format(date)
+    route_log_db_query = "select route_id,employee_id,employee_status,vehicle_id,completion,shift from ROUTE_LOG where date_swept={d};".format(d=date)
     route_db = db.engine.execute(route_log_db_query)
     #route_db = db.engine.execute("select r.route_id, r.completion, r.vehicle_id, r.shift, D.employee_name from ROUTE_LOG r join DRIVERS D on r.employee_id = D.employee_id where date_swept={d} and shift='AM';".format(d=date))
     for route_log in route_db:
@@ -314,24 +332,32 @@ def get_vehicle_list():
     # in use: in ROUTE_LOG for day
     # available: not in maintenance and not in ROUTE_LOG for day
     # unavailable: in maintenance
-    maint_query = "select vehicle_id from VEHICLE_MAINTENANCE where date_service={date} or (date_service<={date} and date_end>={date}".format(date=date)
-    route_log_query = "select vehicle_id from ROUTE_LOG where date_swept={d}".format(d=date)
-    available_vehicles = db.engine.execute("select vehicle_id from VEHICLES where vehicle_id not in (maint_query) and vehicle_id not in (route_log_query);")
-    in_use_vehicles = db.engine.execute(route_log_query)
-    maintenance_vehicles = db.engine.execute(maint_query)
-    data['available'] = available_vehicles
-    data['in_use'] = in_use_vehicles
-    data['maintenance'] = maintenance_vehicles
+    maint_query = "select vehicle_id from VEHICLE_MAINTENANCE where date_service='{date}' or (date_service<='{date}' and date_end>='{date}')".format(date=date)
+    route_log_query = "select vehicle_id from ROUTE_LOG where date_swept='{d}'".format(d=date)
+    available_vehicles = db.engine.execute("select vehicle_id from VEHICLES where vehicle_id not in ({m}) and vehicle_id not in ({r});".format(m=maint_query,r=route_log_query))
+    in_use_vehicles = db.engine.execute(route_log_query+';')
+    maintenance_vehicles = db.engine.execute(maint_query+';')
+    available_list,in_use_list,maint_list = [],[],[]
+    for a in available_vehicles:
+        available_list.append(a[0])
+    for a in in_use_vehicles:
+        in_use_list.append(a[0])
+    for a in maintenance_vehicles:
+        maint_list.append(a[0])
+    data['available'] = available_list
+    data['in_use'] = in_use_list
+    data['maintenance'] = maint_list
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/schedule/day/unplanned', methods=["PUT"])  # ANNA what is this
+@app.route('/schedule/day/unplanned', methods=["PUT"])  
 def get_unplanned_routes():
     date = request.args.get('date')
+    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     data = {'unplanned':[],'planned':[]}
     # get from database
-    day_of_wk = date.weekday()
+    day_of_wk = date_dt.weekday()
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
     wk_of_month = pendulum.parse(date).week_of_month
     routes_today = db.engine.execute("select route_id from ROUTE_LOG where date_swept={d}".format(d=date))
@@ -354,18 +380,18 @@ driver_day_where = "shift_mon=1 or shift_tue=1 or shift_wed=1 or shift_thu=1 or 
 @app.route('/operator/week', methods=["GET"])
 def get_weekly_operator_info():
     date = request.args.get('date')
+    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     data = {'day':[],'night':[]}
     # get from database
 
-    day_of_wk = date.weekday()
+    day_of_wk = date_dt.weekday()
     #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
-    wk_start = date-day_of_wk
-    wk_end = date-day_of_wk+6
+    wk_start, wk_end = get_wk_start_end(date_dt)
 
     # not sure how we're calculating these global holidays where no one works
-    holidays = db.engine.execute("select count(*) from HOLIDAY where holiday_date>={hs} and holiday_date<={he};".format(hs=wk_start,he=wk_end))
+    holidays = db.engine.execute("select count(*) from HOLIDAY where holiday_date>={hs} and holiday_date<={he};".format(hs=wk_start,he=wk_end)).fetchone()[0]
     holiday_hours = holidays*8
 
     drivers = db.engine.execute("select employee_id,employee_name,hours,shift from DRIVERS;")
@@ -375,14 +401,22 @@ def get_weekly_operator_info():
         driver_hours = driver[2]
         driver_shift = driver[3]
         num_routes_query = "select count(*) from ROUTE_LOG where date_swept>={ds} and date_swept<={de} and employee_id={e} and completion='{c}';"
-        driver_routes_swept = db.engine.execute(num_routes_query.format(ds=wk_start,de=wk_end,e=driver_id,c='completed'))
-        driver_routes_missed = db.engine.execute(num_routes_query.format(ds=wk_start,de=wk_end,e=driver_id,c='missed'))
+        driver_routes_swept = db.engine.execute(num_routes_query.format(ds=wk_start,de=wk_end,e=driver_id,c='completed')).fetchone()[0]
+        driver_routes_missed = db.engine.execute(num_routes_query.format(ds=wk_start,de=wk_end,e=driver_id,c='missed')).fetchone()[0]
 
         absences_query = "select sum(time_missed) from ABSENCES where date_absence>={ds} and date_absence<={de} and employee_id={e};"
-        leave_hrs = db.engine.execute(absences_query.format(ds=wk_start,de=wk_end,e=driver_id))
+        leave_hrs = db.engine.execute(absences_query.format(ds=wk_start,de=wk_end,e=driver_id)).fetchone()[0]
 
         overtime_query = "select sum(time_over) from OVERTIME where date_overtime>={ds} and date_overtime<={de} and employee_id={e};"
-        overtime_hrs = db.engine.execute(overtime_query.format(ds=wk_start,de=wk_end,e=driver_id))
+        overtime_hrs = db.engine.execute(overtime_query.format(ds=wk_start,de=wk_end,e=driver_id)).fetchone()[0]
+        if not driver_routes_swept:
+            driver_routes_swept = 0
+        if not driver_routes_missed:
+            driver_routes_missed = 0
+        if not leave_hrs:
+            leave_hrs = 0
+        if not overtime_hrs:
+            overtime_hrs = 0
 
         driver_data = {'name': driver_name,
                     'working_hrs': driver_hours-leave_hrs-holiday_hours+overtime_hrs,
@@ -396,49 +430,6 @@ def get_weekly_operator_info():
                     'missed_total': driver_routes_missed}
 
         data[driver_shift].append(driver_data)
-
-
-
-    data['day'] = [{'name': 'Roger',
-                    'working_hrs': 8,
-                    'leave_hrs': 0,
-                    'acting_hrs': 0,
-                    'standby_hrs': 0, # what is this
-                    'overtime_hrs': 0,
-                    'holiday_hrs': 0,
-                    'is_reviewed': True, # what is this
-                    'swept_total': 5,
-                    'missed_total': 0},
-                   {'name': 'Michael',
-                    'working_hrs': 3,
-                    'leave_hrs': 5,
-                    'acting_hrs': 1,
-                    'standby_hrs': 1,
-                    'overtime_hrs': 1,
-                    'holiday_hrs': 1,
-                    'is_reviewed': False,
-                    'swept_total': 4,
-                    'missed_total': 1}]
-    data['night'] = [{'name': 'Roger',
-                    'working_hrs': 8,
-                    'leave_hrs': 0,
-                    'acting_hrs': 0,
-                    'standby_hrs': 0,
-                    'overtime_hrs': 0,
-                    'holiday_hrs': 0,
-                    'is_reviewed': True,
-                    'swept_total': 5,
-                    'missed_total': 0},
-                   {'name': 'Michael',
-                    'working_hrs': 3,
-                    'leave_hrs': 5,
-                    'acting_hrs': 1,
-                    'standby_hrs': 1,
-                    'overtime_hrs': 1,
-                    'holiday_hrs': 1,
-                    'is_reviewed': False,
-                    'swept_total': 4,
-                    'missed_total': 1}]
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
@@ -494,23 +485,23 @@ def get_daily_offduty_operator_info():
     data = {'day':[],'night':[]}
     # get from database
     absences_query = "select a.employee_id,d.employee_name,a.type,d.shift from ABSENCES a join DRIVERS d on a.employee_id=d.employee_id where date_absence={d};".format(d=date)
-    absences = db.engine.execute(absences_query.format(ds=wk_start,de=wk_end,e=driver_id,c='missed'))
+    absences = db.engine.execute(absences_query.format(d=date))
 
     for a in absences:
         data[a[3]].append({'employee_id':a[0],'name':a[1],'leave':a[2]})
 
-    data['day'] = [{'employee_id': '1',
-                    'name':'Mike',
-                    'leave': 'Sick'},
-                   {'employee_id': '2',
-                    'name': 'Rick',
-                    'leave': 'Family'}]
-    data['night'] = [{'employee_id': '1',
-                    'name':'Mike',
-                    'leave': 'Sick'},
-                   {'employee_id': '2',
-                    'name': 'Rick',
-                    'leave': 'Family'}]
+    """data['day'] = [{'employee_id': '1',
+                                'name':'Mike',
+                                'leave': 'Sick'},
+                               {'employee_id': '2',
+                                'name': 'Rick',
+                                'leave': 'Family'}]
+                data['night'] = [{'employee_id': '1',
+                                'name':'Mike',
+                                'leave': 'Sick'},
+                               {'employee_id': '2',
+                                'name': 'Rick',
+                                'leave': 'Family'}]"""
     return Response(data, status=200, mimetype='application/json')
 
 @app.route('/operator/day/check', methods=["PUT"])
@@ -544,18 +535,29 @@ def add_individual_operator():
 def get_individual_operator_info():
     employee_id = request.args.get('employee_id')
     date = request.args.get('date')
+    if not date:
+    	date = datetime.now().strftime("%Y-%m-%d")
+    if not employee_id:
+        employee_id = 2882
     data = {}
     # get from database
     day_of_wk = datetime.today().weekday()
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
     wk_of_month = pendulum.parse(date).week_of_month
-    operator = db.engine.execute("select name,shift,hours,route_id_{d}{w}_AM,route_id_{d}{w}_PM,route_id_{d}{w}_night from DRIVERS where employee_id={e}".format(d=days[day_of_wk],w=wk_of_month,e=employee_id))
+    operator_info = db.engine.execute("select employee_name,shift,hours,route_id_{d}{w}_AM,route_id_{d}{w}_PM,route_id_{d}{w}_night from DRIVERS where employee_id={e}".format(d=days[day_of_wk],w=wk_of_month,e=employee_id))
+    for o in operator_info:
+        operator = o
+    print('---\n'+str(operator)+'\n---',file=sys.stderr)
 
     absences_query = "select sum(time_missed) from ABSENCES where date_absence={d} and employee_id={e};"
-    leave_hrs = db.engine.execute(absences_query.format(d=date,e=employee_id))
+    leave_hrs = db.engine.execute(absences_query.format(d=date,e=employee_id)).fetchone()[0]
+    if not leave_hrs:
+        leave_hrs = 0
 
     overtime_query = "select sum(time_over) from OVERTIME where date_overtime={d} and employee_id={e};"
-    overtime_hrs = db.engine.execute(overtime_query.format(d=date,e=employee_id))
+    overtime_hrs = db.engine.execute(overtime_query.format(d=date,e=employee_id)).fetchone()[0]
+    if not overtime_hrs:
+        overtime_hrs = 0
 
     data['name'] = operator[0]#'Roger'
     data['status'] = True
@@ -563,11 +565,12 @@ def get_individual_operator_info():
     for o in operator[3:]:
         if o:
             operator_routes.append(o)
-    routes = operator[2]+','+operator[3]+','+operator[4]
+    #routes = operator[3]+','+operator[4]+','+operator[5]
+    #print('---\n'+str(operator[2])+'\n---',file=sys.stderr)
     data['assignments'] = [{'shift': operator[1],#'AM',
                             'route': operator_routes,#['7A'], 
 
-                            'working_hrs': operator[2]+overtime_hrs-leave_hrs,
+                            'working_hrs': int(operator[2])+overtime_hrs-leave_hrs,
                             'overtime_hrs':overtime_hrs,
                             'leave_hrs': leave_hrs,
                             'acting_7.5_hrs': 0, # ANNA what are these
@@ -798,16 +801,21 @@ def get_monthly_performance():
     date = request.args.get('date')
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
-    data = []
+    data = {}
+    date_dt = datetime.now()
     # get from database
-    swept_query = "select sum(*) from ROUTE_LOG where route_id={r} and completion={c} and MONTH(date_swept)={m} and YEAR(date_swept)={y};"
+    swept_query = "select count(*) from ROUTE_LOG where route_id='{r}' and completion='{c}' and MONTH(date_swept)={m} and YEAR(date_swept)={y};"
     routes = db.engine.execute("select route_id,monthly_freq from ROUTES;")
     for route_info in routes:
         route = route_info[0]
         freq = route_info[1]
-        num_swept = db.engine.execute(swept_query.format(r=route,c='completed',m=date.month,y=date.year))
-        num_missed = db.engine.execute(swept_query.format(r=route,c='missed',m=date.month,y=date.year))
-        date[route] = {'route_family':route[0],'frequency':freq,'times_swept':num_swept,'times_missed':num_missed,'success_rate':num_swept/(num_swept+num_missed)}
+        num_swept = db.engine.execute(swept_query.format(r=route,c='completed',m=date_dt.month,y=date_dt.year)).fetchone()[0]
+        num_missed = db.engine.execute(swept_query.format(r=route,c='missed',m=date_dt.month,y=date_dt.year)).fetchone()[0]
+        if num_swept + num_missed == 0:
+            srate = 0
+        else:
+            srate = num_swept/(num_swept+num_missed)
+        data[route] = {'route_family':route[0],'frequency':freq,'times_swept':num_swept,'times_missed':num_missed,'success_rate':srate}
 
     data['3A'] = {'route_family': 3,
                   'frequency': 4,
@@ -819,25 +827,31 @@ def get_monthly_performance():
 @app.route('/performance/week', methods=["GET"])
 def get_weekly_performance():
     date = request.args.get('date')
+    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
-    data = []
+    data = {}
     # get from database
     week_of_month = pendulum.parse(date).week_of_month
     # get day of week from date
-    day_of_wk = date.weekday()
+    day_of_wk = date_dt.weekday()
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
-    start_date = date-days[day_of_wk]
-    end_date = date-days[day_of_wk]+6
+    #start_date = date-days[day_of_wk]
+    #end_date = date-days[day_of_wk]+6
+    wk_start, wk_end = get_wk_start_end(date_dt)
 
-    swept_query = "select sum(*) from ROUTE_LOG where route_id={r} and completion={c} and date_swept>={sd} and date_swept<={ed};"
+    swept_query = "select count(*) from ROUTE_LOG where route_id='{r}' and completion='{c}' and date_swept>='{sd}' and date_swept<='{ed}';"
     routes = db.engine.execute("select route_id,monthly_freq from ROUTES;")
     for route_info in routes:
         route = route_info[0]
         freq = route_info[1]
-        num_swept = db.engine.execute(swept_query.format(r=route,c='completed',sd=start_date,ed=end_date))
-        num_missed = db.engine.execute(swept_query.format(r=route,c='missed',sd=start_date,ed=end_date))
-        date[route] = {'route_family':route[0],'frequency':freq,'times_swept':num_swept,'times_missed':num_missed,'success_rate':num_swept/(num_swept+num_missed)}
+        num_swept = db.engine.execute(swept_query.format(r=route,c='completed',sd=wk_start,ed=wk_end)).fetchone()[0]
+        num_missed = db.engine.execute(swept_query.format(r=route,c='missed',sd=wk_start,ed=wk_end)).fetchone()[0]
+        if num_swept + num_missed == 0:
+            srate = 0
+        else:
+            srate = num_swept/(num_swept+num_missed)
+        data[route] = {'route_family':route[0],'frequency':freq,'times_swept':num_swept,'times_missed':num_missed,'success_rate':srate}
 
     data['3A'] = {'route_family': 3,
                   'frequency': 4,
@@ -851,17 +865,21 @@ def get_daily_performance():
     date = request.args.get('date')
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
-    data = []
+    data = {}
     # get from database
 
-    swept_query = "select sum(*) from ROUTE_LOG where route_id={r} and completion={c} and date_swept={d};"
+    swept_query = "select count(*) from ROUTE_LOG where route_id='{r}' and completion='{c}' and date_swept='{d}';"
     routes = db.engine.execute("select route_id,monthly_freq from ROUTES;")
     for route_info in routes:
         route = route_info[0]
         freq = route_info[1]
-        num_swept = db.engine.execute(swept_query.format(r=route,c='completed',d=date))
-        num_missed = db.engine.execute(swept_query.format(r=route,c='missed',d=date))
-        date[route] = {'route_family':route[0],'frequency':freq,'times_swept':num_swept,'times_missed':num_missed,'success_rate':num_swept/(num_swept+num_missed)}
+        num_swept = db.engine.execute(swept_query.format(r=route,c='completed',d=date)).fetchone()[0]
+        num_missed = db.engine.execute(swept_query.format(r=route,c='missed',d=date)).fetchone()[0]
+        if num_swept + num_missed == 0:
+            srate = 0
+        else:
+            srate = num_swept/(num_swept+num_missed)
+        data[route] = {'route_family':route[0],'frequency':freq,'times_swept':num_swept,'times_missed':num_missed,'success_rate':srate}
 
     data['3A'] = {'route_family': 3,
                   'frequency': 4,
