@@ -3,11 +3,19 @@ import RouteBlock from "./RouteBlock";
 import SwipeableTemporaryDrawer from "./Drawer"
 
 class SchdulePage extends React.Component {
+    constructor(props) {
+    super(props);
+    }
+
+    handleChange = date => {
+    this.props.handleDateChange(date);
+    };
+
     render() {
 		return (
                 <div className="content-container">
                     <div> 
-                        <SwipeableTemporaryDrawer />
+                        <SwipeableTemporaryDrawer date={this.date}/>
                     </div>
                     <div>
 						<RouteBlock

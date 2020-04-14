@@ -3,17 +3,14 @@ import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import Button from '@material-ui/core/Button';
-import List from '@material-ui/core/List';
-import Divider from '@material-ui/core/Divider';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemIcon from '@material-ui/core/ListItemIcon';
-import ListItemText from '@material-ui/core/ListItemText';
-import InboxIcon from '@material-ui/icons/MoveToInbox';
-import MailIcon from '@material-ui/icons/Mail';
+import './drawer.css';
+
+
+
 
 const useStyles = makeStyles({
   list: {
-    width: 750,
+    width: 1250,
   },
   fullList: {
     width: 'auto',
@@ -45,8 +42,22 @@ export default function SwipeableTemporaryDrawer() {
       role="presentation"
       onClick={toggleDrawer(anchor, false)}
       onKeyDown={toggleDrawer(anchor, false)}
+      id="drawer-main"
     >
-      
+      <h3> Daily Schedule </h3>
+      <div className="overview-container"> 
+        Overview
+      </div>
+      <div className="weather-container"> 
+        Weather
+      </div>
+      <div className="operator-container"> 
+        Daily View by Operators
+      </div>
+      <div className="vehicle-container"> 
+        Vehicles
+      </div>
+
     </div>
   );
 

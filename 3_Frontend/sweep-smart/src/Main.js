@@ -3,7 +3,10 @@ import "./main.css";
 import SchedulePage from './components/SchedulePage';
 import OperatorPage from './components/OperatorPage';
 import VehiclePage from './components/VehiclePage';
+
+// import DatePicker from './components/DatePicker';
 import SSDatePicker from './Calendar';
+
 import StaffPanel from './StaffPanel';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -170,6 +173,7 @@ class WeekAndDayPicker extends React.Component {
 			        </Select>
 				</div>
 				<SSDatePicker date={this.props.date} handleDateChange={this.props.handleDateChange}/>
+				
 			</div>
 		);
 	}
