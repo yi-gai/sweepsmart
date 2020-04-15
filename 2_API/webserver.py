@@ -7,10 +7,17 @@ from flask_sqlalchemy import SQLAlchemy
 import pymysql
 import sys
 
-app = Flask(__name__)
+class MyFalsk(Flask):
+    def process_response(self, response):
+        #Every response will be processed here first
+        response.headers["Access-Control-Allow-Origin"] = '*'
+        return(response)
+
+app = MyFalsk(__name__)
 # NOTE: switch out mypass with your own docker password
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:mypass@mariadb-bcot.db-network/OAKLAND_STREET_SWEEPING'
 db = SQLAlchemy(app)
+
 
 @app.route('/')
 def hello_world():
@@ -418,11 +425,10 @@ def get_weekly_operator_info():
         if not overtime_hrs:
             overtime_hrs = 0
 
-        driver_data = {'name': driver_name,
+        driver_data = { 'employee_id' : driver_id,
+                    'name': driver_name,
                     'working_hrs': driver_hours-leave_hrs-holiday_hours+overtime_hrs,
                     'leave_hrs': leave_hrs,
-                    'acting_hrs': 0, # what is this
-                    'standby_hrs': 0, # what is this
                     'overtime_hrs': overtime_hrs,
                     'holiday_hrs': holiday_hours,
                     'is_reviewed': True, # what is this
@@ -577,7 +583,7 @@ def get_individual_operator_info():
                             'acting_12.5_hrs': 0,
                             'standby_hrs': 0,
                             'holiday_hrs': 5}]
-    return Response(data, status=200, mimetype='application/json')
+    return Response(json.dumps(data), status=200, mimetype='application/json')
 
 @app.route('/operator/individual/history', methods=["GET"])
 def get_individual_operator_history():

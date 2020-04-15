@@ -1,4 +1,5 @@
 import React from 'react';
+import API from '../API/api';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/styles';
 import Table from '@material-ui/core/Table';
@@ -66,42 +67,14 @@ class OperatorPage extends React.Component {
     }
   }
   componentDidMount() {
-    fetch("/operator/day/onduty")
-      .then(res => res.json())
+    API.get("/operator/week")
+      .then(res => res['data'])
       .then(
         (result) => {
           console.log(result)
           this.setState({data: result, onScreenData: result.day});
         },
         (error) => {
-          this.setState({
-            data:{
-              'day':[
-                {
-                  'name': 'Dummy1',
-                  'working_hrs': 8,
-                  'leave_hrs': 0,
-                  'acting_hrs': 0,
-                  'standby_hrs': 0,
-                  'overtime_hrs': 0,
-                  'holiday_hrs': 0,
-                  'is_reviewed': true
-                }
-              ],
-              'night':[
-                {
-                  'name': 'Dummy1',
-                  'working_hrs': 8,
-                  'leave_hrs': 0,
-                  'acting_hrs': 0,
-                  'standby_hrs': 0,
-                  'overtime_hrs': 0,
-                  'holiday_hrs': 0,
-                  'is_reviewed': true
-                }
-              ]
-            }
-          })
           console.log(error)
         }
       )
@@ -118,8 +91,13 @@ class OperatorPage extends React.Component {
 
   handleCellClick(row) {
     this.setState({drawer: true})
-    fetch("/operator/individual/info?employee_id=1111&date=2010-04-13")
-      .then(res => res.json())
+    API.get("/operator/individual/info", {
+      params: {
+      'employee_id': row.employee_id,
+      'date': '2010-04-13'
+      }
+    })
+      .then(res => res['data'])
       .then(
         (result) => {
           console.log(result)
@@ -173,7 +151,7 @@ class OperatorPage extends React.Component {
                           {this.state.onScreenData.map((row) => 
                             (
                               <TableRow key={row.name}>
-                              <TableCell component="th" scope="row" onClick={() => this.handleCellClick(row.id)}>
+                              <TableCell component="th" scope="row" onClick={() => this.handleCellClick(row)}>
                                   {row.name}
                               </TableCell>
                               <TableCell align="center">{row.working_hrs}</TableCell>
