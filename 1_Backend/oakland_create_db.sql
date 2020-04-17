@@ -276,6 +276,7 @@ CREATE TABLE `VEHICLE_DAY_LOG` (
     #log_id_day				weather	logs	holiday
   `vehicle_log_id` int(11) NOT NULL AUTO_INCREMENT,
   `log_date` date default NULL,
+  `shift` varchar(11) default NULL,
   `vehicle_id` int(11) default NULL,
   `comment` varchar(255) default NULL,
   PRIMARY KEY `vehicle_log_id` (`vehicle_log_id`)

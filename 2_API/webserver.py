@@ -139,10 +139,9 @@ def change_route_week():
     l_id = 1234 # for log_id, not sure how to get this for editing/deleting certain route logs
     if request.method == 'POST':
         # add to database
-        last_id = db.engine.execute("select MAX(log_id) from ROUTE_LOG;")
         employee_id = db.engine.execute("select employee_id from DRIVERS where employee_name='{n}';".format(n=driver))
-        db.engine.execute("insert into ROUTE_LOG (log_id,date_swept,route_id,shift,employee_id,completion) VALUES "
-            "({id},'{d}','{r}','{s}',{e},'{c}');".format(id=last_id+1,d=date,r=route,s=shift,e=employee_id,c=status))
+        db.engine.execute("insert into ROUTE_LOG (date_swept,route_id,shift,employee_id,completion) VALUES "
+            "('{d}','{r}','{s}',{e},'{c}');".format(d=date,r=route,s=shift,e=employee_id,c=status))
         status_code = 201
     elif request.method == 'PUT':
         # modify database
@@ -358,10 +357,9 @@ def change_route_day():
     comment = arguments.get("comment")
 
     # modify database
-    last_id = db.engine.execute("select MAX(log_id) from ROUTE_LOG;")
     employee_id = db.engine.execute("select employee_id from DRIVERS where employee_name='{n}';".format(n=driver))
-    db.engine.execute("insert into ROUTE_LOG (log_id,date_swept,route_id,shift,employee_id,vehicle_id,completion,notes) VALUES "
-    	"({id},{d},{r},{s},{e},{v},{c},{n});".format(id=last_id+1,d=date,r=route,s=shift,e=employee_id,v=vehicle,c=route_status,n=comment))
+    db.engine.execute("insert into ROUTE_LOG (date_swept,route_id,shift,employee_id,vehicle_id,completion,notes) VALUES "
+    	"('{d}','{r}','{s}',{e},{v},'{c}','{n}');".format(d=date,r=route,s=shift,e=employee_id,v=vehicle,c=route_status,n=comment))
 
 
     return Response(None, status=200, mimetype='application/json')
@@ -713,8 +711,7 @@ def update_individual_operator_leave():
     end_time = request.args.get('end_time')
     reason = request.args.get('reason')
     # modify database
-    last_id = db.engine.execute("select max(absence_id) from ABSENCES;")
-    db.engine.execute("insert into `ABSENCES` (absence_id, employee_id,date_absence,time_start,time_end,type) VALUES ({id},{eid},{d},{ts},{td},{t});".format(id=last_id+1,eid=employee_id,d=date,ts=start_time,te=end_time,t=reason))
+    db.engine.execute("insert into `ABSENCES` ( employee_id,date_absence,time_start,time_end,type) VALUES ({eid},'{d}','{ts}','{td}','{t}');".format(eid=employee_id,d=date,ts=start_time,te=end_time,t=reason))
 
     return Response(None, status=200, mimetype='application/json')
 
@@ -742,7 +739,7 @@ def update_individual_operator_special_assignment():
 def remove_operator():
     employee_id = request.args.get('employee_id')
     # modify database
-    db.engine.execute("delete from DRIVERS where employee_id={e}".format(e=employee_id))
+    db.engine.execute("delete from DRIVERS where employee_id={e};".format(e=employee_id))
     return Response(None, status=200, mimetype='application/json')
 
 @app.route('/operator/individual/assignment', methods=["GET"])
@@ -750,13 +747,22 @@ def get_operator_assignment():
     employee_id = request.args.get('employee_id')
     month = request.args.get('month')
     data = {}
+    data['assignment'] = []
     # get from database
-    # ANNA does employee need to go in the data?
 
-    data['assignment'] = [{'week': 1,
-                           'shift': 'AM',
-                           'route': ['7A', '7A-1']}]
-    return Response(data, status=200, mimetype='application/json')
+    weeks = [1,2,3,4,5]
+    days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    times = ['AM','PM','night']
+    driver_select = 'select employee_name'
+    driver_cols = ['employee_name']
+    for w in weeks:
+        for d in days:
+            for t in times:
+            	driver_info = db.engine.execute("select route_id_{d}{w}_{t} from DRIVERS where employee_id={e};".format(d=d,w=w,t=t,e=employee_id)).fetchone()[0]
+            	if driver_info:
+            		data['assignment'].append({'week':w,'shift':t,'route':driver_info})
+
+    return Response(json.dumps(data), status=200, mimetype='application/json')
 
 @app.route('/operator/individual/assign', methods=["POST"])
 def modify_a_weekly_assignment():
@@ -768,22 +774,42 @@ def modify_a_weekly_assignment():
     # modify database
     return Response(None, status=200, mimetype='application/json')
 
-@app.route('/operator/individual/update_longterm', methods=["POST"])
+@app.route('/operator/individual/update_longterm', methods=["POST","PUT"])
 def modify_longterm_assignment():
     action = request.args.get('assignment')
     # modify database
-    #what is action?
     employee_id = request.args.get('employee_id')
     route = request.args.get('route')
     day = request.args.get('day') #day of week, Mon,Tue,Wed,Thu,Fri,Sat,Sun
     week = request.args.get('week') #integer
     shift = request.args.get('shift') # AM, PM, night
-    db.engine.execute("update DRIVERS set route_id_{d}{w}_{t}=1 where employee_id={id};".format(d=day,w=week,t=shift,id=employee_id))
+
+    if action.lower() == 'modify' or action.lower() == 'add':
+    	db.engine.execute("update DRIVERS set route_id_{d}{w}_{t}='{r}' where employee_id={id};".format(d=day,w=week,t=shift,r=route,id=employee_id))
+    elif action.lower() == 'remove':
+    	db.engine.execute("update DRIVERS set route_id_{d}{w}_{t}=null where employee_id={id};".format(d=day,w=week,t=shift,id=employee_id))
     return Response(None, status=200, mimetype='application/json')
 
 # vehicle daily view
 @app.route('/vehicle/day', methods=["GET"])
 def get_daily_vehicle_infomation():
+    date = request.args.get('date')
+    shift = request.args.get('shift') # day, night
+    if date == None:
+        date = datetime.now().strftime("%Y-%m-%d")
+    data = defaultdict(list)
+    # get from database
+    if shift == 'day':
+    	vehicles = db.engine.execute("select vehicle_id,route_id,employee_id,shift from ROUTE_LOG where shift='am' or shift='pm';")
+    else:
+    	vehicles = db.engine.execute("select vehicle_id,route_id,employee_id,shift from ROUTE_LOG where shift='night';")
+    for row in vehicles:
+        data[row[0]].append({ 'route':row[1], 'employee_id':row[2],'shift':row[3]})
+
+    return Response(json.dumps(data), status=200, mimetype='application/json')
+
+@app.route('/vehicle/day/maintenance', methods=["GET"])
+def get_daily_maintenance_infomation():
     date = request.args.get('date')
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
@@ -831,15 +857,59 @@ def change_vehicle_day():
         pass
     return Response(None, status=status_code, mimetype='application/json')
 
+@app.route('/vehicle/day/comment', methods=["GET", "POST", "PUT", "DELETE"])
+def get_vehicle_comment():
+    if request.headers['Content-Type'] == 'application/json':
+        arguments = request.get_json()
+    if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+        arguments = request.form
+    date = arguments.get("date")
+    vehicle = arguments.get("vehicle")
+    vehicle_status = arguments.get("vehicle_status")
+    shift = arguments.get("shift")
+    comment = arguments.get("comment")
+    comment_id = arguments.get("comment_id")
+    if request.method == "GET":
+    	data = defaultdict(list)
+    	log_info = db.engine.execute("select shift,vehicle_log_id,vehicle_id,comment from VEHICLE_DAY_LOG where log_date='{d}';".format(d=date))
+    	for l in log_info:
+    		data[row[0]] = {'vehicle_log_id':row[1],'vehicle_id':row[2],'comment':row[3]}
+    	return Response(json.dumps(data), status=status_code, mimetype='application/json')
+    elif request.method == 'POST':
+        db.engine.execute("insert into VEHICLE_DAY_LOG (log_date,shift,vehicle_id,comment) VALUES ('{d}','{s}',{v},'{c}');".format(d=date,s=shift,v=vehicle,c=comment))
+    elif request.method == 'PUT':
+        db.engine.execute("update VEHICLE_DAY_LOG set comment='{c}' where vehicle_log_id={id};".format(c=comment,id=comment_id))
+    elif request.method == "DELETE":
+        db.engine.execute("delete from VEHICLE_DAY_LOG where vehicle_log_id={id};".format(id=comment_id))
+
+    return Response(None, status=status_code, mimetype='application/json')
+
 # vehicle weekly view
 @app.route('/vehicle/week', methods=["GET"])
 def get_weekly_vehicle_infomation():
     date = request.args.get('date')
+    date_dt = datetime.today()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     data = {}
+
+    wk_start, wk_end = get_wk_start_end(date_dt)
+
+    vehicles = db.engine.execute("select vehicle_id from VEHICLES;")
+    for v in vehicles:
+        num_swept = db.engine.execute("select count(*) from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and vehicle_id={v} and completion='completed';".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
+        num_sched = db.engine.execute("select count(*) from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
+        num_missed = num_sched-num_missed
+        maint_hours = db.engine.execute("select HOUR(sum(hours_service)) from VEHICLE_MAINTENANCE where date_service>='{ds}' and date_service<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
+        v_data = {'maps_swept':num_swept,'maps_missed':num_missed,'hrs_maintenance':maint_hours,'logs':[]}
+        v_logs = db.engine.execute("select log_date,shift,comment from VEHICLE_DAY_LOG where log_date>='{ds}' and log_date<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0]))
+        for l in v_logs:
+        	v_data['logs'].append({'log_date':l[0],'log_shift':l[1],'log_comment':l[2]})
+        data[v[0]] = v_data
+
+
     vehicles = db.engine.execute("select * from VEHICLES ORDER BY vehicle_id;")
-    maintenance_v = db.engine.execute("select vehicle_id from VEHICLE_MAINTENANCE where date_service <= '{}' and date_end >= '{}';".format(date, date))
+    maintenance_v = db.engine.execute("select vehicle_id from VEHICLE_MAINTENANCE where date_service <= '{ds}' and date_end >= '{de}';".format(ds=wk_start, de=wk_end))
     #not sure which fields we need
     unavailable_vids = [row[0] for row in maintenance_v]
     availables = []
@@ -866,19 +936,20 @@ def get_weekly_vehicle_infomation():
                 'license':row[8],
                 'id_no':row[9]
             })
-    data = {'data': availables + unavailables,
-            'num_availables': len(availables),
-            'num_unavailables': len(unavailables)}
+    data['data'] = availables+unavailables
+    data['num_availables'] = len(availables)
+    data['num_unavailables'] = len(unavailables)
+
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/vehicle/week/action', methods=["DELETE"])
+@app.route('/vehicle/action', methods=["DELETE"])
 def delete_vehicle():
     if request.headers['Content-Type'] == 'application/json':
         arguments = request.get_json()
     if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
         arguments = request.form
     vehicle_id = arguments.get("vehicle")
-    db.engine.execute("delete * from VEHICLES where vehicle_id={};".format(vehicle_id))
+    db.engine.execute("delete from VEHICLES where vehicle_id={v};".format(v=vehicle_id))
     # modify database
     return Response(None, status=200, mimetype='application/json')
 
@@ -901,7 +972,7 @@ def add_vehicle():
     query = '''
     INSERT INTO `VEHICLES`
     (vehicle_id,cng,make,description,vehicle_year,license,v_id_no,status_am,status_pm,status_night)
-    VALUES ({vid},{cng},{make},{description},{year},{license},{id_no},{sam},{spm},{snight});
+    VALUES ({vid},'{cng}','{make}','{description}',{year},'{license}',{id_no},'{sam}','{spm}','{snight}');
     '''.format(vehicle_id, cng, make, description, year, license, id_no, status_am, status_pm, status_night)
     db.engine.execute(query)
     # modify database
