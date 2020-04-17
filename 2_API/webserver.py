@@ -7,10 +7,17 @@ from flask_sqlalchemy import SQLAlchemy
 import pymysql
 import sys
 
-app = Flask(__name__)
+class MyFalsk(Flask):
+    def process_response(self, response):
+        #Every response will be processed here first
+        response.headers["Access-Control-Allow-Origin"] = '*'
+        return(response)
+
+app = MyFalsk(__name__)
 # NOTE: switch out mypass with your own docker password
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:mypass@mariadb-bcot.db-network/OAKLAND_STREET_SWEEPING'
 db = SQLAlchemy(app)
+
 
 @app.route('/')
 def hello_world():
@@ -56,7 +63,7 @@ def sign_up():
     if request.headers['Content-Type'] == 'application/json':
         arguments = request.get_json()
     if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
-        arguments = request.form   
+        arguments = request.form
     username = arguments.get("username")
     password = arguments.get("password")
     name = arguments.get("name")
@@ -79,7 +86,7 @@ def get_weekly_route_schedule():
     data = defaultdict(list)#{}
     data['week_of_month'] = week_of_month
     data['today'] = datetime.now().strftime("%Y-%m-%d")
-    
+
     # get from database
     wk_days = wk_route_map[week_of_month]
     for d in wk_days:
@@ -130,7 +137,7 @@ def change_route_week():
     permanent =  arguments.get("permanent")
 
     l_id = 1234 # for log_id, not sure how to get this for editing/deleting certain route logs
-    if request.method == 'POST':  
+    if request.method == 'POST':
         # add to database
         last_id = db.engine.execute("select MAX(log_id) from ROUTE_LOG;")
         employee_id = db.engine.execute("select employee_id from DRIVERS where employee_name='{n}';".format(n=driver))
@@ -195,7 +202,7 @@ def get_staff_list():
     assigned_query = "select employee_id from ROUTE_LOG where route_id='{r}' and date_swept>='{ds}' and date_swept<='{de}'".format(r=route,ds=wk_start,de=wk_end)
     assigned_query_id = "select employee_id from ROUTE_LOG where route_id='{r}' and date_swept>='{ds}' and date_swept<='{de}'".format(r=route,ds=wk_start,de=wk_end)
     staff_assigned = db.engine.execute(assigned_query+';')
-    
+
     staff_unassigned = db.engine.execute("select employee_name from DRIVERS where employee_id not in ({a});".format(a=assigned_query_id))
 
     assigned_list = []
@@ -220,7 +227,7 @@ def get_daily_overview():
         date = datetime.now().strftime("%Y-%m-%d")
     week_of_month = pendulum.parse(date).week_of_month
     data = {}
-    
+
     # get from database
     # get day of week from date
     day_of_wk = date_dt.weekday()#datetime.today().weekday()
@@ -254,7 +261,7 @@ def get_overview_day():
         date = datetime.now().strftime("%Y-%m-%d")
     week_of_month = pendulum.parse(date).week_of_month
     data = {}
-    
+
     # get day of week from date
     day_of_wk = date_dt.weekday()#datetime.today().weekday()
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
@@ -272,7 +279,7 @@ def get_overview_day():
     unassigned = db.engine.execute("select route_id,notes from ROUTE_LOG where date_swept={date} and employee_id is null;".format(date=date))
     for u in unassigned:
         unassigned_routes[u[0]] = 'Unassigned'
-    
+
 
     data['morning'] = num_am
     data['afternoon'] = num_pm
@@ -324,7 +331,7 @@ def get_daily_route_schedule():
                    'route_status': 'disabled',
                    'driver_status': None,
                    'vehicle': None}]
-    
+
     # get from database
     route_log_db_query = "select route_id,employee_id,employee_status,vehicle_id,completion,shift from ROUTE_LOG where date_swept={d};".format(d=date)
     route_db = db.engine.execute(route_log_db_query)
@@ -359,7 +366,7 @@ def change_route_day():
 
     return Response(None, status=200, mimetype='application/json')
 
-@app.route('/schedule/day/vehicle', methods=["GET"]) 
+@app.route('/schedule/day/vehicle', methods=["GET"])
 def get_vehicle_list():
     date = request.args.get('date')
     if date == None:
@@ -386,7 +393,7 @@ def get_vehicle_list():
     data['maintenance'] = maint_list
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/schedule/day/unplanned', methods=["PUT"])  
+@app.route('/schedule/day/unplanned', methods=["PUT"])
 def get_unplanned_routes():
     date = request.args.get('date')
     date_dt = datetime.now()
@@ -409,7 +416,7 @@ def get_unplanned_routes():
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 
-@app.route('/staff/day', methods=["GET"])  
+@app.route('/staff/day', methods=["GET"])
 def get_staff_day():
     date = request.args.get('date')
     date_dt = datetime.now()
@@ -481,11 +488,10 @@ def get_weekly_operator_info():
         if not overtime_hrs:
             overtime_hrs = 0
 
-        driver_data = {'name': driver_name,
+        driver_data = { 'employee_id' : driver_id,
+                    'name': driver_name,
                     'working_hrs': driver_hours-leave_hrs-holiday_hours+overtime_hrs,
                     'leave_hrs': leave_hrs,
-                    'acting_hrs': 0, # what is this
-                    'standby_hrs': 0, # what is this
                     'overtime_hrs': overtime_hrs,
                     'holiday_hrs': holiday_hours,
                     'is_reviewed': True, # what is this
@@ -940,7 +946,7 @@ def get_monthly_operator_performance():
         e_name = driver_info[1]
         num_swept = db.engine.execute(swept_query.format(e=e_id,c='completed',m=date_dt.month,y=date_dt.year)).fetchone()[0]
         num_missed = db.engine.execute(swept_query.format(e=e_id,c='missed',m=date_dt.month,y=date_dt.year)).fetchone()[0]
-        
+
         data[e_name] = {'employee_id':e_id,'assigned':num_swept+num_missed,'completed':num_swept}
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
