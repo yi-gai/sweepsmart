@@ -150,7 +150,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `STREETS`;
 CREATE TABLE `STREETS` (
-    `street_id` varchar(255) NOT NULL,
+    `street_id` int(11) NOT NULL AUTO_INCREMENT,
   `route_id` varchar(255) NOT NULL,
   `street_name` varchar(255) default NULL,
   PRIMARY KEY (`street_id`),
@@ -165,9 +165,9 @@ LOCK TABLES `STREETS` WRITE;
 /*!40000 ALTER TABLE `STREETS` DISABLE KEYS */;
 #INSERT INTO `STREETS` VALUES ('sid_1234','1A_dummy','Test Street'),
 #                             ('sid_4557','1A_dummy2','Fake Street');
-INSERT INTO `STREETS` (street_id, route_id, street_name) VALUES ('sid_1234','1A_dummy','One Street');
-INSERT INTO `STREETS` (street_id, route_id, street_name) VALUES ('sid_5678','1A_dummy2','Two Ave');
-INSERT INTO `STREETS` (street_id, route_id, street_name) VALUES ('sid_1235','1A_dummy','Three Blvd');
+INSERT INTO `STREETS` ( route_id, street_name) VALUES ('1A_dummy','One Street');
+INSERT INTO `STREETS` ( route_id, street_name) VALUES ('1A_dummy2','Two Ave');
+INSERT INTO `STREETS` ( route_id, street_name) VALUES ('1A_dummy','Three Blvd');
 
 /*!40000 ALTER TABLE `STREETS` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -212,7 +212,7 @@ CREATE TABLE `DYNAMAPS` (
 
 DROP TABLE IF EXISTS `ROUTE_LOG`;
 CREATE TABLE `ROUTE_LOG` (
-  `log_id` int(11) NOT NULL,
+  `log_id` int(11) NOT NULL AUTO_INCREMENT,
   `route_id` varchar(255) NOT NULL,
   `employee_id` int(11) default NULL,
   `employee_status` varchar(255) default NULL,
@@ -234,9 +234,9 @@ CREATE TABLE `ROUTE_LOG` (
 
 LOCK TABLES `ROUTE_LOG` WRITE;
 /*!40000 ALTER TABLE `ROUTE_LOG` DISABLE KEYS */;
-INSERT INTO `ROUTE_LOG` (log_id,route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES (0,'1A_dummy',1234,'vid_1234','2020-03-15','AM','completed');
-INSERT INTO `ROUTE_LOG` (log_id,route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES (1,'1A_dummy2',1234,'vid_1234','2020-03-15','PM','completed');
-INSERT INTO `ROUTE_LOG` (log_id,route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES (2,'1A_dummy',4567,'vid_1234','2020-03-20','AM','completed');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('1A_dummy',1234,'vid_1234','2020-03-15','AM','completed');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('1A_dummy2',1234,'vid_1234','2020-03-15','PM','completed');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('1A_dummy',4567,'vid_1234','2020-03-20','AM','completed');
 
 /*!40000 ALTER TABLE `ROUTE_LOG` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -248,7 +248,7 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `DAY_LOG`;
 CREATE TABLE `DAY_LOG` (
     #log_id_day				weather	logs	holiday
-  `log_id_day` int(11) default NULL,
+  `log_id_day` int(11) default NULL AUTO_INCREMENT,
   `log_date` date default NULL,
   `logs` varchar(255) default NULL,
   `weather` varchar(255) default 'Sunny',
@@ -262,7 +262,7 @@ CREATE TABLE `DAY_LOG` (
 
 LOCK TABLES `DAY_LOG` WRITE;
 /*!40000 ALTER TABLE `DAY_LOG` DISABLE KEYS */;
-INSERT INTO `DAY_LOG` (log_id_day, logs,log_date,weather) VALUES (1234,'lid_1234,lid_5678','2020-04-13','Cloudy');
+INSERT INTO `DAY_LOG` (logs,log_date,weather) VALUES ('lid_1234,lid_5678','2020-04-13','Cloudy');
 /*!40000 ALTER TABLE `DAY_LOG` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -274,7 +274,7 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `VEHICLE_DAY_LOG`;
 CREATE TABLE `VEHICLE_DAY_LOG` (
     #log_id_day				weather	logs	holiday
-  `vehicle_log_id` int(11) NOT NULL,
+  `vehicle_log_id` int(11) NOT NULL AUTO_INCREMENT,
   `log_date` date default NULL,
   `vehicle_id` int(11) default NULL,
   `comment` varchar(255) default NULL,
@@ -288,10 +288,10 @@ CREATE TABLE `VEHICLE_DAY_LOG` (
 
 DROP TABLE IF EXISTS `DRIVERS`;
 CREATE TABLE `DRIVERS` (
-    #employee_id				name	hours
   `employee_id` int(11) NOT NULL,
   `employee_name` varchar(255) default NULL,
-  `hours` int(11) default 40,
+  `hours` int(11) default 40, #weekly hours
+  `daily_hours` int(11) default 8,
   `shift` varchar(11) default 'day',
   `shift_mon` smallint(6) default 0,
   `shift_tue` smallint(6) default 0,
@@ -464,7 +464,7 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `VEHICLE_MAINTENANCE`;
 CREATE TABLE `VEHICLE_MAINTENANCE` (
     #maint_id	vehicle_id			date_service	date_end	hours_service	type	comment
-  `maint_id` int(11) NOT NULL,
+  `maint_id` int(11) NOT NULL AUTO_INCREMENT,
   `vehicle_id` int(11) NOT NULL,
   `date_service` date default NULL,
   `date_end` date default NULL,
@@ -481,7 +481,7 @@ CREATE TABLE `VEHICLE_MAINTENANCE` (
 
 LOCK TABLES `VEHICLE_MAINTENANCE` WRITE;
 /*!40000 ALTER TABLE `VEHICLE_MAINTENANCE` DISABLE KEYS */;
-INSERT INTO `VEHICLE_MAINTENANCE` (maint_id,vehicle_id,date_service,date_end,hours_service) VALUES (0,1,'2020-03-01','2020-03-02',20);
+INSERT INTO `VEHICLE_MAINTENANCE` (vehicle_id,date_service,date_end,hours_service) VALUES (1,'2020-03-01','2020-03-02',20);
 /*!40000 ALTER TABLE `VEHICLE_MAINTENANCE` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -492,7 +492,7 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `ABSENCES`;
 CREATE TABLE `ABSENCES` (
     #absence_id	employee_id			date_absence	shift	hours		comment	type_absence_1
-  `absence_id` int(11) NOT NULL,
+  `absence_id` int(11) NOT NULL AUTO_INCREMENT,
   `employee_id` int(11) NOT NULL,
   `date_absence` date default NULL,
   `shift` varchar(255) default NULL,
@@ -514,8 +514,8 @@ CREATE TABLE `ABSENCES` (
 
 LOCK TABLES `ABSENCES` WRITE;
 /*!40000 ALTER TABLE `ABSENCES` DISABLE KEYS */;
-INSERT INTO `ABSENCES` (absence_id, employee_id,date_absence,shift,comment) VALUES (1,1111,'2020-03-04','PM','an absence');
-INSERT INTO `ABSENCES` (absence_id, employee_id,date_absence,shift,type,time_start,time_end) VALUES (2,2882,'2020-03-04','PM','sick','8:00','12:00');
+INSERT INTO `ABSENCES` ( employee_id,date_absence,shift,comment) VALUES (1111,'2020-03-04','PM','an absence');
+INSERT INTO `ABSENCES` ( employee_id,date_absence,shift,type,time_start,time_end) VALUES (2882,'2020-03-04','PM','sick','8:00','12:00');
 /*!40000 ALTER TABLE `ABSENCES` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -536,7 +536,7 @@ CREATE TABLE `HOLIDAY` (
 DROP TABLE IF EXISTS `OVERTIME`;
 CREATE TABLE `OVERTIME` (
     #absence_id	employee_id			date_absence	shift	hours		comment	type_absence_1
-  `overtime_id` int(11) NOT NULL,
+  `overtime_id` int(11) NOT NULL AUTO_INCREMENT,
   `employee_id` int(11) NOT NULL,
   `date_overtime` date default NULL,
   `time_start` time default NULL,
