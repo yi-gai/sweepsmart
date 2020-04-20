@@ -514,21 +514,27 @@ def get_daily_onduty_operator_info():
     days = {0:'mon',1:'tue',2:'wed',3:'thu',4:'fri',5:'sat',6:'sun'}
 
     absences_query = "select employee_id from ABSENCES where date_absence='{ds}'"
-    drivers = db.engine.execute("select employee_id,employee_name,daily_hours,shift from DRIVERS where (shift_{d}=1 or shift_{d}_pm=1) and employee_id not in ({q});".format(d=day_of_wk[days],q=absences_query))
+    drivers = db.engine.execute("select employee_id,employee_name,daily_hours,shift from DRIVERS where (shift_{d}=1 or shift_{d}_pm=1) and employee_id not in ({q});".format(d=days[day_of_wk],q=absences_query))
     for driver in drivers:
         driver_id = driver[0]
         driver_name = driver[1]
         driver_hours = driver[2]
+        if not driver_hours:
+        	driver_hours = 0
         driver_shift = driver[3]
         num_routes_query = "select count(*) from ROUTE_LOG where date_swept='{d}' and employee_id={e} and completion='{c}';"
         driver_routes_swept = db.engine.execute(num_routes_query.format(d=date,e=driver_id,c='completed')).fetchone()[0]
         driver_routes_missed = db.engine.execute(num_routes_query.format(d=date,e=driver_id,c='missed')).fetchone()[0]
 
         holidays = db.engine.execute("select count(*) from HOLIDAY where holiday_date='{hs}';".format(hs=date)).fetchone()[0]
+        if not holidays:
+        	holidays = 0
         holiday_hours = holidays*driver_hours
 
         absences_query = "select HOUR(sum(time_missed)) from ABSENCES where date_absence='{ds}' and employee_id={e};"
         leave_hrs = db.engine.execute(absences_query.format(ds=date,e=driver_id)).fetchone()[0]
+        if not leave_hrs:
+        	leave_hrs = 0
 
         overtime_query = "select sum(time_over) from OVERTIME where date_overtime='{ds}' and employee_id={e};"
         overtime_hrs = db.engine.execute(overtime_query.format(ds=date,e=driver_id)).fetchone()[0]
@@ -592,7 +598,7 @@ def get_daily_offduty_operator_info():
     date_dt = datetime.today()
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
-    data = {'day':[],'night':[]}
+    data = {'day':[],'night':[],'Off-Duty':[]}
 
     absences_query = "select a.employee_id,d.employee_name,a.type,d.shift from ABSENCES a join DRIVERS d on a.employee_id=d.employee_id where date_absence={d};".format(d=date)
     absences = db.engine.execute(absences_query.format(d=date))
@@ -606,7 +612,7 @@ def get_daily_offduty_operator_info():
     for row in off_duty_db:
         data['Off-Duty'].append({'employee_id':row[0],'name':row[1],'leave':None})
 
-    return Response(data, status=200, mimetype='application/json')
+    return Response(json.dumps(data), status=200, mimetype='application/json')
 
 @app.route('/operator/day/check', methods=["PUT"])
 def update_review_status():
@@ -654,6 +660,9 @@ def get_individual_operator_info():
 
     operator_info = db.engine.execute("select e.employee_name,e.shift,e.daily_hours,r.route_id from DRIVERS e join ROUTE_LOG r on e.employee_id=r.employee_id where r.date_swept='{d}' and e.employee_id={e};".format(d=date,e=employee_id))
     operator_routes = []
+    operator_name = ""
+    operator_shift = ""
+    operator_hours = 0
     for operator in operator_info:
         operator_name = operator[0]
         operator_shift = operator[1]
@@ -665,7 +674,7 @@ def get_individual_operator_info():
     num_leave_hrs = db.engine.execute(absences_query.format(d=date,e=employee_id)).fetchone()[0]
     if not num_leave_hrs:
         num_leave_hrs = 0
-    leave_times = db.engine.execute("select time_start,time_end from ABSNECES where date_absence='{d}' and employee_id={e};".format(d=date,e=employee_id))
+    leave_times = db.engine.execute("select time_start,time_end from ABSENCES where date_absence='{d}' and employee_id={e};".format(d=date,e=employee_id))
     leave_hrs = ""
     for l in leave_times:
         leave_hrs += "{s}-{e}".format(s=l[0],e=l[1])
@@ -680,7 +689,7 @@ def get_individual_operator_info():
 
     data['assignments'] = [{'shift': operator_shift,
                             'route': operator_routes,
-                            'working_hrs': operator_hours+overtime_hrs-leave_hrs,
+                            'working_hrs': operator_hours+overtime_hrs-num_leave_hrs,
                             'overtime_hrs':overtime_hrs,
                             'leave_hrs':leave_hrs,
                             'num_leave_hrs': num_leave_hrs,
@@ -745,6 +754,8 @@ def remove_operator():
 @app.route('/operator/individual/assignment', methods=["GET"])
 def get_operator_assignment():
     employee_id = request.args.get('employee_id')
+    if not employee_id:
+    	employee_id = 2882
     month = request.args.get('month')
     data = {}
     data['assignment'] = []
@@ -899,7 +910,7 @@ def get_weekly_vehicle_infomation():
     for v in vehicles:
         num_swept = db.engine.execute("select count(*) from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and vehicle_id={v} and completion='completed';".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
         num_sched = db.engine.execute("select count(*) from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
-        num_missed = num_sched-num_missed
+        num_missed = num_sched-num_swept
         maint_hours = db.engine.execute("select HOUR(sum(hours_service)) from VEHICLE_MAINTENANCE where date_service>='{ds}' and date_service<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
         v_data = {'maps_swept':num_swept,'maps_missed':num_missed,'hrs_maintenance':maint_hours,'logs':[]}
         v_logs = db.engine.execute("select log_date,shift,comment from VEHICLE_DAY_LOG where log_date>='{ds}' and log_date<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0]))
@@ -942,16 +953,51 @@ def get_weekly_vehicle_infomation():
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/vehicle/action', methods=["DELETE"])
-def delete_vehicle():
-    if request.headers['Content-Type'] == 'application/json':
+@app.route('/vehicle/action', methods=["POST", "DELETE", "OPTIONS"])
+def vehicle_action():
+    if request.method == 'OPTIONS':
+        headers = {
+            'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+            'Access-Control-Allow-Origin': '*'
+        }
+        return Response(None, status=200, headers=headers)
+    if 'application/json' in request.headers['Content-Type'].lower():
         arguments = request.get_json()
-    if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+    if 'application/x-www-form-urlencoded' in request.headers['Content-Type'].lower():
         arguments = request.form
-    vehicle_id = arguments.get("vehicle")
-    db.engine.execute("delete from VEHICLES where vehicle_id={v};".format(v=vehicle_id))
-    # modify database
-    return Response(None, status=200, mimetype='application/json')
+    if request.method == 'DELETE':
+        vehicle_id = arguments.get("vehicle_id")
+        query = "delete from VEHICLES where vehicle_id={v};".format(v=vehicle_id)
+        db.engine.execute(query)
+        db.session.commit()
+        return Response(None, status=204, mimetype='application/json')
+    if request.method == 'POST':
+        try:
+            vehicle_id = int(arguments.get("vehicle_id"))
+        except:
+            return Response(None, status=202, mimetype='application/json')
+        existing_vehicles = db.engine.execute("select * from VEHICLES where vehicle_id={v};".format(v=vehicle_id))
+        if existing_vehicles.fetchone() is not None:
+            return Response(None, status=202, mimetype='application/json')
+        cng = arguments.get("cng", default='')
+        make = arguments.get("make", default='')
+        description = arguments.get("description", default='')
+        year = arguments.get("year", default=2000)
+        license = arguments.get("license", default='')
+        id_no = arguments.get("id_no", default='')
+        status_am = arguments.get("status_am", default='available')
+        status_pm = arguments.get("status_pm", default='available')
+        status_night = arguments.get("status_night", default='available')
+        query = '''
+        INSERT INTO `VEHICLES`
+        (vehicle_id,cng,make,description,vehicle_year,license,v_id_no,status_am,status_pm,status_night)
+        VALUES ({vid},'{cng}','{make}','{description}',{year},'{license}','{id_no}','{sam}','{spm}','{snight}');
+        '''.format(vid=vehicle_id, cng=cng, make=make,
+            description=description, year=year, license=license,
+            id_no=id_no, sam=status_am, spm=status_pm, snight=status_night)
+        db.engine.execute(query)
+        db.session.commit()
+        return Response(None, status=201, mimetype='application/json')
 
 @app.route('/vehicle/add', methods=["POST"])
 def add_vehicle():

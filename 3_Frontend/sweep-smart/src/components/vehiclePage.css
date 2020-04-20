@@ -1,3 +1,21 @@
+.add-vehicle-icon-week {
+	position: absolute;
+	width: 150px;
+	height: 35px;
+	left: 630px;
+	top: -50px;
+	z-index: 1;
+}
+
+.add-vehicle-icon-day {
+	position: absolute;
+	width: 150px;
+	height: 35px;
+	left: 400px;
+	top: -50px;
+	z-index: 1;
+}
+
 .vehicle-weekly-vid-head {
 	width: 15%;
 }

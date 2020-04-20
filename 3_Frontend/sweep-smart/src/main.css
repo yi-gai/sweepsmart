@@ -1,27 +1,9 @@
-.cur-button > a {
-	color: #3A423E;
-	text-decoration: none;
-}
-
-.not-cur-button > a {
-	color: #9AA7A0;
-	text-decoration: none;
-}
-
-.cur-button > a:hover {
-	color: #000000;
-}
-
-.not-cur-button > a:hover {
-	color: #000000;
-}
-
 .main-tab {
 	position: absolute;
 	width: 950px;
 	height: 750px;
 	left: 60px;
-	top: 90px;
+	top: 120px;
 
 	border-radius: 5px;
 }
@@ -40,13 +22,6 @@
 	width: 20%;
 	height: 60px;
 
-	font-family:  'Lato', sans-serif;
-	font-style: normal;
-	font-weight: 900;
-	font-size: 18px;
-	line-height: 22px;
-	color: #3A423E;
-
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -57,13 +32,6 @@
 .not-cur-button {
 	width: 20%;
 	height: 60px;
-
-	font-family:  'Lato', sans-serif;
-	font-style: normal;
-	font-weight: bold;
-	font-size: 18px;
-	line-height: 22px;
-	color: #9AA7A0;
 
 	display: flex;
 	justify-content: center;
@@ -80,14 +48,21 @@
 
 .week-and-day-picker {
 	position: absolute;
-	width: 600px;
+	width: 650px;
 	height: 80px;
 	left: 20px;
 	top: 50px;
 	z-index: 1;
 }
 
-.display-dropdown > div {
+.display-dropdown {
+	width: 650px;
+	height: 38px;
+	float: left;
+}
+
+.week-picker {
+	width: 550px;
 	height: 38px;
 	float: left;
 }
@@ -96,18 +71,14 @@
 	float: left;
 }
 
-.day-picker > div {
+.day-picker {
+	width: 320px;
+	height: 38px;
 	float: left;
 }
 
-.week-picker-arrows {
-	height: 36px;
-	margin-right: 20px;
-}
-
-.day-picker-arrow {
-	height: 36px;
-	margin-right: 20px;
+.day-picker > div {
+	float: left;
 }
 
 .page-name {
@@ -121,7 +92,7 @@
 }
 
 .week-display {
-	margin-right: 20px;
+	width: 420px;
 	font-family:  'Lato', sans-serif;
 	font-style: normal;
 	font-weight: 900;
@@ -131,17 +102,13 @@
 }
 
 .day-display {
-	margin-right: 20px;
+	width: 200px;
 	font-family:  'Lato', sans-serif;
 	font-style: normal;
 	font-weight: 900;
 	font-size: 36px;
 	line-height: 36px;
 	color: #3A423E;
-}
-
-.view-type-dropdown {
-	width: 100px;
 }
 
 #svg-left-arrow {
