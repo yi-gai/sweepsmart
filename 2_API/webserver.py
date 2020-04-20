@@ -598,7 +598,7 @@ def get_daily_offduty_operator_info():
     date_dt = datetime.today()
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
-    data = {'day':[],'night':[]}
+    data = {'day':[],'night':[],'Off-Duty':[]}
 
     absences_query = "select a.employee_id,d.employee_name,a.type,d.shift from ABSENCES a join DRIVERS d on a.employee_id=d.employee_id where date_absence={d};".format(d=date)
     absences = db.engine.execute(absences_query.format(d=date))
@@ -612,7 +612,7 @@ def get_daily_offduty_operator_info():
     for row in off_duty_db:
         data['Off-Duty'].append({'employee_id':row[0],'name':row[1],'leave':None})
 
-    return Response(data, status=200, mimetype='application/json')
+    return Response(json.dumps(data), status=200, mimetype='application/json')
 
 @app.route('/operator/day/check', methods=["PUT"])
 def update_review_status():
@@ -660,6 +660,9 @@ def get_individual_operator_info():
 
     operator_info = db.engine.execute("select e.employee_name,e.shift,e.daily_hours,r.route_id from DRIVERS e join ROUTE_LOG r on e.employee_id=r.employee_id where r.date_swept='{d}' and e.employee_id={e};".format(d=date,e=employee_id))
     operator_routes = []
+    operator_name = ""
+    operator_shift = ""
+    operator_hours = 0
     for operator in operator_info:
         operator_name = operator[0]
         operator_shift = operator[1]
@@ -671,7 +674,7 @@ def get_individual_operator_info():
     num_leave_hrs = db.engine.execute(absences_query.format(d=date,e=employee_id)).fetchone()[0]
     if not num_leave_hrs:
         num_leave_hrs = 0
-    leave_times = db.engine.execute("select time_start,time_end from ABSNECES where date_absence='{d}' and employee_id={e};".format(d=date,e=employee_id))
+    leave_times = db.engine.execute("select time_start,time_end from ABSENCES where date_absence='{d}' and employee_id={e};".format(d=date,e=employee_id))
     leave_hrs = ""
     for l in leave_times:
         leave_hrs += "{s}-{e}".format(s=l[0],e=l[1])
@@ -686,7 +689,7 @@ def get_individual_operator_info():
 
     data['assignments'] = [{'shift': operator_shift,
                             'route': operator_routes,
-                            'working_hrs': operator_hours+overtime_hrs-leave_hrs,
+                            'working_hrs': operator_hours+overtime_hrs-num_leave_hrs,
                             'overtime_hrs':overtime_hrs,
                             'leave_hrs':leave_hrs,
                             'num_leave_hrs': num_leave_hrs,
@@ -751,6 +754,8 @@ def remove_operator():
 @app.route('/operator/individual/assignment', methods=["GET"])
 def get_operator_assignment():
     employee_id = request.args.get('employee_id')
+    if not employee_id:
+    	employee_id = 2882
     month = request.args.get('month')
     data = {}
     data['assignment'] = []
