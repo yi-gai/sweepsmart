@@ -78,6 +78,7 @@ wk_route_map = {1:['Mon1_AM','Mon1_PM','Mon1_night','Tue1_AM','Tue1_PM','Tue1_ni
 @app.route('/schedule/week/route', methods=["GET"])
 def get_weekly_route_schedule():
     date = request.args.get('date')
+    date_dt = datetime.today()
     shift = request.args.get('shift')
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
@@ -87,6 +88,9 @@ def get_weekly_route_schedule():
     data['week_of_month'] = week_of_month
     data['today'] = datetime.now().strftime("%Y-%m-%d")
 
+    wk_start, wk_end = get_wk_start_end(date_dt)
+    data['Monday'] = wk_start
+    data['Sunday'] = wk_end
     # get from database
     wk_days = wk_route_map[week_of_month]
     for d in wk_days:
@@ -95,8 +99,14 @@ def get_weekly_route_schedule():
         else:
             s = d[:3]+str(week_of_month)+d[-3:]
         routes_db = db.engine.execute("select ro.route_id, d.employee_name, r.completion from ROUTES ro join ROUTE_LOG r on ro.route_id = r.route_id join DRIVERS d on r.employee_id = d.employee_id where ro.{d}=1;".format(d=s))
+        routes_included = []
         for r in routes_db:
             data[s].append({'route':r[0], 'driver':r[1], 'route_status':r[2]})
+            routes_included.append(r[0])
+        routes_sched = db.engine.execute("select route_id from ROUTES where {d}=1".format(d=s))
+        for r in routes_sched:
+            if r[0] not in routes_included:
+                data[s].append({'route':r[0], 'driver':None, 'route_status':'Unassigned'})
 
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
@@ -110,16 +120,19 @@ def get_avaiable_route_list():
         date = datetime.now().strftime("%Y-%m-%d")
         shift = 'day'
     week_of_month = pendulum.parse(date).week_of_month
-    data = []
+    data = {'Available':[]}
 
     # get from database
     day_of_wk = date_dt.weekday()
     #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
     wk_start, wk_end = get_wk_start_end(date_dt)
+    data['Monday'] = wk_start
+    data['Sunday'] = wk_end
 
-    routes_db = db.engine.execute("select route_id from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and employee_id is NULL;".format(ds=wk_start,de=wk_end))
+    routes_db = db.engine.execute("select route_id from ROUTES where route_id not in (select route_id from ROUTE_LOG where employee_id is not null and date_swept>='{ds}' and date_swept <= '{de}');".format(ds=wk_start,de=wk_end))
+    #routes_db = db.engine.execute("select route_id from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and employee_id is NULL;".format(ds=wk_start,de=wk_end))
     for row in routes_db:
-        data.append(row[0])
+        data['Available'].append(row[0])
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
