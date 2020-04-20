@@ -514,21 +514,27 @@ def get_daily_onduty_operator_info():
     days = {0:'mon',1:'tue',2:'wed',3:'thu',4:'fri',5:'sat',6:'sun'}
 
     absences_query = "select employee_id from ABSENCES where date_absence='{ds}'"
-    drivers = db.engine.execute("select employee_id,employee_name,daily_hours,shift from DRIVERS where (shift_{d}=1 or shift_{d}_pm=1) and employee_id not in ({q});".format(d=day_of_wk[days],q=absences_query))
+    drivers = db.engine.execute("select employee_id,employee_name,daily_hours,shift from DRIVERS where (shift_{d}=1 or shift_{d}_pm=1) and employee_id not in ({q});".format(d=days[day_of_wk],q=absences_query))
     for driver in drivers:
         driver_id = driver[0]
         driver_name = driver[1]
         driver_hours = driver[2]
+        if not driver_hours:
+        	driver_hours = 0
         driver_shift = driver[3]
         num_routes_query = "select count(*) from ROUTE_LOG where date_swept='{d}' and employee_id={e} and completion='{c}';"
         driver_routes_swept = db.engine.execute(num_routes_query.format(d=date,e=driver_id,c='completed')).fetchone()[0]
         driver_routes_missed = db.engine.execute(num_routes_query.format(d=date,e=driver_id,c='missed')).fetchone()[0]
 
         holidays = db.engine.execute("select count(*) from HOLIDAY where holiday_date='{hs}';".format(hs=date)).fetchone()[0]
+        if not holidays:
+        	holidays = 0
         holiday_hours = holidays*driver_hours
 
         absences_query = "select HOUR(sum(time_missed)) from ABSENCES where date_absence='{ds}' and employee_id={e};"
         leave_hrs = db.engine.execute(absences_query.format(ds=date,e=driver_id)).fetchone()[0]
+        if not leave_hrs:
+        	leave_hrs = 0
 
         overtime_query = "select sum(time_over) from OVERTIME where date_overtime='{ds}' and employee_id={e};"
         overtime_hrs = db.engine.execute(overtime_query.format(ds=date,e=driver_id)).fetchone()[0]
