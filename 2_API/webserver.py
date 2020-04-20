@@ -899,7 +899,7 @@ def get_weekly_vehicle_infomation():
     for v in vehicles:
         num_swept = db.engine.execute("select count(*) from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and vehicle_id={v} and completion='completed';".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
         num_sched = db.engine.execute("select count(*) from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
-        num_missed = num_sched-num_missed
+        num_missed = num_sched-num_swept
         maint_hours = db.engine.execute("select HOUR(sum(hours_service)) from VEHICLE_MAINTENANCE where date_service>='{ds}' and date_service<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
         v_data = {'maps_swept':num_swept,'maps_missed':num_missed,'hrs_maintenance':maint_hours,'logs':[]}
         v_logs = db.engine.execute("select log_date,shift,comment from VEHICLE_DAY_LOG where log_date>='{ds}' and log_date<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0]))
@@ -942,16 +942,51 @@ def get_weekly_vehicle_infomation():
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/vehicle/action', methods=["DELETE"])
-def delete_vehicle():
-    if request.headers['Content-Type'] == 'application/json':
+@app.route('/vehicle/action', methods=["POST", "DELETE", "OPTIONS"])
+def vehicle_action():
+    if request.method == 'OPTIONS':
+        headers = {
+            'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+            'Access-Control-Allow-Origin': '*'
+        }
+        return Response(None, status=200, headers=headers)
+    if 'application/json' in request.headers['Content-Type'].lower():
         arguments = request.get_json()
-    if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+    if 'application/x-www-form-urlencoded' in request.headers['Content-Type'].lower():
         arguments = request.form
-    vehicle_id = arguments.get("vehicle")
-    db.engine.execute("delete from VEHICLES where vehicle_id={v};".format(v=vehicle_id))
-    # modify database
-    return Response(None, status=200, mimetype='application/json')
+    if request.method == 'DELETE':
+        vehicle_id = arguments.get("vehicle_id")
+        query = "delete from VEHICLES where vehicle_id={v};".format(v=vehicle_id)
+        db.engine.execute(query)
+        db.session.commit()
+        return Response(None, status=204, mimetype='application/json')
+    if request.method == 'POST':
+        try:
+            vehicle_id = int(arguments.get("vehicle_id"))
+        except:
+            return Response(None, status=202, mimetype='application/json')
+        existing_vehicles = db.engine.execute("select * from VEHICLES where vehicle_id={v};".format(v=vehicle_id))
+        if existing_vehicles.fetchone() is not None:
+            return Response(None, status=202, mimetype='application/json')
+        cng = arguments.get("cng", default='')
+        make = arguments.get("make", default='')
+        description = arguments.get("description", default='')
+        year = arguments.get("year", default=2000)
+        license = arguments.get("license", default='')
+        id_no = arguments.get("id_no", default='')
+        status_am = arguments.get("status_am", default='available')
+        status_pm = arguments.get("status_pm", default='available')
+        status_night = arguments.get("status_night", default='available')
+        query = '''
+        INSERT INTO `VEHICLES`
+        (vehicle_id,cng,make,description,vehicle_year,license,v_id_no,status_am,status_pm,status_night)
+        VALUES ({vid},'{cng}','{make}','{description}',{year},'{license}','{id_no}','{sam}','{spm}','{snight}');
+        '''.format(vid=vehicle_id, cng=cng, make=make,
+            description=description, year=year, license=license,
+            id_no=id_no, sam=status_am, spm=status_pm, snight=status_night)
+        db.engine.execute(query)
+        db.session.commit()
+        return Response(None, status=201, mimetype='application/json')
 
 @app.route('/vehicle/add', methods=["POST"])
 def add_vehicle():
