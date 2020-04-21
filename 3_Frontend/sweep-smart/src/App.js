@@ -59,7 +59,7 @@ class Vehicle extends React.Component {
 
 class Performance extends React.Component {
   render() {
-    let buttons = ["Month", "Week", "Day"];
+    let buttons = ["Completion", "Vacation"];
     return <Main buttons={buttons} pageName="Performance" viewType="week"/>;
   }
 }

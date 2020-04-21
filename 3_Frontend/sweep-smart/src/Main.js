@@ -5,6 +5,8 @@ import Button from '@material-ui/core/Button';
 import SchedulePage from './components/SchedulePage';
 import OperatorPage from './components/OperatorPage';
 import VehiclePage from './components/VehiclePage';
+import PerformancePage from './components/PerformancePage';
+
 
 // import DatePicker from './components/DatePicker';
 import SSDatePicker from './Calendar';
@@ -113,7 +115,7 @@ class Main extends React.Component {
 				viewType={this.state.viewType}/>;
 		}else if(this.props.pageName === 'Performance'){
 			// TODO: return Performance component
-			mainContent = <SchedulePage tab={this.state.currentTab} date={this.state.date}/>;
+			mainContent = <PerformancePage tab={this.state.currentTab} date={this.state.date}/>;
 		}
 		let buttons;
 		if (this.props.pageName === 'Vehicles' && this.state.viewType === 'week') {
@@ -212,13 +214,10 @@ class WeekAndDayPicker extends React.Component {
 				handleClickLeft={this.props.handleClickLeftDay}
 				handleClickRight={this.props.handleClickRightDay}/>
 		}
-		return (
-			<div className="week-and-day-picker">
-				<div className="page-name">{this.props.pageName}</div>
-				<div className="display-dropdown">
-					{weekAndDayPicker}
-					<div>
-					<FormControl style={{minWidth: 90}}>
+		let weekAndDayDropdown = (<div></div>);
+		if (this.props.pageName == 'Operators' || this.props.pageName == 'Vehicles') {
+			weekAndDayDropdown = (
+				<FormControl style={{minWidth: 90}}>
 					<Select
 						autoWidth={true}
 			        	value={this.props.viewType}
@@ -226,8 +225,15 @@ class WeekAndDayPicker extends React.Component {
 			        	<MenuItem value="week">Week</MenuItem>
 			        	<MenuItem value="day">Day</MenuItem>
 			        </Select>
-			        </FormControl>
-			        </div>
+			    </FormControl>
+			);
+		}
+		return (
+			<div className="week-and-day-picker">
+				<div className="page-name">{this.props.pageName}</div>
+				<div className="display-dropdown">
+					{weekAndDayPicker}
+					{weekAndDayDropdown}
 				</div>
 				<SSDatePicker date={this.props.date} handleDateChange={this.props.handleDateChange}/>
 				
