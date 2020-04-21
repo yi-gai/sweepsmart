@@ -214,13 +214,10 @@ class WeekAndDayPicker extends React.Component {
 				handleClickLeft={this.props.handleClickLeftDay}
 				handleClickRight={this.props.handleClickRightDay}/>
 		}
-		return (
-			<div className="week-and-day-picker">
-				<div className="page-name">{this.props.pageName}</div>
-				<div className="display-dropdown">
-					{weekAndDayPicker}
-					<div>
-					<FormControl style={{minWidth: 90}}>
+		let weekAndDayDropdown = (<div></div>);
+		if (this.props.pageName == 'Operators' || this.props.pageName == 'Vehicles') {
+			weekAndDayDropdown = (
+				<FormControl style={{minWidth: 90}}>
 					<Select
 						autoWidth={true}
 			        	value={this.props.viewType}
@@ -228,8 +225,15 @@ class WeekAndDayPicker extends React.Component {
 			        	<MenuItem value="week">Week</MenuItem>
 			        	<MenuItem value="day">Day</MenuItem>
 			        </Select>
-			        </FormControl>
-			        </div>
+			    </FormControl>
+			);
+		}
+		return (
+			<div className="week-and-day-picker">
+				<div className="page-name">{this.props.pageName}</div>
+				<div className="display-dropdown">
+					{weekAndDayPicker}
+					{weekAndDayDropdown}
 				</div>
 				<SSDatePicker date={this.props.date} handleDateChange={this.props.handleDateChange}/>
 				
