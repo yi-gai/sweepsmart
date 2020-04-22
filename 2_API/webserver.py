@@ -526,7 +526,7 @@ def get_daily_onduty_operator_info():
     day_of_wk = date_dt.weekday()
     days = {0:'mon',1:'tue',2:'wed',3:'thu',4:'fri',5:'sat',6:'sun'}
 
-    absences_query = "select employee_id from ABSENCES where date_absence='{ds}'"
+    absences_query = "select employee_id from ABSENCES where date_absence='{ds}' and HOUR(time_missed)>=8"
     drivers = db.engine.execute("select employee_id,employee_name,daily_hours,shift from DRIVERS where (shift_{d}=1 or shift_{d}_pm=1) and employee_id not in ({q});".format(d=days[day_of_wk],q=absences_query))
     for driver in drivers:
         driver_id = driver[0]
@@ -571,38 +571,6 @@ def get_daily_onduty_operator_info():
 
         data[driver_shift].append(driver_data)
 
-    data['day'] = [{'name': 'Roger',
-                    'working_hrs': 8,
-                    'leave_hrs': 0,
-                    'acting_hrs': 0,
-                    'standby_hrs': 0,
-                    'overtime_hrs': 0,
-                    'holiday_hrs': 0,
-                    'is_reviewed': True},
-                   {'name': 'Michael',
-                    'working_hrs': 3,
-                    'leave_hrs': 5,
-                    'acting_hrs': 1,
-                    'standby_hrs': 1,
-                    'overtime_hrs': 1,
-                    'holiday_hrs': 1,
-                    'is_reviewed': False}]
-    data['night'] = [{'name': 'Roger',
-                    'working_hrs': 8,
-                    'leave_hrs': 3,
-                    'acting_hrs': 0,
-                    'standby_hrs': 0,
-                    'overtime_hrs': 0,
-                    'holiday_hrs': 0,
-                    'is_reviewed': False},
-                     {'name': 'Roger',
-                      'working_hrs': 8,
-                      'leave_hrs': 3,
-                      'acting_hrs': 0,
-                      'standby_hrs': 0,
-                      'overtime_hrs': 0,
-                      'holiday_hrs': 0,
-                      'is_reviewed': True}]
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 @app.route('/operator/day/offduty', methods=["GET"])
