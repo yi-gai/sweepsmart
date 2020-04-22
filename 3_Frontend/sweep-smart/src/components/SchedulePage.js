@@ -10,6 +10,7 @@ import Paper from '@material-ui/core/Paper';
 
 import './schedulepage.css';
 import SwipeableTemporaryDrawer from "./Drawer";
+import ScheduleDrawer from "./ScheduleDrawer";
 import {withStyles} from "@material-ui/styles/index";
 import API from "../API/api";
 
@@ -127,7 +128,7 @@ function ProcessRawData (rawData) {
 	return processedData;
 }
 
-class SchdulePage extends React.Component {
+class SchedulePage extends React.Component {
 
     constructor(props) {
 		super(props);
@@ -136,6 +137,7 @@ class SchdulePage extends React.Component {
 			tab: props.tab,
 			date: props.date,
 			data:null,
+            drawer: false
 		}
     }
 
@@ -155,6 +157,10 @@ class SchdulePage extends React.Component {
             )
     }
 
+    handleDateClick() {
+    this.setState({drawer: true})
+    }
+
     handleChange = date => {
     	this.props.handleDateChange(date);
     };
@@ -164,14 +170,15 @@ class SchdulePage extends React.Component {
 		return (
 			<div className="content-container">
                 <div>
-                    <SwipeableTemporaryDrawer />
+                    <SwipeableTemporaryDrawer date={this.props.date}/>
+                    <ScheduleDrawer date={this.props.date} drawer={this.props.drawer}/>
                 </div>
 				<TableContainer>
 					<Table>
 						<TableHead>
 							<TableRow>
-								<TableCell align="center">
-									<h1>2</h1>
+								<TableCell align="center" >
+									<h1 onClick={() => this.handleDateClick()}> 2 </h1>
 									<p>Mon</p>
 								</TableCell>
 								<TableCell align="center">
@@ -262,4 +269,4 @@ class SchdulePage extends React.Component {
     }
 }
 
-export default SchdulePage;
+export default SchedulePage;

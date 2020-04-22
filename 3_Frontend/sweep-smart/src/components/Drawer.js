@@ -3,21 +3,49 @@ import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
 import './drawer.css';
 
 
-
-
 const useStyles = makeStyles({
-  list: {
-    width: 1250,
-  },
-  fullList: {
-    width: 'auto',
-  },
+  overview: {
+    position: "absolute",
+  width: 696,
+  height: 172,
+  left: 27,
+  top: 217,
+},
+
+weatherPaper: {
+    position: "absolute",
+  width: 430,
+  height: 172,
+  left: 731,
+  top: 217,
+},
+
+operatorPaper: {
+    position: "absolute",
+  width: 1135,
+  height: 547,
+  left: 27,
+  top: 397,
+},
+
+vehiclePaper: {
+    position: "absolute",
+  width: 240,
+  height: 516,
+  left: 1169,
+  top: 217,
+},
+
+drawerMain: {
+  background: "#E5E5E5",
+},
 });
 
-export default function SwipeableTemporaryDrawer() {
+export default function SwipeableTemporaryDrawer(props) {
   const classes = useStyles();
   const [state, setState] = React.useState({
     top: false,
@@ -45,18 +73,21 @@ export default function SwipeableTemporaryDrawer() {
       id="drawer-main"
     >
       <h3> Daily Schedule </h3>
-      <div className="overview-container"> 
-        Overview
-      </div>
-      <div className="weather-container"> 
-        Weather
-      </div>
-      <div className="operator-container"> 
-        Daily View by Operators
-      </div>
-      <div className="vehicle-container"> 
-        Vehicles
-      </div>
+      <Paper className={classes.overview}> 
+        <h4> Overview </h4>
+      </Paper>
+
+      <Paper className={classes.weatherPaper}> 
+        <h4> Weather </h4>
+      </Paper>
+
+      <Paper className={classes.operatorPaper}> 
+        <h4> Daily View by Operators </h4>
+      </Paper>
+
+      <Paper className={classes.vehiclePaper}> 
+        <h4> Vehicles </h4>
+      </Paper>
 
     </div>
   );
@@ -79,3 +110,30 @@ export default function SwipeableTemporaryDrawer() {
     </div>
   );
 }
+
+class DayScheduleDrawer extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      onScreenData: [],
+      tab: props.tab,
+      date: props.date,
+      data:null,
+    }
+    }
+
+  render() {
+        const { classes } = this.props;
+    return (
+      <div>
+        
+      </div>
+        );
+    }
+  
+}
+
+
+
+
+
