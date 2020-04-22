@@ -632,6 +632,7 @@ def get_individual_operator_info():
     if not employee_id:
         employee_id = 2882
     data = {}
+    #date = '2020-04-21' # if testing a specific date
 
     # get from database
     # return: a list of assignments, each assignment includes shift, route, working_hrs, leave_hrs(formatted as such 8:00-10:00, leave it “” if no leave on that day), reason
@@ -647,8 +648,8 @@ def get_individual_operator_info():
     for operator in operator_info:
         operator_name = operator[0]
         operator_shift = operator[1]
-        operator_hours = int(operator[3])
-        operator_routes.append(operator[4])
+        operator_hours = int(operator[2])
+        operator_routes.append(operator[3])
 
 
     absences_query = "select HOUR(sum(time_missed)) from ABSENCES where date_absence='{d}' and employee_id={e};"
