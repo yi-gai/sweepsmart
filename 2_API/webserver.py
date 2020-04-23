@@ -558,7 +558,8 @@ def get_daily_onduty_operator_info():
         if not overtime_hrs:
             overtime_hrs = 0
 
-        driver_data = {'name': driver_name,
+        driver_data = {'employee_id': driver_id,
+                    'name': driver_name,
                     'working_hrs': driver_hours+overtime_hrs-holiday_hours-leave_hrs,
                     'leave_hrs':leave_hrs,
                     'acting_hrs': 0, # what is this
@@ -640,7 +641,7 @@ def get_individual_operator_info():
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
     wk_of_month = pendulum.parse(date).week_of_month
 
-    operator_info = db.engine.execute("select e.employee_name,e.shift,e.daily_hours,r.route_id from DRIVERS e join ROUTE_LOG r on e.employee_id=r.employee_id where r.date_swept='{d}' and e.employee_id={e};".format(d=date,e=employee_id))
+    operator_info = db.engine.execute("select e.employee_name,r.shift,e.daily_hours,r.route_id from DRIVERS e join ROUTE_LOG r on e.employee_id=r.employee_id where r.date_swept='{d}' and e.employee_id={e};".format(d=date,e=employee_id))
     operator_routes = []
     operator_name = ""
     operator_shift = ""
