@@ -1,0 +1,32 @@
+.background-container {
+	background: #E5E5E5;
+	width: 143%;
+	height: 100%
+}
+
+.date {
+	margin-left: 27px;
+}
+
+.day-display {
+	width: 200px;
+	font-family:  'Lato', sans-serif;
+	font-style: normal;
+	font-weight: 900;
+	font-size: 36px;
+	line-height: 36px;
+	color: #3A423E;
+}
+
+.week-numebr-display {
+	height: 30px;
+
+	font-family: 'Lato', sans-serif;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 18px;
+	line-height: 30px;
+
+	color: #7A827F;
+}
+
