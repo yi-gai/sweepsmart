@@ -208,26 +208,26 @@ class SchedulePage extends React.Component {
     									<p style={{"line-height": '10px'}}>Mon</p>
                                     </DateClickButton>
 								</TableCell>
-								<TableCell align="center" onClick={() => this.handleDateClick(2)}>
-    								<DateClickButton textAlign="center" onClick={() => this.handleDateClick(1)}>
+								<TableCell align="center">
+    								<DateClickButton textAlign="center" onClick={() => this.handleDateClick(2)}>
                                         <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 2).getDate()}</h1>
                                         <p style={{"line-height": '10px'}}>Tue</p>
                                     </DateClickButton>
 								</TableCell>
-								<TableCell align="center" onClick={() => this.handleDateClick(3)}>
-									<DateClickButton textAlign="center" onClick={() => this.handleDateClick(1)}>
+								<TableCell align="center">
+									<DateClickButton textAlign="center" onClick={() => this.handleDateClick(3)}>
                                         <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 3).getDate()}</h1>
                                         <p style={{"line-height": '10px'}}>Wed</p>
                                     </DateClickButton>
 								</TableCell>
-								<TableCell align="center" onClick={() => this.handleDateClick(4)}>
-									<DateClickButton textAlign="center" onClick={() => this.handleDateClick(1)}>
+								<TableCell align="center">
+									<DateClickButton textAlign="center" onClick={() => this.handleDateClick(4)}>
                                         <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 4).getDate()}</h1>
                                         <p style={{"line-height": '10px'}}>Thu</p>
                                     </DateClickButton>
 								</TableCell>
-								<TableCell align="center" onClick={() => this.handleDateClick(5)}>
-									<DateClickButton textAlign="center" onClick={() => this.handleDateClick(1)}>
+								<TableCell align="center">
+									<DateClickButton textAlign="center" onClick={() => this.handleDateClick(5)}>
                                         <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 5).getDate()}</h1>
                                         <p style={{"line-height": '10px'}}>Fri</p>
                                     </DateClickButton>
