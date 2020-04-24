@@ -14,11 +14,16 @@ code {
 
 /* main content starts */
 .main-content {
-  position: absolute;
+  position: fixed;
+  overflow-y: scroll;
   top: 0;
   bottom: 0;
   right: 0;
   width: 85%;
   background: #E5E5E5;
+}
+
+.content-container {
+  margin-bottom: 30px;
 }
 /* main content ends */

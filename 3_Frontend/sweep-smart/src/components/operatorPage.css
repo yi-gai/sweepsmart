@@ -8,11 +8,6 @@
     display: flex;
 }
 
-.work-history-div {
-    height: 50%;
-    width: 100%;
-}
-
 .user-icon{
     width: 100px !important;
     height: 100px !important;

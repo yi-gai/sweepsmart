@@ -15,20 +15,22 @@ function App() {
         <Sidebar/>
       </div>
       <div className='main-content'>
-        <Switch>
-          <Route path="/operator">
-            <Operator />
-          </Route>
-          <Route path="/vehicle">
-            <Vehicle/>
-          </Route>
-          <Route path="/performance">
-            <Performance/>
-          </Route>
-          <Route path="/">
-            <Schedule />
-          </Route>
-        </Switch>
+        <div className='inner'>
+          <Switch>
+            <Route path="/operator">
+              <Operator />
+            </Route>
+            <Route path="/vehicle">
+              <Vehicle/>
+            </Route>
+            <Route path="/performance">
+              <Performance/>
+            </Route>
+            <Route path="/">
+              <Schedule />
+            </Route>
+          </Switch>
+        </div>
       </div>
     </Router>
   )
@@ -46,7 +48,7 @@ class Schedule extends React.Component {
 class Operator extends React.Component {
   render() {
     let buttons = ["Day Shift", "Night Shift"];
-    return <Main buttons={buttons} pageName="Operators" viewType="week"/>;
+    return <Main buttons={buttons} pageName="Operators" viewType="day"/>;
   }
 }
 
