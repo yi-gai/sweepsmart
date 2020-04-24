@@ -106,7 +106,10 @@ class Main extends React.Component {
 			mainContent = <SchedulePage tab={this.state.currentTab} date={this.state.date}/>;
 		}else if(this.props.pageName === 'Operators' ){
 			// TODO: return Operator component
-			mainContent = <OperatorPage tab={this.state.currentTab} date={this.state.date}/>;
+			mainContent = <OperatorPage 
+				tab={this.state.currentTab} 
+				date={this.state.date} 
+				viewType={this.state.viewType}/>;
 		}else if(this.props.pageName === 'Vehicles'){
 			// TODO: return Vehicle component
 			mainContent = <VehiclePage
