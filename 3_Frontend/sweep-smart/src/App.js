@@ -7,12 +7,15 @@ import {
   Switch,
   Route
 } from "react-router-dom";
+import { createBrowserHistory } from "history";
 
 function App() {
+  document.title = "Sweep Smart";
+  const history = createBrowserHistory();
   return (
     <Router>
       <div>
-        <Sidebar/>
+        <Sidebar curRoute={history.location.pathname}/>
       </div>
       <div className='main-content'>
         <Switch>
