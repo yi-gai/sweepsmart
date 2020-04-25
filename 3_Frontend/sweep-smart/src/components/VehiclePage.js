@@ -55,6 +55,7 @@ class WeeklyTable extends React.Component {
 	}
 
 	componentDidMount() {
+		console.log(this.props.date)
 	    API.get("/vehicle/week", {
 	    	params: {'date': this.props.date}
 	    }).then(res => res['data'])

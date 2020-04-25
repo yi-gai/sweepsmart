@@ -7,11 +7,13 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
+import Button from '@material-ui/core/Button';
 
-import './schedulepage.css';
+import './schedulePage.css';
 import SwipeableTemporaryDrawer from "./Drawer";
 import ScheduleDrawer from "./ScheduleDrawer";
 import {withStyles} from "@material-ui/styles/index";
+import { styled } from '@material-ui/core/styles';
 import API from "../API/api";
 
 const styles = theme => (
@@ -128,6 +130,16 @@ function ProcessRawData (rawData) {
 	return processedData;
 }
 
+const DateClickButton = styled(Button)({
+    fontFamily:  'Lato',
+    fontFamily:  'sans-serif',
+    fontStyle: 'normal',
+    fontWeight: 'bold',
+    color: '#7A827F',
+    textTransform: 'none',
+    display: 'inline-block',
+});
+
 class SchedulePage extends React.Component {
 
     constructor(props) {
@@ -137,8 +149,11 @@ class SchedulePage extends React.Component {
 			tab: props.tab,
 			date: props.date,
 			data:null,
-            drawer: false
+            drawer: false,
+            daily_view_date: this.props.date
 		}
+        this.handleDateClick = this.handleDateClick.bind(this);
+        this.handleClose = this.handleClose.bind(this);
     }
 
     componentDidMount() {
@@ -157,45 +172,65 @@ class SchedulePage extends React.Component {
             )
     }
 
-    handleDateClick() {
-    this.setState({drawer: true})
+    handleDateClick(weekday) {
+        let diff = weekday - this.props.date.getDay();
+        let curr = new Date(this.props.date);
+        curr.setDate(this.props.date.getDate() + diff);
+
+        this.setState({drawer: true});
+        this.setState({daily_view_date: curr});
     }
 
-    handleChange = date => {
+    handleChange(date) {
     	this.props.handleDateChange(date);
     };
+
+    handleClose() {
+        this.setState({drawer: false});
+    }
 
 	render() {
         const { classes } = this.props;
 		return (
 			<div className="content-container">
                 <div>
-                    <SwipeableTemporaryDrawer date={this.props.date}/>
-                    <ScheduleDrawer date={this.props.date} drawer={this.props.drawer}/>
+                    <ScheduleDrawer date={this.state.daily_view_date}
+                        drawer={this.state.drawer}
+                        handleClose={this.handleClose}/>
                 </div>
 				<TableContainer>
 					<Table>
 						<TableHead>
 							<TableRow>
-								<TableCell align="center" >
-									<h1 onClick={() => this.handleDateClick()}> 2 </h1>
-									<p>Mon</p>
+								<TableCell align="center">
+                                    <DateClickButton textAlign="center" onClick={() => this.handleDateClick(1)}>
+    									<h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 1).getDate()}</h1>
+    									<p style={{"line-height": '10px'}}>Mon</p>
+                                    </DateClickButton>
 								</TableCell>
 								<TableCell align="center">
-									<h1>3</h1>
-									<p>Tue</p>
+    								<DateClickButton textAlign="center" onClick={() => this.handleDateClick(2)}>
+                                        <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 2).getDate()}</h1>
+                                        <p style={{"line-height": '10px'}}>Tue</p>
+                                    </DateClickButton>
 								</TableCell>
 								<TableCell align="center">
-									<h1>4</h1>
-									<p>Wed</p>
+									<DateClickButton textAlign="center" onClick={() => this.handleDateClick(3)}>
+                                        <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 3).getDate()}</h1>
+                                        <p style={{"line-height": '10px'}}>Wed</p>
+                                    </DateClickButton>
 								</TableCell>
 								<TableCell align="center">
-									<h1>5</h1>
-									<p>Thu</p>
+									<DateClickButton textAlign="center" onClick={() => this.handleDateClick(4)}>
+                                        <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 4).getDate()}</h1>
+                                        <p style={{"line-height": '10px'}}>Thu</p>
+                                    </DateClickButton>
 								</TableCell>
 								<TableCell align="center">
-									<h1>6</h1>
-									<p>Fri</p>
+									<DateClickButton textAlign="center" onClick={() => this.handleDateClick(5)}>
+                                        <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 5).getDate()}</h1>
+                                        <p style={{"line-height": '10px'}}>Fri</p>
+                                    </DateClickButton>
 								</TableCell>
 							</TableRow>
 						</TableHead>
@@ -267,6 +302,12 @@ class SchedulePage extends React.Component {
 			</div>
         );
     }
+}
+
+function GetWeekdayDate(date, weekday) {
+    let curr = new Date(date);
+    curr.setDate(date.getDate() - date.getDay() + weekday);
+    return curr;
 }
 
 export default SchedulePage;

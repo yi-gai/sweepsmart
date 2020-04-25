@@ -10,9 +10,17 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import Drawer from '@material-ui/core/Drawer';
+import Modal from '@material-ui/core/Modal';
 import SvgIcon from '@material-ui/core/SvgIcon';
 import CloseIcon from '@material-ui/icons/Close';
 import FaceIcon from '@material-ui/icons/Face';
+import Button from '@material-ui/core/Button';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import TextField from '@material-ui/core/TextField';
 
 import './operatorPage.css';
 import { amber } from '@material-ui/core/colors';
@@ -23,9 +31,15 @@ const styles = theme => (
     },
     largeIcon: {
       width: 60,
-      height: 60,
+      height: 60
     },
-  
+    paper: {
+      position: 'absolute',
+      width: 700,
+      height: 700,
+      backgroundColor: '#E5E5E5',
+      border: '2px solid #000',
+    },
   }
 );
 
@@ -34,10 +48,12 @@ class OperatorPage extends React.Component {
     super(props);
     this.state = {
       onScreenData: [],
-      tab: props.tab,
+      tab: props.tab, // 'Day Shift' or 'Night Shift'
       date: props.date,
+      viewType: props.viewType, // 'week' or 'day'
       data:null,
       drawer: false,
+      modal: false,
       drawer_date: new Date(),
       drawer_data: {
         'name' : 'Roger',
@@ -48,193 +64,367 @@ class OperatorPage extends React.Component {
             'route': '7A',
             'working_hrs': 10,
             'overtime_hrs':10,
-            'leave_hrs': 20,
+            'leave_hrs': '8:00-12:00',
             'acting_7.5_hrs': 0,
             'acting_12.5_hrs': 0,
             'standby_hrs': 0,
             'holiday_hrs': 5
           }
-        ],
-        'history' : [{
-          'week': '1/6-1/10',
-          'total_scheduled': 20,
-          'total_swept': 18,
-          'success_rate': 95,
-          'total_working_hrs': 100,
-          'total_leave_hrs': 10}
         ]
+      },
+      modal_data: {
+        assignments: {
+          'Mon':{
+            1: {
+              'AM': '7A',
+              'PM': '7A-1'
+            },
+            3: {
+              'AM': '7A',
+              'PM': '7A-1'
+            },
+            5: {
+              'AM': '7A',
+              'PM': '7A-1'
+            }
+          }
+        }
       }
     }
   }
+
+  makeMainPageAPICall(){
+    if (this.props.viewType === 'week') {
+      API.get("/operator/week", {
+        params: {
+          'date': this.state.date.toISOString().slice(0, 10)
+        }})
+        .then(res => res['data'])
+        .then(
+          (result) => {
+            console.log(result)
+            this.setState({data: result, onScreenData: result.day});
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
+    }else{
+      API.get("/operator/day/onduty", {
+        params: {
+          'date': this.state.date.toISOString().slice(0, 10)
+        }})
+        .then(res => res['data'])
+        .then(
+          (result) => {
+            console.log(result)
+            this.setState({data: result, onScreenData: result.day});
+          },
+          (error) => {
+            console.log(error)
+          }
+        )
+    }
+  }
+
   componentDidMount() {
-    API.get("/operator/week")
-      .then(res => res['data'])
-      .then(
-        (result) => {
-          console.log(result)
-          this.setState({data: result, onScreenData: result.day});
-        },
-        (error) => {
-          console.log(error)
-        }
-      )
+    this.makeMainPageAPICall();
   }
 
   componentDidUpdate(prevProps, prevState) {
+    // changes day/night shift tab
     if (prevProps.tab!= this.props.tab && this.state.data) {
       if (this.props.tab === 'Day Shift')
         this.setState({onScreenData: this.state.data.day});
       else if (this.props.tab === 'Night Shift')
-          this.setState({onScreenData: this.state.data.night});
+        this.setState({onScreenData: this.state.data.night});
+    }
+    if (prevProps.viewType != this.props.viewType){
+      this.makeMainPageAPICall();
     }
   }
 
   handleCellClick(row) {
+    console.log('handleCellClick')
     this.setState({drawer: true})
     API.get("/operator/individual/info", {
       params: {
-      'employee_id': row.employee_id,
-      'date': '2010-04-13'
+        'employee_id': row.employee_id,
+        'date': this.state.date.toISOString().slice(0, 10)
       }
     })
       .then(res => res['data'])
       .then(
         (result) => {
-          console.log(result)
-          this.setState({drawer_data: result})
+          const res = {
+            ...result,
+            employee_id: row.employee_id
+          }
+          this.setState({drawer_data: res})
+          console.log(res)
         },
         (error) => {
-          this.setState({drawer_data: {
-            'name' : 'Roger',
-            'status': true,
-            'assignments': [
-              {
-                'shift': 'AM',
-                'route': '7A',
-                'working_hrs': 10,
-                'overtime_hrs':10,
-                'leave_hrs': 20,
-                'acting_7.5_hrs': 0,
-                'acting_12.5_hrs': 0,
-                'standby_hrs': 0,
-                'holiday_hrs': 5
-              }
-            ]
-          }})
+          console.log('error')
         }
       )
+  }
+
+  handleModalClick(){
+    this.setState({modal: true})
   }
 
   handleDrawerClose() {
     this.setState({drawer: false})
   }
 
+  handleModalClose(){
+    this.setState({modal: false})
+  }
+
+  handleOperatorDelete = (eid) =>{
+    let params = new URLSearchParams();
+		params.append('employee_id', eid);
+    API({
+			method: 'post',
+			url: '/operator/week/remove',
+			withCredentials: false,
+			data: params
+		}).then(res => {
+			if (res['status'] == 200) {
+				alert("Employee removed!");
+        this.componentDidMount();
+        this.handleDrawerClose();
+			} else {
+				alert("Error");
+			}
+		})
+  }
+
+  handleAddComment(){
+    
+  }
+  
+  getIndividualTable() {
+    let table = []
+    var first = {}
+    var second = {}
+    var children = []
+
+    if(this.state.tab == 'Day Shift'){
+      if (this.state.drawer_data.assignments.length == 1){
+        first = this.state.drawer_data.assignments[0].shift === 'AM' ? this.state.drawer_data.assignments[0] : null
+        second = this.state.drawer_data.assignments[0].shift === 'PM' ? this.state.drawer_data.assignments[0] : null
+      }
+      if (this.state.drawer_data.assignments.length == 2){
+        first = this.state.drawer_data.assignments[0].shift === 'AM' ? this.state.drawer_data.assignments[0] : this.state.drawer_data.assignments[1]
+        second = this.state.drawer_data.assignments[0].shift === 'PM' ? this.state.drawer_data.assignments[0] : this.state.drawer_data.assignments[1]
+      }
+      if(!first){
+        first = {'route': '', 'working_hrs': '', 'leave_hrs': ''}
+      }
+      if(!second){
+        second = {'route': '', 'working_hrs': '', 'leave_hrs': ''}
+      }
+      children.push(<TableCell align="center">{`8:00AM - 12:00AM`}</TableCell>)
+      children.push(<TableCell align="center">{first.route}</TableCell>)
+      children.push(<TableCell align="center">{first.working_hrs}</TableCell>)
+      if(first.leave_hrs)
+        children.push(<TableCell align="center">{first.leave_hrs}</TableCell>)
+      else
+        children.push(<TableCell align="center"><Button size="small" variant="outlined" color="primary">+</Button></TableCell>)
+      children.push(<TableCell align="center"><AddLeaveAlertDialog eid={this.state.drawer_data.employee_id} shift='AM' name={this.state.drawer_data.name} handleAddComment={this.handleAddComment()}/></TableCell>)
+      table.push(<TableRow>{children}</TableRow>)
+      children = []
+      children.push(<TableCell align="center">{`12:00PM - 4:00PM`}</TableCell>)
+      children.push(<TableCell align="center">{second.route}</TableCell>)
+      children.push(<TableCell align="center">{second.working_hrs}</TableCell>)
+      if(second.leave_hrs)
+        children.push(<TableCell align="center">{second.leave_hrs}</TableCell>)
+      else
+        children.push(<TableCell align="center"><Button size="small" variant="outlined" color="primary">+</Button></TableCell>)
+      children.push(<TableCell align="center"><AddLeaveAlertDialog eid={this.state.drawer_data.employee_id} shift='PM' name={this.state.drawer_data.name} handleAddComment={this.handleAddComment()}/></TableCell>)
+      table.push(<TableRow>{children}</TableRow>)
+    }else{
+
+    }
+    return table;
+  }
+
+  createModalTable(){
+    let table = []
+    // Outer loop to create parent
+    let assignments = this.state.modal_data.assignments;
+    for (let i = 0; i < 10; i++) {
+      let children = []
+      //create children
+      var shift = ''
+      if(i % 2 === 0){
+        shift = 'AM'
+        children.push(<TableCell align="center">{`${Math.ceil((i + 1)/2)} week`}</TableCell>)
+        children.push(<TableCell align="center">{`8-12 PM`}</TableCell>)
+      }else{
+        shift = 'PM'
+        children.push(<TableCell align="center"></TableCell>)
+        children.push(<TableCell align="center">{`12-4 PM`}</TableCell>)
+      }
+      let weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+      for(let j = 0; j < 5; j++){
+        var route = '';
+        if(assignments[weekDays[j]] && assignments[weekDays[j]][Math.ceil((i + 1)/2)] && assignments[weekDays[j]][Math.ceil((i + 1)/2)][shift]){
+          route = this.state.modal_data.assignments[weekDays[j]][Math.ceil((i + 1)/2)][shift];
+          children.push(<TableCell align="center">
+                          <Button size="small" variant="contained" color="primary">
+                            {`${route}`}
+                          </Button>
+                        </TableCell>)
+        }else{
+          children.push(<TableCell align="center"><Button size="small" variant="outlined" color="primary">+</Button></TableCell>)
+        }
+      }
+      //Create the parent and add the children
+      table.push(<TableRow>{children}</TableRow>)
+    }
+    return table;
+  }
     render() {
         const { classes } = this.props;
-        return (
+        let viewTypeView;
+        if (this.props.viewType === 'day') {
+          viewTypeView =
             <div className="content-container">
-                <TableContainer component={Paper}>
+              <TableContainer component={Paper}>
+                <Table className={classes.table} aria-label="simple table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell></TableCell>
+                          <TableCell size="large" align="center">Total working hrs</TableCell>
+                          <TableCell size="large" align="center">Total leave hrs</TableCell>
+                          <TableCell size="large" align="center">Overtime hrs</TableCell>
+                          <TableCell size="large" align="center">Holiday hrs</TableCell>
+                      </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {this.state.onScreenData.map((row) => 
+                          (
+                            <TableRow key={row.employee_id}>
+                              <TableCell component="th" scope="row" onClick={() => this.handleCellClick(row)}>
+                                  {row.name}
+                              </TableCell>
+                              <TableCell size="large" align="center">{row.working_hrs}</TableCell>
+                              <TableCell size="large" align="center">{row.leave_hrs}</TableCell>
+                              <TableCell size="large" align="center">{row.overtime_hrs}</TableCell>
+                              <TableCell size="large" align="center">{row.holiday_hrs}</TableCell>
+                            </TableRow>
+                          )
+                        )}
+                      </TableBody>
+                  </Table>
+              </TableContainer>
+              <Drawer anchor='right' open={this.state.drawer}>
+                <CloseIcon onClick={() => this.handleDrawerClose()}/>
+                <div className="operator-top-div">
+                  <FaceIcon className="user-icon"/>
+                  <div className="name-text">
+                    {this.state.drawer_data.name}
+                    <div className="shift-text">
+                      {this.state.tab} Operator
+                    </div>
+                  </div>
+                  <div>
+                    <div className="action-div" onClick={() => this.handleModalClick()}><CalendarIcon/>Route Assignment</div>
+                    <DeleteOperatorAlertDialog handleOperatorDelete={this.handleOperatorDelete} eid={this.state.drawer_data.employee_id}/>
+                  </div>
+                </div>
+                <div>
+                  <DayPicker date={this.state.drawer_date}></DayPicker>
+                  <TableContainer component={Paper}>
                     <Table className={classes.table} aria-label="simple table">
                         <TableHead>
                         <TableRow>
                             <TableCell ></TableCell>
-                            <TableCell align="center">Total<br/>Working Hrs</TableCell>
-                            <TableCell align="center">Total Leave Hrs</TableCell>
-                            <TableCell align="center">Acting Hrs</TableCell>
-                            <TableCell align="center">Standby Hrs</TableCell>
-                            <TableCell align="center">Overtime Hrs</TableCell>
-                            <TableCell align="center">Holiday Hrs</TableCell>
-                            <TableCell align="center">Actions</TableCell>
+                            <TableCell align="center">Route</TableCell>
+                            <TableCell align="center">Working hrs</TableCell>
+                            <TableCell align="center">Leaves</TableCell>
+                            <TableCell align="center">Comment</TableCell>
                         </TableRow>
                         </TableHead>
                         <TableBody>
-                          {this.state.onScreenData.map((row) => 
-                            (
-                              <TableRow key={row.name}>
-                              <TableCell component="th" scope="row" onClick={() => this.handleCellClick(row)}>
-                                  {row.name}
-                              </TableCell>
-                              <TableCell align="center">{row.working_hrs}</TableCell>
-                              <TableCell align="center">{row.leave_hrs}</TableCell>
-                              <TableCell align="center">{row.acting_hrs}</TableCell>
-                              <TableCell align="center">{row.standby_hrs}</TableCell>
-                              <TableCell align="center">{row.overtime_hrs}</TableCell>
-                              <TableCell align="center">{row.holiday_hrs}</TableCell>
-                              <TableCell align="center">{row.is_reviewed}</TableCell>
-                              </TableRow>
-                            )
-                          )}
+                          {this.getIndividualTable()}
                         </TableBody>
                     </Table>
-                </TableContainer>
-                <Drawer anchor='right' open={this.state.drawer}>
-                  <CloseIcon onClick={() => this.handleDrawerClose()}/>
-                  <div className="operator-top-div">
-                    <FaceIcon className="user-icon"/>
-                    <div className="name-text">
-                      {this.state.drawer_data.name}
-                      <div className="shift-text">
-                        Day-shift Operator
-                      </div>
-                    </div>
-                    <div>
-                      <div className="action-div"><CalendarIcon/>Route Assignment</div>
-                      <div className="action-div"><TrashIcon/>Remove</div>
-                    </div>
-                  </div>
-                  <div>
-                    <DayPicker date={this.state.drawer_date}></DayPicker>
+                  </TableContainer>
+                </div>
+              </Drawer>
+              <Modal 
+                style={{display:'flex', alignItems:'center', justifyContent:'center'}}
+                open={this.state.modal} 
+                aria-labelledby="simple-modal-title"
+                aria-describedby="simple-modal-description">
+                <div className={classes.paper}>
+                  <CloseIcon onClick={() => this.handleModalClose()}/>
+                  <div id="simple-modal-title">Regular Assignment</div>
                     <TableContainer component={Paper}>
                       <Table className={classes.table} aria-label="simple table">
-                          <TableHead>
+                        <TableHead>
                           <TableRow>
-                              <TableCell ></TableCell>
-                              <TableCell align="center">Route</TableCell>
-                              <TableCell align="center">Working hrs</TableCell>
-                              <TableCell align="center">Leaves</TableCell>
-                              <TableCell align="center">Comment</TableCell>
+                            <TableCell></TableCell>
+                            <TableCell></TableCell>
+                            <TableCell align="center">Mon</TableCell>
+                            <TableCell align="center">Tue</TableCell>
+                            <TableCell align="center">Wed</TableCell>
+                            <TableCell align="center">Thu</TableCell>
+                            <TableCell align="center">Fri</TableCell>
                           </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            <TableRow>
-                              <TableCell align="center">8:00AM - 12:00AM</TableCell>
-                              <TableCell align="center">7A-1</TableCell>
-                              <TableCell align="center">20</TableCell>
-                            </TableRow>
-                          </TableBody>
+                        </TableHead>
+                        <TableBody>
+                            {this.createModalTable()}
+                        </TableBody>
                       </Table>
                     </TableContainer>
                   </div>
-                  <div className="work-history-div">
-                    <div className="title-div">Work History</div>
-                      <TableContainer component={Paper}>
-                        <Table className={classes.table} aria-label="simple table">
-                          <TableHead>
-                          <TableRow>
-                              <TableCell align="center">Week</TableCell>
-                              <TableCell align="center">Total scheduled</TableCell>
-                              <TableCell align="center">Total swept</TableCell>
-                              <TableCell align="center">Sucess rate</TableCell>
-                              <TableCell align="center"> Total working hrs</TableCell>
-                              <TableCell align="center"> Total leave hrs</TableCell>
-                          </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            <TableRow>
-                              <TableCell align="center">1/6-1/10</TableCell>
-                              <TableCell align="center">5</TableCell>
-                              <TableCell align="center">7</TableCell>
-                              <TableCell align="center">95%</TableCell>
-                              <TableCell align="center">40</TableCell>
-                              <TableCell align="center">40</TableCell>
+                </Modal>
+              </div>;
+        }else if(this.props.viewType === 'week'){
+          viewTypeView = 
+            <div className="content-container">
+              <TableContainer component={Paper}>
+                <Table className={classes.table} aria-label="simple table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell ></TableCell>
+                          <TableCell align="center">Total working hrs</TableCell>
+                          <TableCell align="center">Total leave hrs</TableCell>
+                          <TableCell align="center">Overtime hrs</TableCell>
+                          <TableCell align="center">Holiday hrs</TableCell>
+                          <TableCell align="center">Total swept</TableCell>
+                          <TableCell align="center">Total missed</TableCell>
+                      </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {this.state.onScreenData.map((row) => 
+                          (
+                            <TableRow key={row.employee_id}>
+                            <TableCell component="th" scope="row">
+                                {row.name}
+                            </TableCell>
+                            <TableCell align="center">{row.working_hrs}</TableCell>
+                            <TableCell align="center">{row.leave_hrs}</TableCell>
+                            <TableCell align="center">{row.overtime_hrs}</TableCell>
+                            <TableCell align="center">{row.holiday_hrs}</TableCell>
+                            <TableCell align="center">{row.swept_total}</TableCell>
+                            <TableCell align="center">{row.missed_total}</TableCell>
                             </TableRow>
-                          </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </div>
-                </Drawer>
-                
-            </div>
+                          )
+                        )}
+                      </TableBody>
+                  </Table>
+              </TableContainer>
+            </div>;
+        }
+        return (
+          <div>
+            {viewTypeView}
+          </div>
         );
     }
 }
@@ -250,6 +440,97 @@ class DayPicker extends React.Component {
 				<div className="day-picker-arrow">
 					<DownArrowIcon/>
 				</div>
+			</div>
+		);
+	}
+}
+
+class AddLeaveAlertDialog extends React.Component {
+  constructor(props) {
+		super(props);
+		this.state = {open: false};
+		this.handleClickOpen = this.handleClickOpen.bind(this);
+		this.handleCancel = this.handleCancel.bind(this);
+		this.handleAddComment = this.handleAddComment.bind(this);
+  }
+  handleClickOpen() {
+		this.setState({open: true});
+	};
+
+	handleCancel() {
+		this.setState({open: false});
+	}
+
+	handleAddComment() {
+		this.setState({open: false});
+		this.props.handleAddComment(this.props.vid);
+  };
+  render() {
+		return (
+			<div>
+        <div onClick={this.handleClickOpen}>
+          <EditIcon onClick={this.handleClickOpen}/>
+        </div>
+				<Dialog open={this.state.open}
+				onClose={this.handleCancel}
+				aria-labelledby="alert-dialog-title"
+				aria-describedby="alert-dialog-description">
+					<DialogTitle id="alert-dialog-title">Add comment for {this.props.name} on {this.props.shift} shift</DialogTitle>
+					<DialogContent>
+          <TextField autoFocus margin="dense" id="comment" label="Comment" type="text" fullWidth/>
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={this.handleCancel} color="primary"> Cancel </Button>
+						<Button onClick={this.handleAddComment} color="primary" autoFocus>Add</Button>
+					</DialogActions>
+				</Dialog>
+			</div>
+		);
+	}
+}
+
+class DeleteOperatorAlertDialog extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {open: false};
+		this.handleClickOpen = this.handleClickOpen.bind(this);
+		this.handleCancel = this.handleCancel.bind(this);
+		this.handleOperatorDelete = this.handleOperatorDelete.bind(this);
+	}
+
+	handleClickOpen() {
+		this.setState({open: true});
+	};
+
+	handleCancel() {
+		this.setState({open: false});
+	}
+
+	handleOperatorDelete() {
+		this.setState({open: false});
+		this.props.handleOperatorDelete(this.props.eid);
+	};
+
+	render() {
+		return (
+			<div>
+				<div className="action-div" onClick={this.handleClickOpen} >
+					<TrashIcon /> Remove
+				</div>
+        <Dialog open={this.state.open} onClose={this.handleCancel} 
+          aria-labelledby="alert-dialog-title"
+				  aria-describedby="alert-dialog-description">
+					<DialogTitle id="alert-dialog-title">"WARNING: Are you sure to remove this Operator?"</DialogTitle>
+					<DialogContent>
+            <DialogContentText id="alert-dialog-description">
+              This action will delete this operator forever for future schedules, remove all data about it, and cannot be undone.
+            </DialogContentText>
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={this.handleCancel} color="primary">Cancel</Button>
+						<Button onClick={this.handleOperatorDelete} color="primary" autoFocus>Yes</Button>
+					</DialogActions>
+				</Dialog>
 			</div>
 		);
 	}
@@ -294,6 +575,15 @@ function TrashIcon() {
         <path d="M14.9415 24.5717C14.9555 24.5726 14.9694 24.5728 14.9834 24.5728C15.4026 24.5728 15.753 24.2452 15.7749 23.823L16.5198 9.56365C16.5426 9.12735 16.2062 8.75512 15.7689 8.73246C15.3303 8.70919 14.9582 9.04496 14.9353 9.48125L14.1905 23.7406C14.1678 24.1768 14.5039 24.5491 14.9415 24.5717Z" fill="#7A827F"/>
         <path d="M6.37648 23.8249C6.39962 24.2466 6.74958 24.5729 7.16793 24.5729C7.18239 24.5729 7.19726 24.5724 7.21193 24.5716C7.64928 24.5479 7.98457 24.1751 7.96082 23.7388L7.18053 9.4795C7.15677 9.0432 6.78285 8.70888 6.34529 8.73277C5.90794 8.75646 5.57265 9.12931 5.5964 9.5656L6.37648 23.8249Z" fill="#7A827F"/>
         <path d="M11.067 24.5729C11.5052 24.5729 11.8603 24.2188 11.8603 23.7819V9.52258C11.8603 9.08567 11.5052 8.73157 11.067 8.73157C10.6288 8.73157 10.2737 9.08567 10.2737 9.52258V23.7819C10.2737 24.2188 10.6288 24.5729 11.067 24.5729Z" fill="#7A827F"/>
+      </svg>
+    </SvgIcon>
+  );
+}
+function EditIcon() {
+  return(
+    <SvgIcon>
+      <svg width="100%" height="100%" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11.5072 0.523254C10.8083 -0.174418 9.67654 -0.174418 8.97764 0.523254L8.34443 1.15993L1.60396 7.89682L1.58963 7.91126C1.58616 7.91473 1.58616 7.91842 1.58247 7.91842C1.57531 7.92917 1.56457 7.9398 1.55751 7.95054C1.55751 7.95412 1.55382 7.95412 1.55382 7.95771C1.54666 7.96845 1.54319 7.97561 1.53592 7.98636C1.53245 7.98994 1.53245 7.99341 1.52886 7.9971C1.52528 8.00784 1.5217 8.01501 1.51801 8.02575C1.51801 8.02922 1.51454 8.02922 1.51454 8.03291L0.0190318 12.5301C-0.0248385 12.6581 0.00851191 12.7999 0.10487 12.8949C0.172578 12.9617 0.2639 12.9991 0.358915 12.9988C0.397749 12.9981 0.436247 12.992 0.473403 12.9809L4.96709 11.4818C4.97056 11.4818 4.97056 11.4818 4.97425 11.4783C4.98555 11.4749 4.99641 11.4701 5.00637 11.4639C5.00917 11.4635 5.01163 11.4623 5.01364 11.4604C5.02428 11.4532 5.0386 11.446 5.04935 11.4388C5.05998 11.4317 5.07083 11.421 5.08158 11.4138C5.08516 11.4101 5.08863 11.4101 5.08863 11.4067C5.09232 11.4031 5.09948 11.3996 5.10306 11.3923L12.4767 4.01867C13.1744 3.31976 13.1744 2.18798 12.4767 1.48918L11.5072 0.523254ZM4.8526 10.641L2.36251 8.15098L8.59489 1.9186L11.085 4.40857L4.8526 10.641ZM2.01177 8.81284L4.18716 10.9881L0.920612 12.0757L2.01177 8.81284ZM11.9723 3.51774L11.5931 3.9006L9.10287 1.4104L9.48584 1.02765C9.90474 0.609092 10.5837 0.609092 11.0027 1.02765L11.9758 2.00074C12.3916 2.42154 12.39 3.09896 11.9723 3.51774Z" fill="#7A827F"/>
       </svg>
     </SvgIcon>
   );

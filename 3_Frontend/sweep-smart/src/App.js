@@ -7,28 +7,33 @@ import {
   Switch,
   Route
 } from "react-router-dom";
+import { createBrowserHistory } from "history";
 
 function App() {
+  document.title = "Sweep Smart";
+  const history = createBrowserHistory();
   return (
     <Router>
       <div>
-        <Sidebar/>
+        <Sidebar curRoute={history.location.pathname}/>
       </div>
       <div className='main-content'>
-        <Switch>
-          <Route path="/operator">
-            <Operator />
-          </Route>
-          <Route path="/vehicle">
-            <Vehicle/>
-          </Route>
-          <Route path="/performance">
-            <Performance/>
-          </Route>
-          <Route path="/">
-            <Schedule />
-          </Route>
-        </Switch>
+        <div className='inner'>
+          <Switch>
+            <Route path="/operator">
+              <Operator />
+            </Route>
+            <Route path="/vehicle">
+              <Vehicle/>
+            </Route>
+            <Route path="/performance">
+              <Performance/>
+            </Route>
+            <Route path="/">
+              <Schedule />
+            </Route>
+          </Switch>
+        </div>
       </div>
     </Router>
   )
@@ -46,7 +51,7 @@ class Schedule extends React.Component {
 class Operator extends React.Component {
   render() {
     let buttons = ["Day Shift", "Night Shift"];
-    return <Main buttons={buttons} pageName="Operators" viewType="week"/>;
+    return <Main buttons={buttons} pageName="Operators" viewType="day"/>;
   }
 }
 

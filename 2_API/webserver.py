@@ -558,7 +558,8 @@ def get_daily_onduty_operator_info():
         if not overtime_hrs:
             overtime_hrs = 0
 
-        driver_data = {'name': driver_name,
+        driver_data = {'employee_id': driver_id,
+                    'name': driver_name,
                     'working_hrs': driver_hours+overtime_hrs-holiday_hours-leave_hrs,
                     'leave_hrs':leave_hrs,
                     'acting_hrs': 0, # what is this
@@ -595,30 +596,30 @@ def get_daily_offduty_operator_info():
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/operator/day/check', methods=["PUT"])
-def update_review_status():
-    employee_id = request.args.get('employee_id')
-    date = request.args.get('date')
-    # modify database
-    return Response(None, status=200, mimetype='application/json')
+# @app.route('/operator/day/check', methods=["PUT"])
+# def update_review_status():
+#     employee_id = request.args.get('employee_id')
+#     date = request.args.get('date')
+#     # modify database
+#     return Response(None, status=200, mimetype='application/json')
 
-@app.route('/operator/day/unassigned', methods=["GET"])
-def get_unassigned_routes():
-    data = {}
-    # get from database
-    # ANNA is this a particular day or in general?
-    data['day'] = ['7A-1', '11A']
-    data['night'] = ['7A-1', '11A']
-    return Response(data, status=200, mimetype='application/json')
+# @app.route('/operator/day/unassigned', methods=["GET"])
+# def get_unassigned_routes():
+#     data = {}
+#     # get from database
+#     # ANNA is this a particular day or in general?
+#     data['day'] = ['7A-1', '11A']
+#     data['night'] = ['7A-1', '11A']
+#     return Response(data, status=200, mimetype='application/json')
 
-@app.route('/operator/day/add', methods=["POST"])
-def add_individual_operator():
-    name = request.args.get('name')
-    shift = request.args.get('shift')
-    routes = request.args.get('routes')
-    # modify database
-    # ANNA what is this adding?
-    return Response(None, status=200, mimetype='application/json')
+# @app.route('/operator/day/add', methods=["POST"])
+# def add_individual_operator():
+#     name = request.args.get('name')
+#     shift = request.args.get('shift')
+#     routes = request.args.get('routes')
+#     # modify database
+#     # ANNA what is this adding?
+#     return Response(None, status=200, mimetype='application/json')
 
 
 # operator individual view
@@ -640,7 +641,7 @@ def get_individual_operator_info():
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
     wk_of_month = pendulum.parse(date).week_of_month
 
-    operator_info = db.engine.execute("select e.employee_name,e.shift,e.daily_hours,r.route_id,r.notes from DRIVERS e join ROUTE_LOG r on e.employee_id=r.employee_id where r.date_swept='{d}' and e.employee_id={e};".format(d=date,e=employee_id))
+    operator_info = db.engine.execute("select e.employee_name,r.shift,e.daily_hours,r.route_id,r.notes from DRIVERS e join ROUTE_LOG r on e.employee_id=r.employee_id where r.date_swept='{d}' and e.employee_id={e};".format(d=date,e=employee_id))
     operator_routes = []
     operator_name = ""
     operator_shift = ""
@@ -683,19 +684,19 @@ def get_individual_operator_info():
                             'standby_hrs': 0}]
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/operator/individual/history', methods=["GET"])
-def get_individual_operator_history():
-    employee_id = request.args.get('employee_id')
-    year = request.args.get('year')
-    data = {}
-    # get from database
-    data['history'] = [{'week': '1/6-1/10',
-                        'total_scheduled': 20,
-                        'total_swept': 18,
-                        'success_rate': 95,
-                        'total_working_hrs': 100,
-                        'total_leave_hrs': 10}]
-    return Response(data, status=200, mimetype='application/json')
+# @app.route('/operator/individual/history', methods=["GET"])
+# def get_individual_operator_history():
+#     employee_id = request.args.get('employee_id')
+#     year = request.args.get('year')
+#     data = {}
+#     # get from database
+#     data['history'] = [{'week': '1/6-1/10',
+#                         'total_scheduled': 20,
+#                         'total_swept': 18,
+#                         'success_rate': 95,
+#                         'total_working_hrs': 100,
+#                         'total_leave_hrs': 10}]
+#     return Response(data, status=200, mimetype='application/json')
 
 @app.route('/operator/individual/add_leave', methods=["POST"])
 def update_individual_operator_leave():
@@ -709,7 +710,7 @@ def update_individual_operator_leave():
 
     return Response(None, status=200, mimetype='application/json')
 
-@app.route('/operator/day/comment', methods=["PUT"])
+@app.route('/operator/day/comment', methods=["POST"])
 def add_individual_operator_comment():
     employee_id = request.args.get('employee_id')
     date = request.args.get('date')
@@ -721,72 +722,76 @@ def add_individual_operator_comment():
     db.engine.execute("update ROUTE_LOG set notes='{c}' where employee_id={e} and date_swept='{d}' and shift='{s}';".format(c=comment,e=employee_id,d=date,s=shift))
     return Response(None, status=200, mimetype='application/json')
 
-@app.route('/operator/individual/update_special', methods=["POST"])
-def update_individual_operator_special_assignment():
-    employee_id = request.args.get('employee_id')
-    date = request.args.get('date')
-    hours = request.args.get('hours')
-    assignment_type = request.args.get('assignment_type')
-    # modify database
-    # ANNA what is this
-    return Response(None, status=200, mimetype='application/json')
+# @app.route('/operator/individual/update_special', methods=["POST"])
+# def update_individual_operator_special_assignment():
+#     employee_id = request.args.get('employee_id')
+#     date = request.args.get('date')
+#     hours = request.args.get('hours')
+#     assignment_type = request.args.get('assignment_type')
+#     # modify database
+#     # ANNA what is this
+#     return Response(None, status=200, mimetype='application/json')
 
-@app.route('/operator/week/remove', methods=["POST"])
-def remove_operator():
-    employee_id = request.args.get('employee_id')
-    # modify database
-    db.engine.execute("delete from DRIVERS where employee_id={e};".format(e=employee_id))
-    return Response(None, status=200, mimetype='application/json')
+# @app.route('/operator/week/remove', methods=["POST"])
+# def remove_operator():
+#     if 'application/json' in request.headers['Content-Type'].lower():
+#         arguments = request.get_json()
+#     if 'application/x-www-form-urlencoded' in request.headers['Content-Type'].lower():
+#         arguments = request.form
+#     employee_id = arguments.get('employee_id')
+#     # modify database
+#     db.engine.execute("delete from DRIVERS where employee_id={e};".format(e=employee_id))
+#     return Response(None, status=200, mimetype='application/json')
 
-@app.route('/operator/individual/assignment', methods=["GET"])
-def get_operator_assignment():
-    employee_id = request.args.get('employee_id')
-    if not employee_id:
-    	employee_id = 2882
-    month = request.args.get('month')
-    data = {}
-    data['assignment'] = []
-    # get from database
+# @app.route('/operator/individual/assignment', methods=["GET"])
+# def get_operator_assignment():
+#     employee_id = request.args.get('employee_id')
+#     if not employee_id:
+#     	employee_id = 2882
+#     month = request.args.get('month')
+#     data = {}
+#     data['assignment'] = []
+#     # get from database
 
-    weeks = [1,2,3,4,5]
-    days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
-    times = ['AM','PM','night']
-    driver_select = 'select employee_name'
-    driver_cols = ['employee_name']
-    for w in weeks:
-        for d in days:
-            for t in times:
-            	driver_info = db.engine.execute("select route_id_{d}{w}_{t} from DRIVERS where employee_id={e};".format(d=d,w=w,t=t,e=employee_id)).fetchone()[0]
-            	if driver_info:
-            		data['assignment'].append({'week':w,'shift':t,'route':driver_info})
+#     weeks = [1,2,3,4,5]
+#     days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+#     times = ['AM','PM','night']
+#     driver_select = 'select employee_name'
+#     driver_cols = ['employee_name']
+#     for w in weeks:
+#         for d in days:
+#             for t in times:
+#             	driver_info = db.engine.execute("select route_id_{d}{w}_{t} from DRIVERS where employee_id={e};".format(d=d,w=w,t=t,e=employee_id)).fetchone()[0]
+#             	if driver_info:
+#             		data['assignment'].append({'week':w,'shift':t,'route':driver_info})
 
-    return Response(json.dumps(data), status=200, mimetype='application/json')
+#     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/operator/individual/assign', methods=["POST"])
-def modify_a_weekly_assignment():
-    # assign or unassign
-    action = request.args.get('assigned')
-    employee_id = request.args.get('employee_id')
-    date = request.args.get('date')
-    route = request.args.get('route')
-    # modify database
-    return Response(None, status=200, mimetype='application/json')
+# @app.route('/operator/individual/assign', methods=["POST"])
+# def modify_a_weekly_assignment():
+#     # assign or unassign
+#     action = request.args.get('assigned')
+#     employee_id = request.args.get('employee_id')
+#     date = request.args.get('date')
+#     route = request.args.get('route')
+#     # modify database
+#     return Response(None, status=200, mimetype='application/json')
 
-@app.route('/operator/individual/update_longterm', methods=["POST","PUT"])
-def modify_longterm_assignment():
-    action = request.args.get('assignment')
-    # modify database
-    employee_id = request.args.get('employee_id')
-    route = request.args.get('route')
-    day = request.args.get('day') #day of week, Mon,Tue,Wed,Thu,Fri,Sat,Sun
-    week = request.args.get('week') #integer
-    shift = request.args.get('shift') # AM, PM, night
+# @app.route('/operator/individual/update_longterm', methods=["POST","PUT"])
+# def modify_longterm_assignment():
+#     action = request.args.get('assignment')
+#     # modify database
+#     employee_id = request.args.get('employee_id')
+#     route = request.args.get('route')
+#     day = request.args.get('day') #day of week, Mon,Tue,Wed,Thu,Fri,Sat,Sun
+#     week = request.args.get('week') #integer
+#     shift = request.args.get('shift') # AM, PM, night
 
-    if action.lower() == 'modify' or action.lower() == 'add':
-    	db.engine.execute("update DRIVERS set route_id_{d}{w}_{t}='{r}' where employee_id={id};".format(d=day,w=week,t=shift,r=route,id=employee_id))
-    elif action.lower() == 'remove':
-    	db.engine.execute("update DRIVERS set route_id_{d}{w}_{t}=null where employee_id={id};".format(d=day,w=week,t=shift,id=employee_id))
-    return Response(None, status=200, mimetype='application/json')
+#     if action.lower() == 'modify' or action.lower() == 'add':
+#     	db.engine.execute("update DRIVERS set route_id_{d}{w}_{t}='{r}' where employee_id={id};".format(d=day,w=week,t=shift,r=route,id=employee_id))
+#     elif action.lower() == 'remove':
+#     	db.engine.execute("update DRIVERS set route_id_{d}{w}_{t}=null where employee_id={id};".format(d=day,w=week,t=shift,id=employee_id))
+#     return Response(None, status=200, mimetype='application/json')
 
 # vehicle daily view
 @app.route('/vehicle/day', methods=["GET"])

@@ -18,7 +18,7 @@ class StaffPanel extends React.Component {
   render() {
     return (
       <div className="staff-container"> 
-        <p>Staff</p>
+        <div><p>Staff</p></div>
         <SimpleExpansionPanel /> 
       </div>
     );
