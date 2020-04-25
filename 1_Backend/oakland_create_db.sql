@@ -16,7 +16,8 @@ CREATE TABLE `ROUTES` (
   `route_id` varchar(255) NOT NULL,
   `shift_AM` varchar(255) default NULL,
   `shift_PM` varchar(255) default NULL,
-  `shift_night` varchar(255) default NULL,
+  `shift_night1` varchar(255) default NULL,
+  `shift_night2` varchar(255) default NULL,
   `Mon1_AM` smallint(6) default 0,
 `Mon1_PM` smallint(6) default 0,
 `Mon1_night` smallint(6) default 0,
@@ -474,7 +475,7 @@ CREATE TABLE `VEHICLE_MAINTENANCE` (
   `comment` varchar(255) default NULL,
   PRIMARY KEY  (`maint_id`),
   KEY `vehicle_id` (`vehicle_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;d
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 --
 -- Dumping data for table `VEHICLE_MAINTENANCE`

@@ -632,7 +632,7 @@ def get_individual_operator_info():
     if not employee_id:
         employee_id = 2882
     data = {}
-    #date = '2020-04-21' # if testing a specific date
+    #date = '2020-04-22' # if testing a specific date
 
     # get from database
     # return: a list of assignments, each assignment includes shift, route, working_hrs, leave_hrs(formatted as such 8:00-10:00, leave it “” if no leave on that day), reason
@@ -640,16 +640,18 @@ def get_individual_operator_info():
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
     wk_of_month = pendulum.parse(date).week_of_month
 
-    operator_info = db.engine.execute("select e.employee_name,e.shift,e.daily_hours,r.route_id from DRIVERS e join ROUTE_LOG r on e.employee_id=r.employee_id where r.date_swept='{d}' and e.employee_id={e};".format(d=date,e=employee_id))
+    operator_info = db.engine.execute("select e.employee_name,e.shift,e.daily_hours,r.route_id,r.notes from DRIVERS e join ROUTE_LOG r on e.employee_id=r.employee_id where r.date_swept='{d}' and e.employee_id={e};".format(d=date,e=employee_id))
     operator_routes = []
     operator_name = ""
     operator_shift = ""
     operator_hours = 0
+    operator_comments = ""
     for operator in operator_info:
         operator_name = operator[0]
         operator_shift = operator[1]
         operator_hours = int(operator[2])
         operator_routes.append(operator[3])
+        operator_comments = operator[4]
 
 
     absences_query = "select HOUR(sum(time_missed)) from ABSENCES where date_absence='{d}' and employee_id={e};"
@@ -675,6 +677,7 @@ def get_individual_operator_info():
                             'overtime_hrs':overtime_hrs,
                             'leave_hrs':leave_hrs,
                             'num_leave_hrs': num_leave_hrs,
+                            'comment':operator_comments,
                             'acting_7.5_hrs': 0, # ANNA what are these
                             'acting_12.5_hrs': 0,
                             'standby_hrs': 0}]
@@ -712,8 +715,10 @@ def add_individual_operator_comment():
     date = request.args.get('date')
     shift = request.args.get('shift')
 
+    comment = request.args.get('comment')
+
     # modify database
-    # ANNA add comment to what?
+    db.engine.execute("update ROUTE_LOG set notes='{c}' where employee_id={e} and date_swept='{d}' and shift='{s}';".format(c=comment,e=employee_id,d=date,s=shift))
     return Response(None, status=200, mimetype='application/json')
 
 @app.route('/operator/individual/update_special', methods=["POST"])
