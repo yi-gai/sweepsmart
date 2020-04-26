@@ -21,9 +21,11 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import TextField from '@material-ui/core/TextField';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import InputLabel from '@material-ui/core/InputLabel';
 
 import './operatorPage.css';
-import { amber } from '@material-ui/core/colors';
 
 const styles = theme => (
   {
@@ -54,7 +56,7 @@ class OperatorPage extends React.Component {
       data:null,
       drawer: false,
       modal: false,
-      drawer_date: new Date(),
+      drawer_date: props.date,
       drawer_data: {
         'name' : 'Roger',
         'status': true,
@@ -127,6 +129,29 @@ class OperatorPage extends React.Component {
     }
   }
 
+  makeDrawerAPICall(eid){
+    API.get("/operator/individual/info", {
+      params: {
+        'employee_id': eid,
+        'date': this.state.drawer_date.toISOString().slice(0, 10)
+      }
+    })
+      .then(res => res['data'])
+      .then(
+        (result) => {
+          const res = {
+            ...result,
+            employee_id: eid
+          }
+          this.setState({drawer_data: res})
+          console.log(res)
+        },
+        (error) => {
+          console.log('error')
+        }
+      )
+  }
+
   componentDidMount() {
     this.makeMainPageAPICall();
   }
@@ -147,26 +172,7 @@ class OperatorPage extends React.Component {
   handleCellClick(row) {
     console.log('handleCellClick')
     this.setState({drawer: true})
-    API.get("/operator/individual/info", {
-      params: {
-        'employee_id': row.employee_id,
-        'date': this.state.date.toISOString().slice(0, 10)
-      }
-    })
-      .then(res => res['data'])
-      .then(
-        (result) => {
-          const res = {
-            ...result,
-            employee_id: row.employee_id
-          }
-          this.setState({drawer_data: res})
-          console.log(res)
-        },
-        (error) => {
-          console.log('error')
-        }
-      )
+    this.makeDrawerAPICall(row.employee_id)
   }
 
   handleModalClick(){
@@ -200,10 +206,50 @@ class OperatorPage extends React.Component {
 		})
   }
 
-  handleAddComment(){
-    
+  handleAddComment = (eid, comment, shift, date) => {
+    let params = new URLSearchParams();
+    params.append('employee_id', eid);
+    params.append('date', date.toISOString().slice(0, 10));
+    params.append('shift', shift);
+    params.append('comment', comment);
+    API({
+			method: 'post',
+			url: '/operator/day/comment',
+			withCredentials: false,
+			data: params
+		}).then(res => {
+			if (res['status'] == 200) {
+        alert("Comment added");
+        this.makeDrawerAPICall(eid)
+			} else {
+				alert("Error");
+			}
+		})
   }
   
+  handleAddLeave = (eid, date, shift, start_time, end_time, reason) => {
+    let params = new URLSearchParams();
+    params.append('employee_id', eid);
+    params.append('date', date.toISOString().slice(0, 10));
+    params.append('shift', shift);
+    params.append('start_time', start_time);
+    params.append('end_time', end_time);
+    params.append('reason', reason);
+    API({
+			method: 'post',
+			url: '/operator/individual/add_leave',
+			withCredentials: false,
+			data: params
+		}).then(res => {
+			if (res['status'] == 200) {
+        alert("Leave added");
+        this.makeDrawerAPICall(eid)
+			} else {
+				alert("Error");
+			}
+		})
+  }
+
   getIndividualTable() {
     let table = []
     var first = {}
@@ -231,8 +277,23 @@ class OperatorPage extends React.Component {
       if(first.leave_hrs)
         children.push(<TableCell align="center">{first.leave_hrs}</TableCell>)
       else
-        children.push(<TableCell align="center"><Button size="small" variant="outlined" color="primary">+</Button></TableCell>)
-      children.push(<TableCell align="center"><AddLeaveAlertDialog eid={this.state.drawer_data.employee_id} shift='AM' name={this.state.drawer_data.name} handleAddComment={this.handleAddComment()}/></TableCell>)
+        children.push(<TableCell align="center">
+                        <AddLeaveAlertDialog
+                          eid={this.state.drawer_data.employee_id}
+                          shift='AM'
+                          date={this.state.drawer_date}
+                          name={this.state.drawer_data.name}
+                          handleAddLeave={this.handleAddLeave} />
+                      </TableCell>)
+      children.push(<TableCell align="center">{first.comment}
+                      <AddCommentAlertDialog 
+                        eid={this.state.drawer_data.employee_id}
+                        shift='AM'
+                        date={this.state.drawer_date}
+                        name={this.state.drawer_data.name} 
+                        newComment={first.comment}
+                        handleAddComment={this.handleAddComment}/>
+                    </TableCell>)
       table.push(<TableRow>{children}</TableRow>)
       children = []
       children.push(<TableCell align="center">{`12:00PM - 4:00PM`}</TableCell>)
@@ -241,8 +302,23 @@ class OperatorPage extends React.Component {
       if(second.leave_hrs)
         children.push(<TableCell align="center">{second.leave_hrs}</TableCell>)
       else
-        children.push(<TableCell align="center"><Button size="small" variant="outlined" color="primary">+</Button></TableCell>)
-      children.push(<TableCell align="center"><AddLeaveAlertDialog eid={this.state.drawer_data.employee_id} shift='PM' name={this.state.drawer_data.name} handleAddComment={this.handleAddComment()}/></TableCell>)
+        children.push(<TableCell align="center">
+                        <AddLeaveAlertDialog
+                          eid={this.state.drawer_data.employee_id}
+                          shift='PM'
+                          date={this.state.drawer_date}
+                          name={this.state.drawer_data.name}
+                          handleAddLeave={this.handleAddLeave} />
+                      </TableCell>)
+      children.push(<TableCell align="center">{second.comment}
+                      <AddCommentAlertDialog 
+                        eid={this.state.drawer_data.employee_id} 
+                        shift='PM'
+                        date={this.state.drawer_date}
+                        name={this.state.drawer_data.name}
+                        newComment={second.comment}
+                        handleAddComment={this.handleAddComment}/>
+                    </TableCell>)
       table.push(<TableRow>{children}</TableRow>)
     }else{
 
@@ -448,10 +524,107 @@ class DayPicker extends React.Component {
 class AddLeaveAlertDialog extends React.Component {
   constructor(props) {
 		super(props);
-		this.state = {open: false};
+    this.state = {
+      open: false, 
+      isAvailable: false,
+      start_time: '08:00',
+      end_time: '12:00',
+      reason: '',
+    };
 		this.handleClickOpen = this.handleClickOpen.bind(this);
 		this.handleCancel = this.handleCancel.bind(this);
-		this.handleAddComment = this.handleAddComment.bind(this);
+    this.handleAddLeave = this.handleAddLeave.bind(this);
+    this.handleLeaveTimeChange = this.handleLeaveTimeChange.bind(this);
+    this.handleLeaveReasonChange = this.handleLeaveReasonChange.bind(this);
+  }
+  handleClickOpen() {
+		this.setState({open: true});
+	};
+
+	handleCancel() {
+		this.setState({open: false});
+	}
+
+	handleAddLeave() {
+    this.setState({open: false});
+    // (eid, date, shift, start_time, end_time, reason)
+    console.log(this.props.eid)
+    console.log(this.state.start_time)
+    console.log(this.state.end_time)
+    console.log(this.state.reason)
+    this.props.handleAddLeave(this.props.eid, this.props.date ,this.props.shift, 
+                              this.state.start_time, this.state.end_time, this.state.reason);
+  };
+
+  handleLeaveTimeChange(event) {
+    let time = event.target.value;
+    console.log(time)
+		if(event.target.id === 'start_time'){
+      this.setState({start_time: time});
+    }else if (event.target.id === 'end_time'){
+      this.setState({end_time: time});
+    }
+  }
+
+  handleLeaveReasonChange(event) {
+    let reason = event.target.value
+    if (reason != '') {
+			this.setState({isAvailable: true});
+		} else {
+			this.setState({isAvailable: false});
+		}
+		this.setState({reason: reason});
+  }
+  
+  render() {
+		return (
+			<div>
+        <div onClick={this.handleClickOpen}>
+          <Button size="small" variant="outlined" color="primary" onClick={this.handleClickOpen}>+</Button>
+        </div>
+				<Dialog open={this.state.open}
+				onClose={this.handleCancel}
+				aria-labelledby="alert-dialog-title"
+				aria-describedby="alert-dialog-description">
+					<DialogTitle id="alert-dialog-title">Add Leave for {this.props.name} on {this.props.shift} shift</DialogTitle>
+					<DialogContent>
+            <TextField id="start_time" label="Start time" type="time" defaultValue="08:00" onChange={this.handleLeaveTimeChange}
+                        InputLabelProps={{shrink: true,}}
+                        inputProps={{step: 600}}/>
+            <TextField id="end_time" label="End time" type="time" defaultValue="12:00" onChange={this.handleLeaveTimeChange}
+                        InputLabelProps={{shrink: true,}}
+                        inputProps={{step: 600}}/><br/>
+            <InputLabel shrink>Reason</InputLabel>
+            <Select onChange={this.handleLeaveReasonChange}>
+              <MenuItem value='PBL'>Personal Businsess Leave</MenuItem>
+              <MenuItem value='SICK'>Sick</MenuItem>
+              <MenuItem value='VOC'>Vacation</MenuItem>
+              <MenuItem value='FAM'>Family</MenuItem>
+            </Select>
+          </DialogContent>
+					<DialogActions>
+						<Button onClick={this.handleCancel} color="primary"> Cancel </Button>
+						<Button onClick={this.handleAddLeave} color="primary" disabled={!this.state.isAvailable} autoFocus> Update </Button>
+					</DialogActions>
+				</Dialog>
+			</div>
+		);
+	}
+}
+
+
+class AddCommentAlertDialog extends React.Component {
+  constructor(props) {
+		super(props);
+    this.state = {
+      open: false, 
+      isAvailable: false,
+      newComment: this.props.newComment
+    };
+		this.handleClickOpen = this.handleClickOpen.bind(this);
+		this.handleCancel = this.handleCancel.bind(this);
+    this.handleAddComment = this.handleAddComment.bind(this);
+    this.handleCommentChange = this.handleCommentChange.bind(this);
   }
   handleClickOpen() {
 		this.setState({open: true});
@@ -463,8 +636,19 @@ class AddLeaveAlertDialog extends React.Component {
 
 	handleAddComment() {
 		this.setState({open: false});
-		this.props.handleAddComment(this.props.vid);
+		this.props.handleAddComment(this.props.eid, this.state.newComment ,this.props.shift, this.props.date);
   };
+
+  handleCommentChange(event) {
+		let comment = event.target.value;
+		if (comment != '') {
+			this.setState({isAvailable: true});
+		} else {
+			this.setState({isAvailable: false});
+		}
+		this.setState({newComment: comment});
+  }
+  
   render() {
 		return (
 			<div>
@@ -477,11 +661,13 @@ class AddLeaveAlertDialog extends React.Component {
 				aria-describedby="alert-dialog-description">
 					<DialogTitle id="alert-dialog-title">Add comment for {this.props.name} on {this.props.shift} shift</DialogTitle>
 					<DialogContent>
-          <TextField autoFocus margin="dense" id="comment" label="Comment" type="text" fullWidth/>
+            <TextField autoFocus margin="dense" id="comment" label="Comment" type="text" fullWidth
+              defaultValue={this.state.newComment}
+              onChange={this.handleCommentChange}/>
 					</DialogContent>
 					<DialogActions>
 						<Button onClick={this.handleCancel} color="primary"> Cancel </Button>
-						<Button onClick={this.handleAddComment} color="primary" autoFocus>Add</Button>
+						<Button onClick={this.handleAddComment} color="primary" disabled={!this.state.isAvailable} autoFocus>Update</Button>
 					</DialogActions>
 				</Dialog>
 			</div>
