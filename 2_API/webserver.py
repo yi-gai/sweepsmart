@@ -700,23 +700,31 @@ def get_individual_operator_info():
 
 @app.route('/operator/individual/add_leave', methods=["POST"])
 def update_individual_operator_leave():
-    employee_id = request.args.get('employee_id')
-    date = request.args.get('date')
-    start_time = request.args.get('start_time')
-    end_time = request.args.get('end_time')
-    reason = request.args.get('reason')
+    if request.headers['Content-Type'] == 'application/json':
+        arguments = request.get_json()
+    if 'application/x-www-form-urlencoded' in request.headers['Content-Type']:
+        arguments = request.form
+    employee_id = arguments.get('employee_id')
+    date = arguments.get('date')
+    start_time = arguments.get('start_time')
+    end_time = arguments.get('end_time')
+    reason = arguments.get('reason')
     # modify database
-    db.engine.execute("insert into `ABSENCES` ( employee_id,date_absence,time_start,time_end,type) VALUES ({eid},'{d}','{ts}','{td}','{t}');".format(eid=employee_id,d=date,ts=start_time,te=end_time,t=reason))
+    db.engine.execute("insert into `ABSENCES` ( employee_id,date_absence,time_start,time_end,type) VALUES ({eid},'{d}','{ts}','{te}','{t}');".format(eid=employee_id,d=date,ts=start_time,te=end_time,t=reason))
 
     return Response(None, status=200, mimetype='application/json')
 
 @app.route('/operator/day/comment', methods=["POST"])
 def add_individual_operator_comment():
-    employee_id = request.args.get('employee_id')
-    date = request.args.get('date')
-    shift = request.args.get('shift')
+    if request.headers['Content-Type'] == 'application/json':
+        arguments = request.get_json()
+    if 'application/x-www-form-urlencoded' in request.headers['Content-Type']:
+        arguments = request.form
+    employee_id = arguments.get('employee_id')
+    date = arguments.get('date')
+    shift = arguments.get('shift')
 
-    comment = request.args.get('comment')
+    comment = arguments.get('comment')
 
     # modify database
     db.engine.execute("update ROUTE_LOG set notes='{c}' where employee_id={e} and date_swept='{d}' and shift='{s}';".format(c=comment,e=employee_id,d=date,s=shift))
