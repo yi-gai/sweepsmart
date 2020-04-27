@@ -14,6 +14,9 @@ import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
+import Paper from '@material-ui/core/Paper';
+import Select from '@material-ui/core/Select';
+import { withStyles } from '@material-ui/styles';
 import './vehiclePage.css';
 
 const AddVehicleButton = styled(Button)({
@@ -21,6 +24,11 @@ const AddVehicleButton = styled(Button)({
 	padding: 0,
 	margin: 0,
 	minWidth: '40px',
+});
+
+const NoBottomTableCell = styled(TableCell) ({
+  border: 0,
+  borderCollapse: 'collapse'
 });
 
 class VehiclePage extends React.Component {
@@ -102,14 +110,14 @@ class WeeklyTable extends React.Component {
 	render() {
 		let content = this.state.onScreenData.map((value, _) => 
 			<TableRow>
-				<TableCell align="center" size="small">{value.vehicle_id}</TableCell>
+				<NoBottomTableCell align="center" size="medium">{value.vehicle_id}</NoBottomTableCell>
 				{GetWeeklyStatusFormat(value.status)}
-				<TableCell align="center" size="small">20</TableCell>
-				<TableCell align="center" size="small">5</TableCell>
-				<TableCell align="center" size="small">0</TableCell>
-				<TableCell align="center" size="small">
+				<NoBottomTableCell align="center" size="medium">20</NoBottomTableCell>
+				<NoBottomTableCell align="center" size="medium">5</NoBottomTableCell>
+				<NoBottomTableCell align="center" size="medium">0</NoBottomTableCell>
+				<NoBottomTableCell align="center" size="medium">
 				<DeleteAlertDialog handleDelete={this.handleDelete} vid={value.vehicle_id}/>
-				</TableCell>
+				</NoBottomTableCell>
 			</TableRow>
 		);
 		return (
@@ -193,11 +201,11 @@ class DeleteAlertDialog extends React.Component {
 
 function GetWeeklyStatusFormat(status) {
 	if (status == 'available') {
-		return <TableCell  align="center"  size="small" class="weekly-status-available">Available</TableCell>
+		return <NoBottomTableCell  align="center"  size="small" class="weekly-status-available">Available</NoBottomTableCell>
 	} else if (status == 'out-of-service') {
-		return <TableCell  align="center"  size="small" class="weekly-status-outofservice">Out-of-service</TableCell>
+		return <NoBottomTableCell  align="center"  size="small" class="weekly-status-outofservice">Out-of-service</NoBottomTableCell>
 	} else {
-		return <TableCell>{status}</TableCell>
+		return <NoBottomTableCell>{status}</NoBottomTableCell>
 	}
 }
 
