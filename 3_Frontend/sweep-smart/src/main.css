@@ -1,7 +1,7 @@
 .main-tab {
 	position: absolute;
 	width: 950px;
-	height: 750px;
+	min-height: 750px;
 	left: 60px;
 	top: 120px;
 
@@ -40,7 +40,7 @@
 }
 
 .content-container {
-	height: 690px;
+	min-height: 690px;
 
 	background: #FFFFFF;
 	border-radius: 5px;

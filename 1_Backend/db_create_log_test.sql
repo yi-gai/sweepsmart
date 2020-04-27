@@ -1,4 +1,4 @@
-INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1C-1',2882,7160,'2020-04-22','PM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,notes) VALUES ('1C-1',2882,7160,'2020-04-22','PM','a comment');
 INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1D-1',8097,7164,'2020-04-22','AM');
 INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('7',1536,7171,'2020-04-22','AM');
 INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('6-1',14551,7165,'2020-04-22','PM');
