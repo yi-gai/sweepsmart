@@ -6,13 +6,10 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 
 import './schedulePage.css';
-import SwipeableTemporaryDrawer from "./Drawer";
 import ScheduleDrawer from "./ScheduleDrawer";
-import {withStyles} from "@material-ui/styles/index";
 import { styled } from '@material-ui/core/styles';
 import API from "../API/api";
 
@@ -132,7 +129,6 @@ function ProcessRawData (rawData) {
 
 const DateClickButton = styled(Button)({
     fontFamily:  'Lato',
-    fontFamily:  'sans-serif',
     fontStyle: 'normal',
     fontWeight: 'bold',
     color: '#7A827F',
@@ -151,7 +147,7 @@ class SchedulePage extends React.Component {
 			data:null,
             drawer: false,
             daily_view_date: this.props.date
-		}
+		};
         this.handleDateClick = this.handleDateClick.bind(this);
         this.handleClose = this.handleClose.bind(this);
     }
