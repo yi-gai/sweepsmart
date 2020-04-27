@@ -10,7 +10,6 @@ import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 
 import './schedulePage.css';
-import SwipeableTemporaryDrawer from "./Drawer";
 import ScheduleDrawer from "./ScheduleDrawer";
 import {withStyles} from "@material-ui/styles/index";
 import { styled } from '@material-ui/core/styles';
