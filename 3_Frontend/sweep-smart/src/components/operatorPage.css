@@ -54,3 +54,11 @@
     line-height: 29px;
     color: #3A423E;
 }
+
+.table-small {
+    width: 12%;
+}
+
+.table-leave {
+    width: 20%;
+}

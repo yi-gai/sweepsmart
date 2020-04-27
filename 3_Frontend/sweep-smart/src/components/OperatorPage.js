@@ -285,15 +285,15 @@ class OperatorPage extends React.Component {
                           name={this.state.drawer_data.name}
                           handleAddLeave={this.handleAddLeave} />
                       </TableCell>)
-      children.push(<TableCell align="center">{first.comment}
-                      <AddCommentAlertDialog 
-                        eid={this.state.drawer_data.employee_id}
-                        shift='AM'
-                        date={this.state.drawer_date}
-                        name={this.state.drawer_data.name} 
-                        newComment={first.comment}
-                        handleAddComment={this.handleAddComment}/>
-                    </TableCell>)
+      children.push(<TableCell align="center">{first.comment}</TableCell>)
+      children.push(<TableCell align="center">
+        <AddCommentAlertDialog 
+          eid={this.state.drawer_data.employee_id}
+          shift='AM'
+          date={this.state.drawer_date}
+          name={this.state.drawer_data.name} 
+          newComment={first.comment}
+          handleAddComment={this.handleAddComment}/></TableCell>)
       table.push(<TableRow>{children}</TableRow>)
       children = []
       children.push(<TableCell align="center">{`12:00PM - 4:00PM`}</TableCell>)
@@ -310,15 +310,16 @@ class OperatorPage extends React.Component {
                           name={this.state.drawer_data.name}
                           handleAddLeave={this.handleAddLeave} />
                       </TableCell>)
-      children.push(<TableCell align="center">{second.comment}
-                      <AddCommentAlertDialog 
+      children.push(<TableCell align="center">{second.comment}</TableCell>)
+      children.push(<TableCell align="center">
+        <AddCommentAlertDialog 
                         eid={this.state.drawer_data.employee_id} 
                         shift='PM'
                         date={this.state.drawer_date}
                         name={this.state.drawer_data.name}
                         newComment={second.comment}
                         handleAddComment={this.handleAddComment}/>
-                    </TableCell>)
+      </TableCell>)
       table.push(<TableRow>{children}</TableRow>)
     }else{
 
@@ -417,11 +418,12 @@ class OperatorPage extends React.Component {
                     <Table className={classes.table} aria-label="simple table">
                         <TableHead>
                         <TableRow>
-                            <TableCell ></TableCell>
-                            <TableCell align="center">Route</TableCell>
-                            <TableCell align="center">Working hrs</TableCell>
-                            <TableCell align="center">Leaves</TableCell>
-                            <TableCell align="center">Comment</TableCell>
+                            <TableCell class="table-small"></TableCell>
+                            <TableCell class="table-small" align="center">Route</TableCell>
+                            <TableCell class="table-small" align="center">Working hrs</TableCell>
+                            <TableCell class="table-leave" align="center">Leaves</TableCell>
+                            <TableCell class="table-comment"align="center">Comments</TableCell>
+                            <TableCell class="table-small"align="center">Edit comments</TableCell>
                         </TableRow>
                         </TableHead>
                         <TableBody>
