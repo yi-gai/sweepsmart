@@ -242,7 +242,7 @@ def get_daily_overview():
 
     # get from database
     # get day of week from date
-    day_of_wk = date_dt.weekday()#datetime.today().weekday()
+    day_of_wk = date_dt.weekday()
     days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
 
     num_am = db.engine.execute("select count(*) from ROUTES where {d}{w}_AM=1;".format(d=days[day_of_wk],w=week_of_month)).fetchone()[0]
@@ -253,7 +253,7 @@ def get_daily_overview():
     maps_holiday = db.engine.execute("select count(*) from ROUTE_LOG where date_swept={date} and completion='holiday';".format(date=date)).fetchone()[0]
     # ANNA not sure what the completion status fill values will be (e.g. completed, missed, holiday, etc)
 
-    data['date'] = date
+    data['date'] = str(date)
     data['maps_am'] = num_am
     data['maps_pm'] = num_pm
     data['maps_night'] = num_night
@@ -262,7 +262,10 @@ def get_daily_overview():
     data['maps_served'] = maps_served
     data['maps_missed'] = maps_missed
     data['maps_to_do'] = num_am + num_pm + num_night - maps_served - maps_missed
-    data['success_rate'] = data['maps_served'] / data['maps_total']
+    if data['maps_total'] == 0:
+        data['success_rate'] = 0
+    else:
+        data['success_rate'] = data['maps_served'] / data['maps_total']
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 @app.route('/overview/day', methods=["GET"])
