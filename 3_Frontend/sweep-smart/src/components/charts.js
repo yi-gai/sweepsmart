@@ -1,70 +1,49 @@
-import React from 'react';
-import {vl} from '@vega/vega-lite-api';
-import API from "../API/api";
+import React, { Component } from 'react';
+import * as d3 from "d3";
 
-import 
 
-const d3 = require('d3');
+class OperatorChart extends Component {
+   constructor(props){
+      super(props);
+      this.createBarChart = this.createBarChart.bind(this);
 
-const stats = d3.csv("/mock_data/operator_completion.csv");
+      let tempData = [{"Operator": "John B.", "Scheduled": 10, "Completion": 9},
+      {"Operator": "Jack A.", "Scheduled": 10, "Completion": 9},
+      {"Operator": "Allen D.", "Scheduled": 10, "Completion": 9},
+      {"Operator": "Henry H.", "Scheduled": 10, "Completion": 9},
+      {"Operator": "Zack K.", "Scheduled": 10, "Completion": 9},
+      {"Operator": "Christ H.", "Scheduled": 10, "Completion": 9},
+      {"Operator": "Martin S.", "Scheduled": 10, "Completion": 9},
+      {"Operator": "Josh E.", "Scheduled": 10, "Completion": 9}]
+      
+      let currentTab = "";
+      let date = new Date();
 
-class OperatorChart extends React.Component {
-	constructor(props) {
-    super(props);
-}
+      this.state = {currentTab: currentTab,
+    			date: date,
+    			data: tempData};
+   }
+   componentDidMount() {
+      this.createBarChart()
+   }
+   componentDidUpdate() {
+      this.createBarChart()
+   }
+   createBarChart() {
+      const node = this.node
+      const stats = this.state.data
+      
+      
 
-	renderOperatorChart() {
 
-  const sched = vl.markBar({fill: 'pink', stroke: 'firebrick'})
-   .data(stats)
-     .encode(
-             vl.y().fieldN('Operator'),   
-             vl.x().fieldQ('Scheduled')
-          );
-  
-  const schedText = vl.markText({'dx': 5})
-    .data(stats)
-    .encode(
-      vl.y().fieldN('Operator'),   
-      vl.x().fieldQ('Scheduled'),
-      vl.text({'field': 'Scheduled', 'type': 'quantitative', 'align': 'left'})
-    );
-  
-  const schedStack = vl.layer(sched, schedText);
-  
-  const compl = vl.markBar({fill: 'firebrick'})
-     .data(stats)
-     .encode(
-             vl.y().fieldN('Operator'),   
-             vl.x().fieldQ('Completion')
-    );
-  
-  const complText = vl.markText({'dx': 5})
-    .data(stats)
-    .encode(
-      vl.y().fieldN('Operator'),   
-      vl.x().fieldQ('Completion'),
-      vl.text({'field': 'Completion', 'type': 'quantitative', 'align': 'left'})
-    );
-  
-  const compStack = vl.layer(compl, complText);
+   }
 
-  return vl.layer(schedStack, compStack)
-    .title({
-  	text: 'Completion by Operator',
-  	fontSize: 14, 
-  	font: 'Tahoma'       
-	}).render();
 
-	}  
-
-	render() {
-    return (
-      <div> 
-        {this.renderOperatorChart()}
-      </div>
-    );
-  }
+render() {
+      return <svg ref={node => this.node = node}
+      width={500} height={500}>
+      </svg>
+   }
 }
 
 export default OperatorChart;

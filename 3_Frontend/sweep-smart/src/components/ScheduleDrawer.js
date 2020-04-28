@@ -17,6 +17,11 @@ import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import "./scheduleDrawer.css";
 
+const drawerMain = styled(Drawer)({
+  width: 1600,
+  background: '#E5E5E5',
+});
+
 const OverviewPanel = styled(Paper)({
   position: "absolute",
   width: 696,
@@ -172,6 +177,23 @@ class ScheduleDrawer extends React.Component {
         </div>
           <OverviewPanel className="overview"> 
           	<h4> Overview </h4>
+            <table className="tableFrame">
+            <tr>
+              <td className="overviewTable"><div> Morning maps </div></td>
+              <td className="overviewTable"><div> Total maps served </div></td>
+              <td className="overviewTable"><div> Success Rate </div></td>
+            </tr>
+            <tr>
+              <td className="overviewTable"><div> Afternoon maps </div></td>
+              <td className="overviewTable"> <div> Total maps missed </div></td>
+              <td className="overviewTable">  </td>
+            </tr>
+            <tr className="overviewTable">
+              <td className="overviewTable"><div> Total maps </div></td>
+              <td className="overviewTable"> <div> Total maps to-do </div></td>
+              <td className="overviewTable">  </td>
+            </tr>
+          </table>
           </OverviewPanel>
           <WeatherPanel className="weatherPaper"> 
           	<h4> Weather </h4>

@@ -1,6 +1,6 @@
 import React from 'react';
 import Paper from '@material-ui/core/Paper';
-// import OperatorChart from './charts';
+import OperatorChart from './charts';
 
 import './schedulePage.css';
 import {withStyles} from "@material-ui/styles/index";
@@ -47,7 +47,7 @@ class PerformancePage extends React.Component {
 		return (
 			<div className="content-container">
                 <div>
-                    
+                    <OperatorChart/>
                 </div>
 				
 			</div>
