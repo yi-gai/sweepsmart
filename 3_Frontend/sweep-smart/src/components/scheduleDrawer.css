@@ -38,6 +38,15 @@
 	font-size: 16px;
 	color: #3A423E;
 	text-align: left;
+	max-width: 25px;
+}
+
+.overviewNumber {
+	font-family: 'Lato';
+	font-weight: bold;
+	font-size: 16px;
+	color: #3A423E;
+	text-align: left;
 }
 
 .tableFrame {

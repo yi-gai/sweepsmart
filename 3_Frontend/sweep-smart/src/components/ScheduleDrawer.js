@@ -143,7 +143,15 @@ class ScheduleDrawer extends React.Component {
       operators: [],
       vehiclesDay: null,
       vehiclesNight: null,
-      vehicles: []
+      vehicles: [],
+      morning: 1,
+      afternoon: 0,
+      holiday: 1,
+      served: 0,
+      missed: 0,
+      todo: 0,
+      success: 0.0
+
     };
 	}
 
@@ -161,6 +169,17 @@ class ScheduleDrawer extends React.Component {
     API.get("/operator/day/onduty", {
       params: {'date': GetDateFormat(this.props.date)}
     }).then(res => this.setState({operators: res['data']['day']}));
+
+    API.get("/schedule/day/overview", {
+      params: {'date': GetDateInMM(this.props.date)}
+    }).then(res => this.setState({morning: res['data']['maps_am'],
+      afternoon: res['data']['maps_pm'],
+      holiday: res['data']['maps_holiday'],
+      served: res['data']['maps_served'],
+      missed: res['data']['maps_missed'],
+      todo: res['data']['maps_to_do'],
+      success: res['data']['success_rate']}));
+
   }
 
 	render() {
@@ -180,17 +199,25 @@ class ScheduleDrawer extends React.Component {
             <table className="tableFrame">
             <tr>
               <td className="overviewTable"><div> Morning maps </div></td>
+              <td className="overviewNumber"> {this.state.morning} </td>
               <td className="overviewTable"><div> Total maps served </div></td>
-              <td className="overviewTable"><div> Success Rate </div></td>
+              <td className="overviewNumber"> {this.state.served} </td>
+              <td className="overviewTable"><div> Total Holiday Maps </div></td>
+              <td className="overviewNumber"> {this.state.holiday} </td>
             </tr>
             <tr>
-              <td className="overviewTable"><div> Afternoon maps </div></td>
+              <td className="overviewTable"><div> Afternoon maps  </div></td>
+              <td className="overviewNumber"> {this.state.afternoon} </td>
               <td className="overviewTable"> <div> Total maps missed </div></td>
-              <td className="overviewTable">  </td>
+              <td className="overviewNumber"> {this.state.missed} </td>
+              <td className="overviewTable"> Success Rate </td>
+              <td className="overviewNumber"> {this.state.success} </td>
             </tr>
-            <tr className="overviewTable">
+            <tr>
               <td className="overviewTable"><div> Total maps </div></td>
+              <td className="overviewNumber"> {this.state.morning + this.state.afternoon} </td>
               <td className="overviewTable"> <div> Total maps to-do </div></td>
+              <td className="overviewNumber"> {this.state.todo} </td>
               <td className="overviewTable">  </td>
             </tr>
           </table>
@@ -333,6 +360,17 @@ function GetDateFormat(date) {
   let day = date.getDate();
   let year = date.getYear() + 1900;
   return year + "-" + month + "-" + day;
+}
+
+function GetDateInMM(date) {
+  let month = date.getMonth() + 1;
+  let day = date.getDate();
+  let year = date.getYear() + 1900;
+  if (month < 10) {
+    return year + "-0" + month + "-" + day;
+  } else {
+    return year + "-" + month + "-" + day;
+  }
 }
 
 function GetDayDisplay(date) {
