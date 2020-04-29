@@ -153,21 +153,32 @@ class ScheduleDrawer extends React.Component {
       success: 0.0
 
     };
+    this.makeAPICalls = this.makeAPICalls.bind(this);
 	}
 
   componentDidMount() {
+    this.makeAPICalls();
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.date !== prevProps.date) {
+      this.makeAPICalls();
+    }
+  }
+
+  makeAPICalls() {
     API.get("/vehicle/day", {
-      params: {'date': GetDateFormat(this.props.date), 'shift': 'day'}
+      params: {'date': GetDateInMM(this.props.date), 'shift': 'day'}
     }).then(res => this.setState({vehiclesDay: res['data']}))
       .then(() => {
         API.get("/vehicle/day", {
-          params: {'date': GetDateFormat(this.props.date), 'shift': 'night'}
+          params: {'date': GetDateInMM(this.props.date), 'shift': 'night'}
         }).then(res => this.setState({vehiclesNight: res['data']}))
         .then(() => this.setState({vehicles: Array.from(new Set(Object.keys(this.state.vehiclesDay).concat(Object.keys(this.state.vehiclesNight))))}))
       });
 
     API.get("/operator/day/onduty", {
-      params: {'date': GetDateFormat(this.props.date)}
+      params: {'date': GetDateInMM(this.props.date)}
     }).then(res => this.setState({operators: res['data']['day']}));
 
     API.get("/schedule/day/overview", {
@@ -179,7 +190,6 @@ class ScheduleDrawer extends React.Component {
       missed: res['data']['maps_missed'],
       todo: res['data']['maps_to_do'],
       success: res['data']['success_rate']}));
-
   }
 
 	render() {
@@ -366,11 +376,13 @@ function GetDateInMM(date) {
   let month = date.getMonth() + 1;
   let day = date.getDate();
   let year = date.getYear() + 1900;
-  if (month < 10) {
-    return year + "-0" + month + "-" + day;
-  } else {
-    return year + "-" + month + "-" + day;
+  if (day < 10) {
+    day = '0' + day;
   }
+  if (month < 10) {
+    month = '0' + month;
+  }
+  return year + '-' + month + '-' + day;
 }
 
 function GetDayDisplay(date) {
