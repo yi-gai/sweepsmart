@@ -78,35 +78,58 @@ wk_route_map = {1:['Mon1_AM','Mon1_PM','Mon1_night','Tue1_AM','Tue1_PM','Tue1_ni
 @app.route('/schedule/week/route', methods=["GET"])
 def get_weekly_route_schedule():
     date = request.args.get('date')
-    date_dt = datetime.today()
     shift = request.args.get('shift')
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
         shift = 'day'
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     week_of_month = pendulum.parse(date).week_of_month
     data = defaultdict(list)#{}
     data['week_of_month'] = week_of_month
-    data['today'] = datetime.now().strftime("%Y-%m-%d")
+    data['today'] = date
 
     wk_start, wk_end = get_wk_start_end(date_dt)
     data['Monday'] = wk_start
     data['Sunday'] = wk_end
+
+    day_of_wk = date_dt.weekday()
+    days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
+    days_of_wk = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
     # get from database
-    wk_days = wk_route_map[week_of_month]
+
+    if week_of_month == 1:
+        days_this_month = [days[i] for i in range(day_of_wk,7)]
+        days_last_month = [days[i] for i in range(0,day_of_wk)]
+        wk_days = []
+        for d in wk_route_map[5]:
+            if d[:3] in days_last_month:
+                wk_days.append(d)
+        for d in wk_route_map[1]:
+            if d[:3] in days_this_month:
+                wk_days.append(d)
+    elif week_of_month == 5:
+        days_this_month = [days[i] for i in range(0,day_of_wk+1)]
+        days_next_month = [days[i] for i in range(day_of_wk+1,7)]
+        wk_days = []
+        for d in wk_route_map[5]:
+            if d[:3] in days_this_month:
+                wk_days.append(d)
+        for d in wk_route_map[1]:
+            if d[:3] in days_next_month:
+                wk_days.append(d)
+    else:
+        wk_days = wk_route_map[week_of_month]
+
     for d in wk_days:
-        if len(d) >7: #night
-            s=d[:3]+str(week_of_month)+"_night"
-        else:
-            s = d[:3]+str(week_of_month)+d[-3:]
-        routes_db = db.engine.execute("select ro.route_id, d.employee_name, r.completion from ROUTES ro join ROUTE_LOG r on ro.route_id = r.route_id join DRIVERS d on r.employee_id = d.employee_id where ro.{d}=1;".format(d=s))
+        routes_db = db.engine.execute("select ro.route_id, d.employee_name, r.completion from ROUTES ro join ROUTE_LOG r on ro.route_id = r.route_id join DRIVERS d on r.employee_id = d.employee_id where ro.{d}=1;".format(d=d))
         routes_included = []
         for r in routes_db:
-            data[s].append({'route':r[0], 'driver':r[1], 'route_status':r[2]})
+            data[d].append({'route':r[0], 'driver':r[1], 'route_status':r[2]})
             routes_included.append(r[0])
-        routes_sched = db.engine.execute("select route_id from ROUTES where {d}=1".format(d=s))
+        routes_sched = db.engine.execute("select route_id from ROUTES where {d}=1".format(d=d))
         for r in routes_sched:
             if r[0] not in routes_included:
-                data[s].append({'route':r[0], 'driver':None, 'route_status':'Unassigned'})
+                data[d].append({'route':r[0], 'driver':None, 'route_status':'Unassigned'})
 
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
@@ -115,10 +138,10 @@ def get_weekly_route_schedule():
 def get_avaiable_route_list():
     date = request.args.get('date')
     shift = request.args.get('shift')
-    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
         shift = 'day'
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     week_of_month = pendulum.parse(date).week_of_month
     data = {'Available':[]}
 
@@ -201,10 +224,10 @@ def get_staff_list():
     date = request.args.get('date')
     shift = request.args.get('shift')
     status = request.args.get('status')
-    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
         shift = 'am'
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     week_of_month = pendulum.parse(date).week_of_month
     data = {}
 
@@ -234,9 +257,9 @@ def get_staff_list():
 @app.route('/schedule/day/overview', methods=["GET"])
 def get_daily_overview():
     date = request.args.get('date')
-    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     week_of_month = pendulum.parse(date).week_of_month
     data = {}
 
@@ -271,9 +294,9 @@ def get_daily_overview():
 @app.route('/overview/day', methods=["GET"])
 def get_overview_day():
     date = request.args.get('date')
-    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     week_of_month = pendulum.parse(date).week_of_month
     data = {}
 
@@ -410,9 +433,9 @@ def get_vehicle_list():
 @app.route('/schedule/day/unplanned', methods=["PUT"])
 def get_unplanned_routes():
     date = request.args.get('date')
-    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     data = {'unplanned':[],'planned':[]}
     # get from database
     day_of_wk = date_dt.weekday()
@@ -433,9 +456,9 @@ def get_unplanned_routes():
 @app.route('/staff/day', methods=["GET"])
 def get_staff_day():
     date = request.args.get('date')
-    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     data = {'Day':[],'Night':[],'Off-Duty':[]}
     day_of_wk = date_dt.weekday()
     days = {0:'mon',1:'tue',2:'wed',3:'thu',4:'fri',5:'sat',6:'sun'}
@@ -462,9 +485,9 @@ driver_day_where = "shift_mon=1 or shift_tue=1 or shift_wed=1 or shift_thu=1 or 
 @app.route('/operator/week', methods=["GET"])
 def get_weekly_operator_info():
     date = request.args.get('date')
-    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     data = {'day':[],'night':[]}
     # get from database
 
@@ -520,9 +543,9 @@ def get_weekly_operator_info():
 @app.route('/operator/day/onduty', methods=["GET"])
 def get_daily_onduty_operator_info():
     date = request.args.get('date')
-    date_dt = datetime.today()
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     data = {'day':[],'night':[]}
 
     # get from database
@@ -580,9 +603,9 @@ def get_daily_onduty_operator_info():
 @app.route('/operator/day/offduty', methods=["GET"])
 def get_daily_offduty_operator_info():
     date = request.args.get('date')
-    date_dt = datetime.today()
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     data = {'day':[],'night':[],'Off-Duty':[]}
 
     absences_query = "select a.employee_id,d.employee_name,a.type,d.shift from ABSENCES a join DRIVERS d on a.employee_id=d.employee_id where date_absence={d};".format(d=date)
@@ -630,9 +653,9 @@ def get_daily_offduty_operator_info():
 def get_individual_operator_info():
     employee_id = request.args.get('employee_id')
     date = request.args.get('date')
-    date_dt = datetime.today()
     if not date:
         date = datetime.now().strftime("%Y-%m-%d")
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     if not employee_id:
         employee_id = 2882
     data = {}
@@ -948,9 +971,9 @@ def get_vehicle_comment():
 @app.route('/vehicle/week', methods=["GET"])
 def get_weekly_vehicle_infomation():
     date = request.args.get('date')
-    date_dt = datetime.today()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     data = {}
 
     wk_start, wk_end = get_wk_start_end(date_dt)
@@ -1089,7 +1112,7 @@ def get_monthly_performance():
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     data = {}
-    date_dt = datetime.now()
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     # get from database
     swept_query = "select count(*) from ROUTE_LOG where route_id='{r}' and completion='{c}' and MONTH(date_swept)={m} and YEAR(date_swept)={y};"
     routes = db.engine.execute("select route_id,monthly_freq from ROUTES;")
@@ -1112,7 +1135,7 @@ def get_monthly_operator_performance():
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     data = {}
-    date_dt = datetime.now()
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     # get from database
     swept_query = "select count(*) from ROUTE_LOG where employee_id='{e}' and completion='{c}' and MONTH(date_swept)={m} and YEAR(date_swept)={y};"
     drivers = db.engine.execute("select employee_id,employee_name from DRIVERS;")
@@ -1129,9 +1152,9 @@ def get_monthly_operator_performance():
 @app.route('/performance/week', methods=["GET"])
 def get_weekly_performance():
     date = request.args.get('date')
-    date_dt = datetime.now()
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     data = {}
     # get from database
     week_of_month = pendulum.parse(date).week_of_month
@@ -1196,7 +1219,7 @@ def get_absences():
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
     data = {}
-    date_dt = datetime.now()
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
     # get from database
     month_query = "select sum(time_missed) from ABSENCES where employee_id='{e}' and MONTH(date_absence)={m} and YEAR(date_absence)={y};"
     year_query = "select HOUR(sum(time_missed)) from ABSENCES where employee_id='{e}' and YEAR(date_absence)={y};"
