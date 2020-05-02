@@ -17,6 +17,20 @@ const styles = theme => (
     { }
 );
 
+const DateClickButton = styled(Button)({
+    fontFamily:  'Lato, sans-serif',
+    fontStyle: 'normal',
+    fontWeight: 'bold',
+    color: '#7A827F',
+    textTransform: 'none',
+    display: 'inline-block',
+});
+
+const NoBorderTableCell = styled(TableCell) ({
+    border: 0,
+    borderCollapse: 'collapse'
+});
+
 function ProcessRawData (rawData) {
 	let processedData = {};
 	let daySchedule = [
@@ -57,64 +71,47 @@ function ProcessRawData (rawData) {
 	];
 
     for (let [key, value] of Object.entries(rawData)) {
-    	let scheduleInfo = value[0];
-
         // Decide date of week and shift time
         if (key.includes('Mon')) {
             if (key.includes('AM')) {
-                scheduleInfo['shift'] = 'day';
-                daySchedule[0]["Mon"].push(scheduleInfo);
+                daySchedule[0]["Mon"] = value;
             } else if (key.includes('PM')) {
-                scheduleInfo['shift'] = 'day';
-                daySchedule[1]["Mon"].push(scheduleInfo);
+                daySchedule[1]["Mon"] = value;
             } else if (key.includes('night')) {
                 // TODO: might need to update to 1st haf & 2nd half as well
-                scheduleInfo['shift'] = 'night';
-                nightSchedule[0]["Mon"].push(scheduleInfo);
+                nightSchedule[0]["Mon"] = value;
             }
         } else if (key.includes('Tue')) {
             if (key.includes('AM')) {
-                scheduleInfo['shift'] = 'day';
-                daySchedule[0]["Tue"].push(scheduleInfo);
+                daySchedule[0]["Tue"] = value;
             } else if (key.includes('PM')) {
-                scheduleInfo['shift'] = 'day';
-                daySchedule[1]["Tue"].push(scheduleInfo);
+                daySchedule[1]["Tue"] = value;
             } else if (key.includes('night')) {
-                scheduleInfo['shift'] = 'night';
-                nightSchedule[0]["Tue"].push(scheduleInfo);
+                nightSchedule[0]["Tue"] = value;
             }
         } else if (key.includes('Wed')) {
             if (key.includes('AM')) {
-                scheduleInfo['shift'] = 'day';
-                daySchedule[0]["Wed"].push(scheduleInfo);
+                daySchedule[0]["Wed"] = value;
             } else if (key.includes('PM')) {
-                scheduleInfo['shift'] = 'day';
-                daySchedule[1]["Wed"].push(scheduleInfo);
+                daySchedule[1]["Wed"] = value;
             } else if (key.includes('night')) {
-                scheduleInfo['shift'] = 'night';
-                nightSchedule[0]["Wed"].push(scheduleInfo);
+                nightSchedule[0]["Wed"] = value;
             }
         } else if (key.includes('Thu')) {
             if (key.includes('AM')) {
-                scheduleInfo['shift'] = 'day';
-                daySchedule[0]["Thu"].push(scheduleInfo);
+                daySchedule[0]["Thu"] = value;
             } else if (key.includes('PM')) {
-                scheduleInfo['shift'] = 'day';
-                daySchedule[1]["Thu"].push(scheduleInfo);
+                daySchedule[1]["Thu"] = value;
             } else if (key.includes('night')) {
-                scheduleInfo['shift'] = 'night';
-                nightSchedule[0]["Thu"].push(scheduleInfo);
+                nightSchedule[0]["Thu"] = value;
             }
         } else if (key.includes('Fri')) {
             if (key.includes('AM')) {
-                scheduleInfo['shift'] = 'day';
-                daySchedule[0]["Fri"].push(scheduleInfo);
+                daySchedule[0]["Fri"] = value;
             } else if (key.includes('PM')) {
-                scheduleInfo['shift'] = 'day';
-                daySchedule[1]["Fri"].push(scheduleInfo);
+                daySchedule[1]["Fri"] = value;
             } else if (key.includes('night')) {
-                scheduleInfo['shift'] = 'night';
-                nightSchedule[0]["Fri"].push(scheduleInfo);
+                nightSchedule[0]["Fri"] = value;
             }
         }
     }
@@ -122,50 +119,62 @@ function ProcessRawData (rawData) {
     // update data
 	processedData.daySchedule = daySchedule;
     processedData.nightSchedule = nightSchedule;
-    console.log(JSON.stringify(processedData));
-
 	return processedData;
 }
 
-const DateClickButton = styled(Button)({
-    fontFamily:  'Lato',
-    fontStyle: 'normal',
-    fontWeight: 'bold',
-    color: '#7A827F',
-    textTransform: 'none',
-    display: 'inline-block',
-});
-
 class SchedulePage extends React.Component {
-
     constructor(props) {
 		super(props);
 		this.state = {
 			onScreenData: [],
-			tab: props.tab,
-			date: props.date,
-			data:null,
+			data: null,
             drawer: false,
-            daily_view_date: this.props.date
+            dailyViewDate: this.props.date
 		};
         this.handleDateClick = this.handleDateClick.bind(this);
         this.handleClose = this.handleClose.bind(this);
+        this.fetchWeeklyScheduleData = this.fetchWeeklyScheduleData.bind(this);
+        this.updateOnScreenData = this.updateOnScreenData.bind(this);
     }
 
     componentDidMount() {
-    	API.get("/schedule/week/route")
-            .then(res => res['data'])
-            .then(
-                (result) => {
-                    console.log('week route: ' + JSON.stringify(result));
-                    let processedData = ProcessRawData(result);
-                    this.setState({data: processedData, onScreenData: processedData.daySchedule, date: result.today});
-                    console.log(this.state);
-                },
-                (error) => {
-                    console.log('week route error : ' + error)
+    	this.fetchWeeklyScheduleData();
+    }
+
+    componentDidUpdate(prevProps) {
+        if (this.props.date !== prevProps.date) {
+            this.fetchWeeklyScheduleData();
+        } else if (this.props.tab !== prevProps.tab) {
+            this.updateOnScreenData();
+        }
+    }
+
+    fetchWeeklyScheduleData() {
+        API.get("/schedule/week/route", {
+            params: {date: this.props.date}
+        }).then(res => res['data'])
+        .then(
+            (result) => {
+                let processedData = ProcessRawData(result);
+                this.setState({data: processedData});
+                if (this.props.tab === 'Day Shift') {
+                    this.setState({onScreenData: processedData.daySchedule});
+                } else if (this.props.tab === 'Night Shift') {
+                    this.setState({onScreenData: processedData.nightSchedule});
                 }
-            )
+            },
+            (error) => {
+                console.log('week route error : ' + error)
+            }
+        );
+    }
+
+    updateOnScreenData() {
+        if (this.props.tab === 'Day Shift') {
+            this.setState({onScreenData: this.state.data.daySchedule});
+        } else if (this.props.tab === 'Night Shift') {
+            this.setState({onScreenData: this.state.data.nightSchedule});
+        }
     }
 
     handleDateClick(weekday) {
@@ -173,13 +182,8 @@ class SchedulePage extends React.Component {
         let curr = new Date(this.props.date);
         curr.setDate(this.props.date.getDate() + diff);
 
-        this.setState({drawer: true});
-        this.setState({daily_view_date: curr});
+        this.setState({drawer: true, dailyViewDate: curr});
     }
-
-    handleChange(date) {
-    	this.props.handleDateChange(date);
-    };
 
     handleClose() {
         this.setState({drawer: false});
@@ -190,114 +194,109 @@ class SchedulePage extends React.Component {
 		return (
 			<div className="content-container">
                 <div>
-                    <ScheduleDrawer date={this.state.daily_view_date}
+                    <ScheduleDrawer date={this.state.dailyViewDate}
                         drawer={this.state.drawer}
                         handleClose={this.handleClose}/>
                 </div>
 				<TableContainer>
 					<Table>
-						<TableHead>
-							<TableRow>
-								<TableCell align="center">
-                                    <DateClickButton textAlign="center" onClick={() => this.handleDateClick(1)}>
-    									<h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 1).getDate()}</h1>
-    									<p style={{"line-height": '10px'}}>Mon</p>
-                                    </DateClickButton>
-								</TableCell>
-								<TableCell align="center">
-    								<DateClickButton textAlign="center" onClick={() => this.handleDateClick(2)}>
-                                        <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 2).getDate()}</h1>
-                                        <p style={{"line-height": '10px'}}>Tue</p>
-                                    </DateClickButton>
-								</TableCell>
-								<TableCell align="center">
-									<DateClickButton textAlign="center" onClick={() => this.handleDateClick(3)}>
-                                        <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 3).getDate()}</h1>
-                                        <p style={{"line-height": '10px'}}>Wed</p>
-                                    </DateClickButton>
-								</TableCell>
-								<TableCell align="center">
-									<DateClickButton textAlign="center" onClick={() => this.handleDateClick(4)}>
-                                        <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 4).getDate()}</h1>
-                                        <p style={{"line-height": '10px'}}>Thu</p>
-                                    </DateClickButton>
-								</TableCell>
-								<TableCell align="center">
-									<DateClickButton textAlign="center" onClick={() => this.handleDateClick(5)}>
-                                        <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, 5).getDate()}</h1>
-                                        <p style={{"line-height": '10px'}}>Fri</p>
-                                    </DateClickButton>
-								</TableCell>
-							</TableRow>
-						</TableHead>
-						<TableBody>
-                            {this.state.onScreenData.map((row) =>
-                                (
-                                    <TableRow key={row.shift_time}>
-                                        <TableCell align="center">
-											{row.Mon.map((route) => (
-                                                <RouteBlock key={route.route}
-                                                    onClick={() => {console.log("Clicked")}}
-                                                    shift={route.shift}
-                                                    status={route.route_status}
-                                                    route={route.route}
-                                                    operator={route.driver}>
-                                                    {route.route}</RouteBlock>
-											))}
-                                        </TableCell>
-                                        <TableCell align="center">
-                                            {row.Tue.map((route) => (
-                                                <RouteBlock key={route.route}
-                                                    onClick={() => {console.log("Clicked")}}
-                                                    shift={route.shift}
-                                                    status={route.route_status}
-                                                    route={route.route}
-                                                    operator={route.driver}>
-                                                    {route.route}</RouteBlock>
-                                            ))}
-                                        </TableCell>
-                                        <TableCell align="center">
-                                            {row.Wed.map((route) => (
-                                                <RouteBlock key={route.route}
-                                                    onClick={() => {console.log("Clicked")}}
-                                                    shift={route.shift}
-                                                    status={route.route_status}
-                                                    route={route.route}
-                                                    operator={route.driver}>
-                                                    {route.route}</RouteBlock>
-                                            ))}
-                                        </TableCell>
-                                        <TableCell align="center">
-                                            {row.Thu.map((route) => (
-                                                <RouteBlock key={route.route}
-                                                    onClick={() => {console.log("Clicked")}}
-                                                    shift={route.shift}
-                                                    status={route.route_status}
-                                                    route={route.route}
-                                                    operator={route.driver}>
-                                                    {route.route}</RouteBlock>
-                                            ))}
-                                        </TableCell>
-                                        <TableCell align="center">
-                                            {row.Fri.map((route) => (
-                                                <RouteBlock key={route.route}
-                                                    onClick={() => {console.log("Clicked")}}
-                                                    shift={route.shift}
-                                                    status={route.route_status}
-                                                    route={route.route}
-                                                    operator={route.driver}>
-                                                    {route.route}</RouteBlock>
-                                            ))}
-                                        </TableCell>
-                                    </TableRow>
-                                )
-                            )}
-						</TableBody>
+						<ScheduleTableHead date={this.props.date} handleDateClick={this.handleDateClick}/>
+						<ScheduleTableBody onScreenData={this.state.onScreenData}/>
 					</Table>
 				</TableContainer>
 			</div>
         );
     }
+}
+
+class ScheduleTableHead extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        let weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+        return (
+            <TableHead>
+                <TableRow>
+                    {[1,2,3,4,5].map((value) => (
+                        <TableCell align="center">
+                            <DateClickButton textAlign="center" onClick={() => this.props.handleDateClick(value)}>
+                                <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, value).getDate()}</h1>
+                                <p style={{"line-height": '10px'}}>{weekdays[value-1]}</p>
+                            </DateClickButton>
+                        </TableCell>
+                    ))}
+                </TableRow>
+            </TableHead>
+        );
+    }
+}
+
+class ScheduleTableBody extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        let first_half;
+        let second_half;
+        if (this.props.onScreenData.length !== 0) {
+            let first = GetScheduleDataByRow(this.props.onScreenData[0]);
+            let second = GetScheduleDataByRow(this.props.onScreenData[1]);
+            first_half = first.map((row, index) => (GetSingleRow(row, index===first.length-1)));
+            second_half = second.map((row, index) => (GetSingleRow(row, index===second.length-1)));
+        }
+        return (
+            <TableBody>
+                {first_half}
+                {second_half}
+            </TableBody>
+        );
+    }
+}
+
+function GetScheduleDataByRow(data) {
+    let arrays = [data.Mon, data.Tue, data.Wed, data.Thu, data.Fri];
+    let lengths = arrays.map((array) => (array.length));
+    let max_len = Math.max(...lengths);
+
+    let rows = [];
+    for (let i = 0; i < max_len; i++) {
+        rows.push([]);
+        for (let array of arrays) {
+            if (i < array.length) {
+                rows[i].push(array[i]);
+            } else {
+                rows[i].push(null);
+            }
+        }
+    }
+
+    return rows;
+}
+
+function GetSingleRow(row, border) {
+    return (
+        <TableRow>
+            {row.map((route) => {
+                let block;
+                if (route !== null) {
+                    block = <RouteBlock key={route.route}
+                                onClick={() => {console.log("Clicked")}}
+                                shift={route.shift}
+                                status={route.route_status}
+                                route={route.route}
+                                operator={route.driver}></RouteBlock>;
+                }
+                if (border) {
+                    return <TableCell align="center">{block}</TableCell>;
+                } else {
+                    return <NoBorderTableCell align="center">{block}</NoBorderTableCell>;
+                }
+            })}
+        </TableRow>
+    );
 }
 
 function GetWeekdayDate(date, weekday) {
