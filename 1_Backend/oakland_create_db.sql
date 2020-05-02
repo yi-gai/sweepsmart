@@ -249,7 +249,7 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `DAY_LOG`;
 CREATE TABLE `DAY_LOG` (
     #log_id_day				weather	logs	holiday
-  `log_id_day` int(11) default NULL AUTO_INCREMENT,
+  `log_id_day` int(11) NOT NULL AUTO_INCREMENT,
   `log_date` date default NULL,
   `logs` varchar(255) default NULL,
   `weather` varchar(255) default 'Sunny',
@@ -469,7 +469,7 @@ CREATE TABLE `VEHICLE_MAINTENANCE` (
   `maint_id` int(11) NOT NULL AUTO_INCREMENT,
   `vehicle_id` int(11) NOT NULL,
   `date_service` date default NULL,
-  `date_end` date default NULL,
+  `date_end` date default (date_service),#NULL,
   `hours_service` int(11) default NULL,
   `type` varchar(255) default NULL,
   `comment` varchar(255) default NULL,

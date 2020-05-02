@@ -818,7 +818,7 @@ def get_daily_vehicle_infomation():
         for v in vehicles:
             v_data = {}
             v_default_stat = 'available'
-            v_maint = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where date_service='{ds}' and vehicle_id={v};".format(ds=date,v=v[0])).fetchone()[0]
+            v_maint = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where (date_service='{ds}' or (date_service<'{ds}' and date_end>='{ds}')) and vehicle_id={v};".format(ds=date,v=v[0])).fetchone()[0]
             if v_maint > 0:
                 v_default_stat = 'out-of-service'
             v_data['8-12 shift'] = ''
@@ -905,14 +905,16 @@ def change_vehicle_day():
     vehicle = arguments.get("vehicle")
     vehicle_status = arguments.get("vehicle_status")
     comment = arguments.get("comment")
-    # modify databast
-    # ANNA is this for maintenance or adding vehicles?
+    # modify database
     if request.method == 'POST':
-        status_code = 201
-        pass
+        db.engine.execute("insert into VEHICLE_MAINTENANCE (date_service,vehicle_id,comment) VALUES ('{d}',{v},'{c}');".format(d=date,v=vehicle,c=comment))
     elif request.method == 'PUT':
-        status_code = 200
-        pass
+        if vehicle_status.lower() == 'available':
+            yester = datetime.strptime(date,'%Y-%m-%d') - timedelta(days=1)
+            yesterday = datetime.strftime(yester, '%Y-%m-%d')
+            db.engine.execute("update VEHICLE_MAINTENANCE set date_end='{y}' where vehicle_id={id} and date_end>='{d}';".format(y=yesterday,id=vehicle,d=date))
+        else:
+            db.engine.execute("update VEHICLE_MAINTENANCE set comment='{c}' where vehicle_id={id} and date_service='{d}';".format(c=comment,id=vehicle,d=date))
     return Response(None, status=status_code, mimetype='application/json')
 
 @app.route('/vehicle/day/comment', methods=["GET", "POST", "PUT", "DELETE"])
@@ -958,9 +960,12 @@ def get_weekly_vehicle_infomation():
         num_swept = db.engine.execute("select count(*) from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and vehicle_id={v} and completion='completed';".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
         num_sched = db.engine.execute("select count(*) from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
         num_missed = num_sched-num_swept
-        maint_days = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where date_service>='{ds}' and date_service<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
+        tot_maint_days = db.engine.execute("select sum(DATEDIFF(date_end,date_service)+1) from VEHICLE_MAINTENANCE where (date_service>='{ds}' or (date_service<'{ds}' and date_end>='{ds}')) and date_service<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
+        if not tot_maint_days:
+            tot_maint_days = 0
+        maint_days = min(tot_maint_days,7)
         available_days = 7-maint_days
-        maint_today = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where date_service='{ds}' and vehicle_id={v};".format(ds=date,v=v[0])).fetchone()[0]
+        maint_today = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where (date_service='{ds}' or (date_service<'{ds}' and date_end>='{ds}')) and vehicle_id={v};".format(ds=date,v=v[0])).fetchone()[0]
         v_status = 'available'
         if maint_today > 0:
             v_status = 'out-of-service'
