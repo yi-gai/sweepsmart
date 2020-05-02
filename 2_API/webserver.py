@@ -375,7 +375,7 @@ def change_route_day():
     # modify database
     employee_id = db.engine.execute("select employee_id from DRIVERS where employee_name='{n}';".format(n=driver))
     db.engine.execute("insert into ROUTE_LOG (date_swept,route_id,shift,employee_id,vehicle_id,completion,notes) VALUES "
-    	"('{d}','{r}','{s}',{e},{v},'{c}','{n}');".format(d=date,r=route,s=shift,e=employee_id,v=vehicle,c=route_status,n=comment))
+        "('{d}','{r}','{s}',{e},{v},'{c}','{n}');".format(d=date,r=route,s=shift,e=employee_id,v=vehicle,c=route_status,n=comment))
 
 
     return Response(None, status=200, mimetype='application/json')
@@ -536,7 +536,7 @@ def get_daily_onduty_operator_info():
         driver_name = driver[1]
         driver_hours = driver[2]
         if not driver_hours:
-        	driver_hours = 0
+            driver_hours = 0
         driver_shift = driver[3]
         num_routes_query = "select count(*) from ROUTE_LOG where date_swept='{d}' and employee_id={e} and completion='{c}';"
         driver_routes_swept = db.engine.execute(num_routes_query.format(d=date,e=driver_id,c='completed')).fetchone()[0]
@@ -544,13 +544,13 @@ def get_daily_onduty_operator_info():
 
         holidays = db.engine.execute("select count(*) from HOLIDAY where holiday_date='{hs}';".format(hs=date)).fetchone()[0]
         if not holidays:
-        	holidays = 0
+            holidays = 0
         holiday_hours = holidays*driver_hours
 
         absences_query = "select HOUR(sum(time_missed)) from ABSENCES where date_absence='{ds}' and employee_id={e};"
         leave_hrs = db.engine.execute(absences_query.format(ds=date,e=driver_id)).fetchone()[0]
         if not leave_hrs:
-        	leave_hrs = 0
+            leave_hrs = 0
 
         overtime_query = "select sum(time_over) from OVERTIME where date_overtime='{ds}' and employee_id={e};"
         overtime_hrs = db.engine.execute(overtime_query.format(ds=date,e=driver_id)).fetchone()[0]
@@ -632,7 +632,7 @@ def get_individual_operator_info():
     date = request.args.get('date')
     date_dt = datetime.today()
     if not date:
-    	date = datetime.now().strftime("%Y-%m-%d")
+        date = datetime.now().strftime("%Y-%m-%d")
     if not employee_id:
         employee_id = 2882
     data = {}
@@ -758,7 +758,7 @@ def add_individual_operator_comment():
 # def get_operator_assignment():
 #     employee_id = request.args.get('employee_id')
 #     if not employee_id:
-#     	employee_id = 2882
+#         employee_id = 2882
 #     month = request.args.get('month')
 #     data = {}
 #     data['assignment'] = []
@@ -814,11 +814,55 @@ def get_daily_vehicle_infomation():
     data = defaultdict(list)
     # get from database
     if shift == 'day':
-    	vehicles = db.engine.execute("select vehicle_id,route_id,employee_id,shift from ROUTE_LOG where shift='am' or shift='pm';")
+        vehicles = db.engine.execute("select vehicle_id from VEHICLES where status_am=1 or status_pm=1;")
+        for v in vehicles:
+            v_data = {}
+            v_default_stat = 'available'
+            v_maint = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where date_service='{ds}' and vehicle_id={v};".format(ds=date,v=v[0])).fetchone()[0]
+            if v_maint > 0:
+                v_default_stat = 'out-of-service'
+            v_data['8-12 shift'] = ''
+            v_data['8-12 operator'] = ''
+            v_data['8-12 status'] = v_default_stat
+            v_data['12-4 shift'] = ''
+            v_data['12-4 operator'] = ''
+            v_data['12-4 status'] = v_default_stat
+            v_info = db.engine.execute("select route_id,employee_id,shift from ROUTE_LOG where date_swept='{d}' and vehicle_id={v}".format(d=date,v=v[0]))
+            for i in v_info:
+                if i[2].lower() == 'am':
+                    v_data['8-12 shift'] = i[0]
+                    v_data['8-12 operator'] = db.engine.execute("select employee_name from DRIVERS where employee_id={e};".format(e=i[1])).fetchone()[0]
+                    v_data['8-12 status'] = 'in-use'
+                elif i[2].lower() == 'pm':
+                    v_data['12-4 shift'] = i[0]
+                    v_data['12-4 operator'] = db.engine.execute("select employee_name from DRIVERS where employee_id={e};".format(e=i[1])).fetchone()[0]
+                    v_data['12-4 status'] = 'in-use'
+            data[v[0]] = v_data
     else:
-    	vehicles = db.engine.execute("select vehicle_id,route_id,employee_id,shift from ROUTE_LOG where shift='night';")
-    for row in vehicles:
-        data[row[0]].append({ 'route':row[1], 'employee_id':row[2],'shift':row[3]})
+        vehicles = db.engine.execute("select vehicle_id from VEHICLES where status_night=1;")
+        for v in vehicles:
+            v_data = {}
+            v_default_stat = 'available'
+            v_maint = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where date_service='{ds}' and vehicle_id={v};".format(ds=date,v=v[0])).fetchone()[0]
+            if v_maint > 0:
+                v_default_stat = 'out-of-service'
+            v_data['0-3 shift'] = ''
+            v_data['0-3 operator'] = ''
+            v_data['0-3 status'] = v_default_stat
+            v_data['3-6 shift'] = ''
+            v_data['3-6 operator'] = ''
+            v_data['3-6 status'] = v_default_stat
+            v_info = db.engine.execute("select route_id,employee_id,shift from ROUTE_LOG where date_swept='{d}' and vehicle_id={v}".format(d=date,v=v[0]))
+            for i in v_info:
+                if i[2].lower() == 'am':
+                    v_data['8-12 shift'] = i[0]
+                    v_data['8-12 operator'] = db.engine.execute("select employee_name from DRIVERS where employee_id={e};".format(e=i[1])).fetchone()[0]
+                    v_data['8-12 status'] = 'in-use'
+                elif i[2].lower() == 'pm':
+                    v_data['12-4 shift'] = i[0]
+                    v_data['12-4 operator'] = db.engine.execute("select employee_name from DRIVERS where employee_id={e};".format(e=i[1])).fetchone()[0]
+                    v_data['12-4 status'] = 'in-use'
+            data[v[0]] = v_data
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
@@ -884,11 +928,11 @@ def get_vehicle_comment():
     comment = arguments.get("comment")
     comment_id = arguments.get("comment_id")
     if request.method == "GET":
-    	data = defaultdict(list)
-    	log_info = db.engine.execute("select shift,vehicle_log_id,vehicle_id,comment from VEHICLE_DAY_LOG where log_date='{d}';".format(d=date))
-    	for l in log_info:
-    		data[row[0]] = {'vehicle_log_id':row[1],'vehicle_id':row[2],'comment':row[3]}
-    	return Response(json.dumps(data), status=status_code, mimetype='application/json')
+        data = defaultdict(list)
+        log_info = db.engine.execute("select shift,vehicle_log_id,vehicle_id,comment from VEHICLE_DAY_LOG where log_date='{d}';".format(d=date))
+        for l in log_info:
+            data[row[0]] = {'vehicle_log_id':row[1],'vehicle_id':row[2],'comment':row[3]}
+        return Response(json.dumps(data), status=status_code, mimetype='application/json')
     elif request.method == 'POST':
         db.engine.execute("insert into VEHICLE_DAY_LOG (log_date,shift,vehicle_id,comment) VALUES ('{d}','{s}',{v},'{c}');".format(d=date,s=shift,v=vehicle,c=comment))
     elif request.method == 'PUT':
@@ -914,11 +958,17 @@ def get_weekly_vehicle_infomation():
         num_swept = db.engine.execute("select count(*) from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and vehicle_id={v} and completion='completed';".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
         num_sched = db.engine.execute("select count(*) from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
         num_missed = num_sched-num_swept
+        maint_days = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where date_service>='{ds}' and date_service<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
+        available_days = 7-maint_days
+        maint_today = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where date_service='{ds}' and vehicle_id={v};".format(ds=date,v=v[0])).fetchone()[0]
+        v_status = 'available'
+        if maint_today > 0:
+            v_status = 'out-of-service'
         maint_hours = db.engine.execute("select HOUR(sum(hours_service)) from VEHICLE_MAINTENANCE where date_service>='{ds}' and date_service<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
-        v_data = {'maps_swept':num_swept,'maps_missed':num_missed,'hrs_maintenance':maint_hours,'logs':[]}
+        v_data = {'status':v_status,'maps_swept':num_swept,'maps_missed':num_missed,'avaiable_days':available_days,'out_of_service_days':maint_days,'hrs_maintenance':maint_hours,'logs':[]}
         v_logs = db.engine.execute("select log_date,shift,comment from VEHICLE_DAY_LOG where log_date>='{ds}' and log_date<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0]))
         for l in v_logs:
-        	v_data['logs'].append({'log_date':l[0],'log_shift':l[1],'log_comment':l[2]})
+            v_data['logs'].append({'log_date':l[0],'log_shift':l[1],'log_comment':l[2]})
         data[v[0]] = v_data
 
 

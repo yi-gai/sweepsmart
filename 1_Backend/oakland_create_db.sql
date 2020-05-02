@@ -437,9 +437,9 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `VEHICLES`;
 CREATE TABLE `VEHICLES` (
   `vehicle_id` int(11) NOT NULL,
-  `status_am` varchar(255) default 'available',
-  `status_pm` varchar(255) default 'available',
-  `status_night` varchar(255) default 'available',
+  `status_am` int(11) default 1,
+  `status_pm` int(11) default 1,
+  `status_night` int(11) default 1,
   `make` varchar(255) default NULL,
   `description` varchar(255) default NULL,
   `cng` varchar(255) default NULL,
