@@ -60,10 +60,14 @@ class WeeklyTable extends React.Component {
 		}
 		this.handleDelete = this.handleDelete.bind(this);
 		this.handlePost = this.handlePost.bind(this);
+		this.makeAPICalls = this.makeAPICalls.bind(this);
 	}
 
 	componentDidMount() {
-		console.log(this.props.date)
+		this.makeAPICalls();
+	}
+
+	makeAPICalls() {
 	    API.get("/vehicle/week", {
 	    	params: {'date': this.props.date}
 	    }).then(res => res['data'])
