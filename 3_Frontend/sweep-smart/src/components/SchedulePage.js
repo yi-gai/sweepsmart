@@ -145,7 +145,7 @@ class SchedulePage extends React.Component {
         if (this.props.date !== prevProps.date) {
             this.fetchWeeklyScheduleData();
         } else if (this.props.tab !== prevProps.tab) {
-            this.updateOnScreenData();
+            this.updateOnScreenData(this.state.data);
         }
     }
 
@@ -157,11 +157,7 @@ class SchedulePage extends React.Component {
             (result) => {
                 let processedData = ProcessRawData(result);
                 this.setState({data: processedData});
-                if (this.props.tab === 'Day Shift') {
-                    this.setState({onScreenData: processedData.daySchedule});
-                } else if (this.props.tab === 'Night Shift') {
-                    this.setState({onScreenData: processedData.nightSchedule});
-                }
+                this.updateOnScreenData(processedData);
             },
             (error) => {
                 console.log('week route error : ' + error)
@@ -169,11 +165,11 @@ class SchedulePage extends React.Component {
         );
     }
 
-    updateOnScreenData() {
+    updateOnScreenData(data) {
         if (this.props.tab === 'Day Shift') {
-            this.setState({onScreenData: this.state.data.daySchedule});
+            this.setState({onScreenData: data.daySchedule});
         } else if (this.props.tab === 'Night Shift') {
-            this.setState({onScreenData: this.state.data.nightSchedule});
+            this.setState({onScreenData: data.nightSchedule});
         }
     }
 
