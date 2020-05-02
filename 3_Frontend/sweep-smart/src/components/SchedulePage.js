@@ -122,6 +122,19 @@ function ProcessRawData (rawData) {
 	return processedData;
 }
 
+function GetDateFormat(date) {
+  let month = date.getMonth() + 1;
+  let day = date.getDate();
+  let year = date.getYear() + 1900;
+  if (day < 10) {
+    day = '0' + day;
+  }
+  if (month < 10) {
+    month = '0' + month;
+  }
+  return year + '-' + month + '-' + day;
+}
+
 class SchedulePage extends React.Component {
     constructor(props) {
 		super(props);
@@ -138,7 +151,7 @@ class SchedulePage extends React.Component {
     }
 
     componentDidMount() {
-    	this.fetchWeeklyScheduleData();
+        this.fetchWeeklyScheduleData();
     }
 
     componentDidUpdate(prevProps) {
@@ -150,8 +163,9 @@ class SchedulePage extends React.Component {
     }
 
     fetchWeeklyScheduleData() {
+
         API.get("/schedule/week/route", {
-            params: {date: this.props.date}
+            params: {date: GetDateFormat(this.props.date)}
         }).then(res => res['data'])
         .then(
             (result) => {
@@ -241,7 +255,7 @@ class ScheduleTableBody extends React.Component {
             let first = GetScheduleDataByRow(this.props.onScreenData[0]);
             let second = GetScheduleDataByRow(this.props.onScreenData[1]);
             first_half = first.map((row, index) => (GetSingleRow(row, index===first.length-1)));
-            second_half = second.map((row, index) => (GetSingleRow(row, index===second.length-1)));
+            second_half = second.map((row, index) => (GetSingleRow(row, false)));
         }
         return (
             <TableBody>
