@@ -98,8 +98,9 @@ def get_weekly_route_schedule():
     # get from database
 
     if week_of_month == 1:
-        days_this_month = [days[i] for i in range(day_of_wk,7)]
-        days_last_month = [days[i] for i in range(0,day_of_wk)]
+        month_first_day = datetime(date_dt.year,date_dt.month,1).weekday()
+        days_this_month = [days[i] for i in range(month_first_day,7)]
+        days_last_month = [days[i] for i in range(0,month_first_day)]
         wk_days = []
         for d in wk_route_map[5]:
             if d[:3] in days_last_month:
@@ -108,8 +109,14 @@ def get_weekly_route_schedule():
             if d[:3] in days_this_month:
                 wk_days.append(d)
     elif week_of_month == 5:
-        days_this_month = [days[i] for i in range(0,day_of_wk+1)]
-        days_next_month = [days[i] for i in range(day_of_wk+1,7)]
+        next_month = date_dt.month + 1
+        next_year = date_dt.year
+        if next_month == 13:
+            next_month = 1
+            next_year += 1
+        month_first_day = datetime(next_year,next_month,1).weekday()
+        days_this_month = [days[i] for i in range(0,month_first_day)]
+        days_next_month = [days[i] for i in range(month_first_day,7)]
         wk_days = []
         for d in wk_route_map[5]:
             if d[:3] in days_this_month:
@@ -120,18 +127,21 @@ def get_weekly_route_schedule():
     else:
         wk_days = wk_route_map[week_of_month]
 
+    day = datetime.strptime(wk_start,"%Y-%m-%d")
     for d in wk_days:
-        routes_db = db.engine.execute("select ro.route_id, d.employee_name, r.completion from ROUTES ro join ROUTE_LOG r on ro.route_id = r.route_id join DRIVERS d on r.employee_id = d.employee_id where ro.{d}=1;".format(d=d))
-        routes_included = []
-        for r in routes_db:
-            data[d].append({'route':r[0], 'driver':r[1], 'route_status':r[2]})
-            routes_included.append(r[0])
-        routes_sched = db.engine.execute("select route_id from ROUTES where {d}=1".format(d=d))
-        for r in routes_sched:
-            if r[0] not in routes_included:
-                data[d].append({'route':r[0], 'driver':None, 'route_status':'Unassigned'})
-
-
+        day_str = datetime.strftime(day,"%Y-%m-%d")
+        routes_assigned = db.engine.execute("select route_id from ROUTES where {d}=1;".format(d=d))
+        for r in routes_assigned:
+            route = r[0]
+            route_log_info = db.engine.execute("select d.employee_name, r.completion from ROUTE_LOG r join DRIVERS d on r.employee_id=d.employee_id where r.route_id='{r}' and r.date_swept='{d}';".format(r=route,d=day_str))
+            driver_name = ''
+            route_status = None
+            for l in route_log_info:
+                driver_name = l[0]
+                route_status = l[1]
+            data[d].append({'route':route, 'driver':driver_name, 'route_status':route_status})
+        day = day + timedelta(days=1)
+    
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 @app.route('/schedule/week/route/available', methods=["GET"])
