@@ -209,7 +209,7 @@ class SchedulePage extends React.Component {
                         handleClose={this.handleClose}/>
                 </div>
 				<TableContainer>
-					<Table>
+					<Table fullWidth={true}>
 						<ScheduleTableHead date={this.props.date} handleDateClick={this.handleDateClick}/>
 						<ScheduleTableBody onScreenData={this.state.onScreenData}/>
 					</Table>
@@ -230,7 +230,7 @@ class ScheduleTableHead extends React.Component {
             <TableHead>
                 <TableRow>
                     {[1,2,3,4,5].map((value) => (
-                        <TableCell align="center">
+                        <TableCell align="center" width="20%">
                             <DateClickButton textAlign="center" onClick={() => this.props.handleDateClick(value)}>
                                 <h1 style={{"line-height": '15px'}}>{GetWeekdayDate(this.props.date, value).getDate()}</h1>
                                 <p style={{"line-height": '10px'}}>{weekdays[value-1]}</p>
@@ -300,9 +300,9 @@ function GetSingleRow(row, border) {
                                 operator={route.driver}></RouteBlock>;
                 }
                 if (border) {
-                    return <TableCell align="center">{block}</TableCell>;
+                    return <TableCell align="center" width="20%">{block}</TableCell>;
                 } else {
-                    return <NoBorderTableCell align="center">{block}</NoBorderTableCell>;
+                    return <NoBorderTableCell align="center" width="20%">{block}</NoBorderTableCell>;
                 }
             })}
         </TableRow>

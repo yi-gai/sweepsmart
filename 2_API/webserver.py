@@ -918,7 +918,7 @@ def get_daily_maintenance_infomation():
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/vehicle/day/action', methods=["POST", "PUT"])
+@app.route('/vehicle/day/action', methods=["PUT"])
 def change_vehicle_day():
     if request.headers['Content-Type'] == 'application/json':
         arguments = request.get_json()
@@ -927,7 +927,7 @@ def change_vehicle_day():
     date = arguments.get("date")
     vehicle = arguments.get("vehicle")
     vehicle_status = arguments.get("vehicle_status")
-    comment = arguments.get("comment")
+    comment = arguments.get("comment", default="")
     # modify database
     if request.method == 'POST':
         db.engine.execute("insert into VEHICLE_MAINTENANCE (date_service,vehicle_id,comment) VALUES ('{d}',{v},'{c}');".format(d=date,v=vehicle,c=comment))
@@ -938,7 +938,7 @@ def change_vehicle_day():
             db.engine.execute("update VEHICLE_MAINTENANCE set date_end='{y}' where vehicle_id={id} and date_end>='{d}';".format(y=yesterday,id=vehicle,d=date))
         else:
             db.engine.execute("update VEHICLE_MAINTENANCE set comment='{c}' where vehicle_id={id} and date_service='{d}';".format(c=comment,id=vehicle,d=date))
-    return Response(None, status=status_code, mimetype='application/json')
+    return Response(None, status=200, mimetype='application/json')
 
 @app.route('/vehicle/day/comment', methods=["GET", "POST", "PUT", "DELETE"])
 def get_vehicle_comment():
@@ -986,51 +986,50 @@ def get_weekly_vehicle_infomation():
         tot_maint_days = db.engine.execute("select sum(DATEDIFF(date_end,date_service)+1) from VEHICLE_MAINTENANCE where (date_service>='{ds}' or (date_service<'{ds}' and date_end>='{ds}')) and date_service<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
         if not tot_maint_days:
             tot_maint_days = 0
-        maint_days = min(tot_maint_days,7)
-        available_days = 7-maint_days
+        maint_days = min(tot_maint_days,5)
+        available_days = 5-maint_days
         maint_today = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where (date_service='{ds}' or (date_service<'{ds}' and date_end>='{ds}')) and vehicle_id={v};".format(ds=date,v=v[0])).fetchone()[0]
         v_status = 'available'
         if maint_today > 0:
             v_status = 'out-of-service'
         maint_hours = db.engine.execute("select HOUR(sum(hours_service)) from VEHICLE_MAINTENANCE where date_service>='{ds}' and date_service<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
-        v_data = {'status':v_status,'maps_swept':num_swept,'maps_missed':num_missed,'avaiable_days':available_days,'out_of_service_days':maint_days,'hrs_maintenance':maint_hours,'logs':[]}
+        v_data = {'status':v_status,'maps_swept':num_swept,'maps_missed':num_missed,'available_days':available_days,'out_of_service_days':maint_days,'hrs_maintenance':maint_hours,'logs':[]}
         v_logs = db.engine.execute("select log_date,shift,comment from VEHICLE_DAY_LOG where log_date>='{ds}' and log_date<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0]))
         for l in v_logs:
             v_data['logs'].append({'log_date':l[0],'log_shift':l[1],'log_comment':l[2]})
         data[v[0]] = v_data
 
-
-    vehicles = db.engine.execute("select * from VEHICLES ORDER BY vehicle_id;")
-    maintenance_v = db.engine.execute("select vehicle_id from VEHICLE_MAINTENANCE where date_service <= '{ds}' and date_end >= '{de}';".format(ds=wk_start, de=wk_end))
-    #not sure which fields we need
-    unavailable_vids = [row[0] for row in maintenance_v]
-    availables = []
-    unavailables = []
-    for row in vehicles:
-        vid = row[0]
-        if vid not in unavailable_vids:
-            availables.append({
-                'vehicle_id':vid,
-                'status':'available',
-                'make':row[4],
-                'description':row[5],
-                'year':row[7],
-                'license':row[8],
-                'id_no':row[9]
-            })
-        else:
-            unavailables.append({
-                'vehicle_id':vid,
-                'status':'out-of-service',
-                'make':row[4],
-                'description':row[5],
-                'year':row[7],
-                'license':row[8],
-                'id_no':row[9]
-            })
-    data['data'] = availables+unavailables
-    data['num_availables'] = len(availables)
-    data['num_unavailables'] = len(unavailables)
+    # vehicles = db.engine.execute("select * from VEHICLES ORDER BY vehicle_id;")
+    # maintenance_v = db.engine.execute("select vehicle_id from VEHICLE_MAINTENANCE where date_service <= '{ds}' and date_end >= '{de}';".format(ds=wk_start, de=wk_end))
+    # #not sure which fields we need
+    # unavailable_vids = [row[0] for row in maintenance_v]
+    # availables = []
+    # unavailables = []
+    # for row in vehicles:
+    #     vid = row[0]
+    #     if vid not in unavailable_vids:
+    #         availables.append({
+    #             'vehicle_id':vid,
+    #             'status':'available',
+    #             'make':row[4],
+    #             'description':row[5],
+    #             'year':row[7],
+    #             'license':row[8],
+    #             'id_no':row[9]
+    #         })
+    #     else:
+    #         unavailables.append({
+    #             'vehicle_id':vid,
+    #             'status':'out-of-service',
+    #             'make':row[4],
+    #             'description':row[5],
+    #             'year':row[7],
+    #             'license':row[8],
+    #             'id_no':row[9]
+    #         })
+    # data['data'] = availables+unavailables
+    # data['num_availables'] = len(availables)
+    # data['num_unavailables'] = len(unavailables)
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
@@ -1066,13 +1065,13 @@ def vehicle_action():
         year = arguments.get("year", default=2000)
         license = arguments.get("license", default='')
         id_no = arguments.get("id_no", default='')
-        status_am = arguments.get("status_am", default='available')
-        status_pm = arguments.get("status_pm", default='available')
-        status_night = arguments.get("status_night", default='available')
+        status_am = arguments.get("status_am", default=1)
+        status_pm = arguments.get("status_pm", default=1)
+        status_night = arguments.get("status_night", default=1)
         query = '''
         INSERT INTO `VEHICLES`
         (vehicle_id,cng,make,description,vehicle_year,license,v_id_no,status_am,status_pm,status_night)
-        VALUES ({vid},'{cng}','{make}','{description}',{year},'{license}','{id_no}','{sam}','{spm}','{snight}');
+        VALUES ({vid},'{cng}','{make}','{description}',{year},'{license}','{id_no}',{sam},{spm},{snight});
         '''.format(vid=vehicle_id, cng=cng, make=make,
             description=description, year=year, license=license,
             id_no=id_no, sam=status_am, spm=status_pm, snight=status_night)
@@ -1080,30 +1079,30 @@ def vehicle_action():
         db.session.commit()
         return Response(None, status=201, mimetype='application/json')
 
-@app.route('/vehicle/add', methods=["POST"])
-def add_vehicle():
-    if request.headers['Content-Type'] == 'application/json':
-        arguments = request.get_json()
-    if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
-        arguments = request.form
-    vehicle_id = arguments.get("vehicle_id")
-    cng = arguments.get("cng", default='')
-    make = arguments.get("make", default='')
-    description = arguments.get("description", default='')
-    year = arguments.get("year", default='')
-    license = arguments.get("license", default='')
-    id_no = arguments.get("id_no", default='')
-    status_am = arguments.get("status_am", default='available')
-    status_pm = arguments.get("status_pm", default='available')
-    status_night = arguments.get("status_night", default='available')
-    query = '''
-    INSERT INTO `VEHICLES`
-    (vehicle_id,cng,make,description,vehicle_year,license,v_id_no,status_am,status_pm,status_night)
-    VALUES ({vid},'{cng}','{make}','{description}',{year},'{license}',{id_no},'{sam}','{spm}','{snight}');
-    '''.format(vehicle_id, cng, make, description, year, license, id_no, status_am, status_pm, status_night)
-    db.engine.execute(query)
-    # modify database
-    return Response(None, status=200, mimetype='application/json')
+# @app.route('/vehicle/add', methods=["POST"])
+# def add_vehicle():
+#     if request.headers['Content-Type'] == 'application/json':
+#         arguments = request.get_json()
+#     if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+#         arguments = request.form
+#     vehicle_id = arguments.get("vehicle_id")
+#     cng = arguments.get("cng", default='')
+#     make = arguments.get("make", default='')
+#     description = arguments.get("description", default='')
+#     year = arguments.get("year", default='')
+#     license = arguments.get("license", default='')
+#     id_no = arguments.get("id_no", default='')
+#     status_am = arguments.get("status_am", default='available')
+#     status_pm = arguments.get("status_pm", default='available')
+#     status_night = arguments.get("status_night", default='available')
+#     query = '''
+#     INSERT INTO `VEHICLES`
+#     (vehicle_id,cng,make,description,vehicle_year,license,v_id_no,status_am,status_pm,status_night)
+#     VALUES ({vid},'{cng}','{make}','{description}',{year},'{license}',{id_no},'{sam}','{spm}','{snight}');
+#     '''.format(vehicle_id, cng, make, description, year, license, id_no, status_am, status_pm, status_night)
+#     db.engine.execute(query)
+#     # modify database
+#     return Response(None, status=200, mimetype='application/json')
 
 # performance
 @app.route('/performance/month', methods=["GET"])
