@@ -2,6 +2,7 @@ import React from 'react';
 import API from '../API/api';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/styles';
+import { styled } from '@material-ui/core/styles';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -46,6 +47,34 @@ const styles = theme => (
     }
   }
 );
+
+const StyledTableHeadCell = styled(TableCell) ({
+	height: 60,
+	color: '#7A827F',
+	fontFamily: 'Lato, sans-serif',
+	fontStyle: 'normal',
+	fontWeight: 900,
+	fontSize: 16,
+	textAlign: 'center'
+});
+
+const StyledTableNormalCell = styled(TableCell) ({
+  color: '#3A423E',
+  fontFamily: 'Lato',
+  fontStyle: 'normal',
+  fontWeight: 'normal',
+  fontSize: 16,
+	textAlign: 'center'
+});
+
+const StyledTableBoldCell = styled(TableCell) ({
+  color: '#3A423E',
+  fontFamily: 'Lato',
+  fontStyle: 'bold',
+  fontWeight: 'normal',
+  fontSize: 16,
+	textAlign: 'center'
+});
 
 class OperatorPage extends React.Component {
   constructor(props) {
@@ -273,47 +302,47 @@ class OperatorPage extends React.Component {
       if(!second){
         second = {'route': '', 'working_hrs': '', 'leave_hrs': ''}
       }
-      children.push(<TableCell align="center">8:00AM<br/>-<br/>12:00AM</TableCell>)
-      children.push(<TableCell align="center">{first.route}</TableCell>)
-      children.push(<TableCell align="center">{first.working_hrs}</TableCell>)
+      children.push(<StyledTableHeadCell align="center">8:00AM<br/>-<br/>12:00AM</StyledTableHeadCell>)
+      children.push(<StyledTableNormalCell align="center">{first.route}</StyledTableNormalCell>)
+      children.push(<StyledTableNormalCell align="center">{first.working_hrs}</StyledTableNormalCell>)
       if(first.leave_hrs)
-        children.push(<TableCell align="center">{first.leave_hrs}</TableCell>)
+        children.push(<StyledTableNormalCell align="center">{first.leave_hrs}</StyledTableNormalCell>)
       else
-        children.push(<TableCell align="center">
+        children.push(<StyledTableNormalCell align="center">
                         <AddLeaveAlertDialog
                           eid={this.state.drawer_data.employee_id}
                           shift='AM'
                           date={this.state.drawer_date}
                           name={this.state.drawer_data.name}
                           handleAddLeave={this.handleAddLeave} />
-                      </TableCell>)
-      children.push(<TableCell align="center">{first.comment}</TableCell>)
-      children.push(<TableCell align="center">
+                      </StyledTableNormalCell>)
+      children.push(<StyledTableNormalCell align="center">{first.comment}</StyledTableNormalCell>)
+      children.push(<StyledTableNormalCell align="center">
         <AddCommentAlertDialog 
           eid={this.state.drawer_data.employee_id}
           shift='AM'
           date={this.state.drawer_date}
           name={this.state.drawer_data.name} 
           newComment={first.comment}
-          handleAddComment={this.handleAddComment}/></TableCell>)
+          handleAddComment={this.handleAddComment}/></StyledTableNormalCell>)
       table.push(<TableRow>{children}</TableRow>)
       children = []
-      children.push(<TableCell align="center">12:00PM <br/>-<br/>4:00PM</TableCell>)
-      children.push(<TableCell align="center">{second.route}</TableCell>)
-      children.push(<TableCell align="center">{second.working_hrs}</TableCell>)
+      children.push(<StyledTableHeadCell align="center">12:00PM <br/>-<br/>4:00PM</StyledTableHeadCell>)
+      children.push(<StyledTableNormalCell align="center">{second.route}</StyledTableNormalCell>)
+      children.push(<StyledTableNormalCell align="center">{second.working_hrs}</StyledTableNormalCell>)
       if(second.leave_hrs)
-        children.push(<TableCell align="center">{second.leave_hrs}</TableCell>)
+        children.push(<StyledTableNormalCell align="center">{second.leave_hrs}</StyledTableNormalCell>)
       else
-        children.push(<TableCell align="center">
+        children.push(<StyledTableNormalCell align="center">
                         <AddLeaveAlertDialog
                           eid={this.state.drawer_data.employee_id}
                           shift='PM'
                           date={this.state.drawer_date}
                           name={this.state.drawer_data.name}
                           handleAddLeave={this.handleAddLeave} />
-                      </TableCell>)
-      children.push(<TableCell align="center">{second.comment}</TableCell>)
-      children.push(<TableCell align="center">
+                      </StyledTableNormalCell>)
+      children.push(<StyledTableNormalCell align="center">{second.comment}</StyledTableNormalCell>)
+      children.push(<StyledTableNormalCell align="center">
         <AddCommentAlertDialog 
                         eid={this.state.drawer_data.employee_id} 
                         shift='PM'
@@ -321,7 +350,7 @@ class OperatorPage extends React.Component {
                         name={this.state.drawer_data.name}
                         newComment={second.comment}
                         handleAddComment={this.handleAddComment}/>
-      </TableCell>)
+      </StyledTableNormalCell>)
       table.push(<TableRow>{children}</TableRow>)
     }else{
 
@@ -376,23 +405,23 @@ class OperatorPage extends React.Component {
                   <TableHead>
                     <TableRow>
                       <TableCell></TableCell>
-                          <TableCell size="large" align="center">Total working hrs</TableCell>
-                          <TableCell size="large" align="center">Total leave hrs</TableCell>
-                          <TableCell size="large" align="center">Overtime hrs</TableCell>
-                          <TableCell size="large" align="center">Holiday hrs</TableCell>
+                          <StyledTableHeadCell size="large" align="center">Total working hrs</StyledTableHeadCell>
+                          <StyledTableHeadCell size="large" align="center">Total leave hrs</StyledTableHeadCell>
+                          <StyledTableHeadCell size="large" align="center">Overtime hrs</StyledTableHeadCell>
+                          <StyledTableHeadCell size="large" align="center">Holiday hrs</StyledTableHeadCell>
                       </TableRow>
                       </TableHead>
                       <TableBody>
                         {this.state.onScreenData.map((row) => 
                           (
                             <TableRow key={row.employee_id}>
-                              <TableCell className={classes.tableCell} component="th" scope="row" onClick={() => this.handleCellClick(row)}>
+                              <StyledTableBoldCell className={classes.tableCell} component="th" scope="row" onClick={() => this.handleCellClick(row)}>
                                   {row.name}
-                              </TableCell>
-                              <TableCell className={classes.tableCell} size="large" align="center">{row.working_hrs}</TableCell>
-                              <TableCell className={classes.tableCell} size="large" align="center">{row.leave_hrs}</TableCell>
-                              <TableCell className={classes.tableCell} size="large" align="center">{row.overtime_hrs}</TableCell>
-                              <TableCell className={classes.tableCell} size="large" align="center">{row.holiday_hrs}</TableCell>
+                              </StyledTableBoldCell>
+                              <StyledTableNormalCell className={classes.tableCell} size="large" align="center">{row.working_hrs}</StyledTableNormalCell>
+                              <StyledTableNormalCell className={classes.tableCell} size="large" align="center">{row.leave_hrs}</StyledTableNormalCell>
+                              <StyledTableNormalCell className={classes.tableCell} size="large" align="center">{row.overtime_hrs}</StyledTableNormalCell>
+                              <StyledTableNormalCell className={classes.tableCell} size="large" align="center">{row.holiday_hrs}</StyledTableNormalCell>
                             </TableRow>
                           )
                         )}
@@ -430,12 +459,12 @@ class OperatorPage extends React.Component {
                         <Table className={classes.table} aria-label="simple table">
                             <TableHead>
                             <TableRow>
-                                <TableCell class="table-small"></TableCell>
-                                <TableCell class="table-small" align="center">Route</TableCell>
-                                <TableCell class="table-small" align="center">Working hrs</TableCell>
-                                <TableCell class="table-leave" align="center">Leaves</TableCell>
-                                <TableCell class="table-comment"align="center">Comments</TableCell>
-                                <TableCell class="table-small"align="center">Edit</TableCell>
+                                <StyledTableHeadCell></StyledTableHeadCell>
+                                <StyledTableHeadCell align="center">Route</StyledTableHeadCell>
+                                <StyledTableHeadCell align="center">Working hrs</StyledTableHeadCell>
+                                <StyledTableHeadCell align="center">Leaves</StyledTableHeadCell>
+                                <StyledTableHeadCell align="center">Comments</StyledTableHeadCell>
+                                <StyledTableHeadCell align="center">Edit</StyledTableHeadCell>
                             </TableRow>
                             </TableHead>
                             <TableBody>
@@ -484,27 +513,27 @@ class OperatorPage extends React.Component {
                   <TableHead>
                     <TableRow>
                       <TableCell ></TableCell>
-                          <TableCell align="center">Total working hrs</TableCell>
-                          <TableCell align="center">Total leave hrs</TableCell>
-                          <TableCell align="center">Overtime hrs</TableCell>
-                          <TableCell align="center">Holiday hrs</TableCell>
-                          <TableCell align="center">Total swept</TableCell>
-                          <TableCell align="center">Total missed</TableCell>
+                          <StyledTableHeadCell align="center">Total<br/>working hrs</StyledTableHeadCell>
+                          <StyledTableHeadCell align="center">Total<br/>leave hrs</StyledTableHeadCell>
+                          <StyledTableHeadCell align="center">Overtime<br/>hrs</StyledTableHeadCell>
+                          <StyledTableHeadCell align="center">Holiday<br/>hrs</StyledTableHeadCell>
+                          <StyledTableHeadCell align="center">Total<br/>swept</StyledTableHeadCell>
+                          <StyledTableHeadCell align="center">Total<br/>missed</StyledTableHeadCell>
                       </TableRow>
                       </TableHead>
                       <TableBody>
                         {this.state.onScreenData.map((row) => 
                           (
                             <TableRow key={row.employee_id}>
-                            <TableCell className={classes.tableCell} component="th" scope="row">
+                            <StyledTableNormalCell className={classes.tableCell} component="th" scope="row">
                                 {row.name}
-                            </TableCell>
-                            <TableCell className={classes.tableCell} align="center">{row.working_hrs}</TableCell>
-                            <TableCell className={classes.tableCell} align="center">{row.leave_hrs}</TableCell>
-                            <TableCell className={classes.tableCell} align="center">{row.overtime_hrs}</TableCell>
-                            <TableCell className={classes.tableCell} align="center">{row.holiday_hrs}</TableCell>
-                            <TableCell className={classes.tableCell} align="center">{row.swept_total}</TableCell>
-                            <TableCell className={classes.tableCell} align="center">{row.missed_total}</TableCell>
+                            </StyledTableNormalCell>
+                            <StyledTableNormalCell className={classes.tableCell} align="center">{row.working_hrs}</StyledTableNormalCell>
+                            <StyledTableNormalCell className={classes.tableCell} align="center">{row.leave_hrs}</StyledTableNormalCell>
+                            <StyledTableNormalCell className={classes.tableCell} align="center">{row.overtime_hrs}</StyledTableNormalCell>
+                            <StyledTableNormalCell className={classes.tableCell} align="center">{row.holiday_hrs}</StyledTableNormalCell>
+                            <StyledTableNormalCell className={classes.tableCell} align="center">{row.swept_total}</StyledTableNormalCell>
+                            <StyledTableNormalCell className={classes.tableCell} align="center">{row.missed_total}</StyledTableNormalCell>
                             </TableRow>
                           )
                         )}
