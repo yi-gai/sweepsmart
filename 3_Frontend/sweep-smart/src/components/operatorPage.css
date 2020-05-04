@@ -1,31 +1,49 @@
 .MuiPaper-root{
-    width: 60%
+    width: 50%
 }
 
 .operator-top-div {
-    height: 20%;
+    height: 25%;
     width: 100%;
     display: flex;
+    align-items: center;
+}
+
+.close-btn {
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .user-icon{
     width: 100px !important;
     height: 100px !important;
-    vertical-align: auto;
-    margin-left: 30px;
-    margin-right: 30px;
+    margin-left: 8%;
+    margin-right: 20px;
+    display: block;
+}
+
+.operator-top-text {
+    height: 100%;
 }
 
 .name-text {
+    height: 55%;
     font-family: Lato;
     font-style: normal;
     font-weight: 900;
-    font-size: 36px;
-    line-height: 43px;
+    font-size: 40px;
     color: #3A423E;
+    position: relative;
+}
+
+.name-text span {
+    position: absolute;
+    bottom: 0;
 }
 
 .shift-text {
+    height: 45%;
     font-family: Lato;
     font-style: normal;
     font-weight: bold;
@@ -35,13 +53,54 @@
 }
 
 .action-div {
-    height: 35px;
+    margin-left: 50px;
+    width: 20%;    
+}
+
+.action-text {
     font-family: Lato;
     font-style: normal;
     font-weight: bold;
     font-size: 14px;
     line-height: 17px;
     color: #7A827F;
+    height: 50%;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+
+.align-bottom {
+    position: absolute;
+    bottom: 0;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.drawer-date-div {
+    width: 90%;
+    margin: auto;
+    display:flex;
+}
+
+.drawer-date-display {
+    font-family: Lato;
+    font-style: normal;
+    font-weight: 900;
+    font-size: 24px;
+    line-height: 29px;
+    color: #3A423E;
+}
+
+.drawer-date-down-arrow {
+    margin-left: 20px;
+}
+
+.drawer-table-container{
+    margin-top: 50px;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .title-div {
@@ -61,4 +120,9 @@
 
 .table-leave {
     width: 20%;
+}
+
+.operator-drawer {
+    background: #E5E5E5;
+    height: 100%;
 }
