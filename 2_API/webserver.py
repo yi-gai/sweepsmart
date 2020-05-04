@@ -97,8 +97,18 @@ def get_weekly_route_schedule():
     days_of_wk = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
     # get from database
 
+    month_first_dt = datetime(date_dt.year,date_dt.month,1)
+    next_month = date_dt.month + 1
+    next_year = date_dt.year
+    if next_month == 13:
+        next_month = 1
+        next_year += 1
+    next_month_first_dt = datetime(next_year,next_month,1)
+    next_month_first_day = next_month_first_dt.weekday()
+    
+
     if week_of_month == 1:
-        month_first_day = datetime(date_dt.year,date_dt.month,1).weekday()
+        month_first_day = month_first_dt.weekday()
         days_this_month = [days[i] for i in range(month_first_day,7)]
         days_last_month = [days[i] for i in range(0,month_first_day)]
         wk_days = []
@@ -108,15 +118,10 @@ def get_weekly_route_schedule():
         for d in wk_route_map[1]:
             if d[:3] in days_this_month:
                 wk_days.append(d)
-    elif week_of_month == 5:
-        next_month = date_dt.month + 1
-        next_year = date_dt.year
-        if next_month == 13:
-            next_month = 1
-            next_year += 1
-        month_first_day = datetime(next_year,next_month,1).weekday()
-        days_this_month = [days[i] for i in range(0,month_first_day)]
-        days_next_month = [days[i] for i in range(month_first_day,7)]
+    elif next_month_first_dt - timedelta(days=7) < date_dt and next_month_first_day > day_of_wk: 
+        
+        days_this_month = [days[i] for i in range(0,next_month_first_day)]
+        days_next_month = [days[i] for i in range(next_month_first_day,7)]
         wk_days = []
         for d in wk_route_map[5]:
             if d[:3] in days_this_month:
@@ -125,8 +130,18 @@ def get_weekly_route_schedule():
             if d[:3] in days_next_month:
                 wk_days.append(d)
     else:
-        wk_days = wk_route_map[week_of_month]
-
+        day_break = (month_first_dt + timedelta(days=(7*(week_of_month-1)))).weekday()
+        days_last_week = [days[i] for i in range(0,day_break)]
+        days_this_week = [days[i] for i in range(day_break,7)]
+        wk_days = []
+        for d in wk_route_map[week_of_month-1]:
+            if d[:3] in days_last_week:
+                wk_days.append(d)
+        for d in wk_route_map[week_of_month]:
+            if d[:3] in days_this_week:
+                wk_days.append(d)
+    data['wk_days'] = wk_days
+    
     day = datetime.strptime(wk_start,"%Y-%m-%d")
     for d in wk_days:
         day_str = datetime.strftime(day,"%Y-%m-%d")
