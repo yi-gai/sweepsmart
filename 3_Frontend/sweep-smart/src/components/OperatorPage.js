@@ -40,8 +40,10 @@ const styles = theme => (
       width: 700,
       height: 700,
       backgroundColor: '#E5E5E5',
-      border: '2px solid #000',
     },
+    tableCell: {
+      borderBottom: "none"
+    }
   }
 );
 
@@ -271,7 +273,7 @@ class OperatorPage extends React.Component {
       if(!second){
         second = {'route': '', 'working_hrs': '', 'leave_hrs': ''}
       }
-      children.push(<TableCell align="center">{`8:00AM - 12:00AM`}</TableCell>)
+      children.push(<TableCell align="center">8:00AM<br/>-<br/>12:00AM</TableCell>)
       children.push(<TableCell align="center">{first.route}</TableCell>)
       children.push(<TableCell align="center">{first.working_hrs}</TableCell>)
       if(first.leave_hrs)
@@ -285,18 +287,18 @@ class OperatorPage extends React.Component {
                           name={this.state.drawer_data.name}
                           handleAddLeave={this.handleAddLeave} />
                       </TableCell>)
-      children.push(<TableCell align="center">{first.comment}
-                      <AddCommentAlertDialog 
-                        eid={this.state.drawer_data.employee_id}
-                        shift='AM'
-                        date={this.state.drawer_date}
-                        name={this.state.drawer_data.name} 
-                        newComment={first.comment}
-                        handleAddComment={this.handleAddComment}/>
-                    </TableCell>)
+      children.push(<TableCell align="center">{first.comment}</TableCell>)
+      children.push(<TableCell align="center">
+        <AddCommentAlertDialog 
+          eid={this.state.drawer_data.employee_id}
+          shift='AM'
+          date={this.state.drawer_date}
+          name={this.state.drawer_data.name} 
+          newComment={first.comment}
+          handleAddComment={this.handleAddComment}/></TableCell>)
       table.push(<TableRow>{children}</TableRow>)
       children = []
-      children.push(<TableCell align="center">{`12:00PM - 4:00PM`}</TableCell>)
+      children.push(<TableCell align="center">12:00PM <br/>-<br/>4:00PM</TableCell>)
       children.push(<TableCell align="center">{second.route}</TableCell>)
       children.push(<TableCell align="center">{second.working_hrs}</TableCell>)
       if(second.leave_hrs)
@@ -310,15 +312,16 @@ class OperatorPage extends React.Component {
                           name={this.state.drawer_data.name}
                           handleAddLeave={this.handleAddLeave} />
                       </TableCell>)
-      children.push(<TableCell align="center">{second.comment}
-                      <AddCommentAlertDialog 
+      children.push(<TableCell align="center">{second.comment}</TableCell>)
+      children.push(<TableCell align="center">
+        <AddCommentAlertDialog 
                         eid={this.state.drawer_data.employee_id} 
                         shift='PM'
                         date={this.state.drawer_date}
                         name={this.state.drawer_data.name}
                         newComment={second.comment}
                         handleAddComment={this.handleAddComment}/>
-                    </TableCell>)
+      </TableCell>)
       table.push(<TableRow>{children}</TableRow>)
     }else{
 
@@ -360,7 +363,7 @@ class OperatorPage extends React.Component {
       //Create the parent and add the children
       table.push(<TableRow>{children}</TableRow>)
     }
-    return table;
+    return table
   }
     render() {
         const { classes } = this.props;
@@ -383,13 +386,13 @@ class OperatorPage extends React.Component {
                         {this.state.onScreenData.map((row) => 
                           (
                             <TableRow key={row.employee_id}>
-                              <TableCell component="th" scope="row" onClick={() => this.handleCellClick(row)}>
+                              <TableCell className={classes.tableCell} component="th" scope="row" onClick={() => this.handleCellClick(row)}>
                                   {row.name}
                               </TableCell>
-                              <TableCell size="large" align="center">{row.working_hrs}</TableCell>
-                              <TableCell size="large" align="center">{row.leave_hrs}</TableCell>
-                              <TableCell size="large" align="center">{row.overtime_hrs}</TableCell>
-                              <TableCell size="large" align="center">{row.holiday_hrs}</TableCell>
+                              <TableCell className={classes.tableCell} size="large" align="center">{row.working_hrs}</TableCell>
+                              <TableCell className={classes.tableCell} size="large" align="center">{row.leave_hrs}</TableCell>
+                              <TableCell className={classes.tableCell} size="large" align="center">{row.overtime_hrs}</TableCell>
+                              <TableCell className={classes.tableCell} size="large" align="center">{row.holiday_hrs}</TableCell>
                             </TableRow>
                           )
                         )}
@@ -397,38 +400,51 @@ class OperatorPage extends React.Component {
                   </Table>
               </TableContainer>
               <Drawer anchor='right' open={this.state.drawer}>
-                <CloseIcon onClick={() => this.handleDrawerClose()}/>
-                <div className="operator-top-div">
-                  <FaceIcon className="user-icon"/>
-                  <div className="name-text">
-                    {this.state.drawer_data.name}
-                    <div className="shift-text">
-                      {this.state.tab} Operator
+                <div className="operator-drawer">
+                  <div className="operator-top-div">
+                    <div class="close-btn">
+                      <Button className="close-btn" style={{width: 30, height: 45}} onClick={() => this.handleDrawerClose()}>
+                        <CloseIcon />
+                      </Button>
+                    </div>
+                    <FaceIcon className="user-icon"/>
+                    <div className="operator-top-text">
+                      <div className="name-text">
+                        <span>{this.state.drawer_data.name} R. Roger</span>
+                      </div>
+                      <div className="shift-text">
+                          {this.state.tab} Operator
+                      </div>
+                    </div>
+                    <div className="action-div">
+                      <div className="action-text" onClick={() => this.handleModalClick()}>
+                        <div className="align-bottom"><CalendarIcon/>Route Assignment</div>
+                      </div>
+                      <DeleteOperatorAlertDialog handleOperatorDelete={this.handleOperatorDelete} eid={this.state.drawer_data.employee_id}/>
                     </div>
                   </div>
                   <div>
-                    <div className="action-div" onClick={() => this.handleModalClick()}><CalendarIcon/>Route Assignment</div>
-                    <DeleteOperatorAlertDialog handleOperatorDelete={this.handleOperatorDelete} eid={this.state.drawer_data.employee_id}/>
+                    <DayPicker date={this.state.drawer_date}></DayPicker>
+                    <div className="drawer-table-container">
+                      <TableContainer component={Paper}>
+                        <Table className={classes.table} aria-label="simple table">
+                            <TableHead>
+                            <TableRow>
+                                <TableCell class="table-small"></TableCell>
+                                <TableCell class="table-small" align="center">Route</TableCell>
+                                <TableCell class="table-small" align="center">Working hrs</TableCell>
+                                <TableCell class="table-leave" align="center">Leaves</TableCell>
+                                <TableCell class="table-comment"align="center">Comments</TableCell>
+                                <TableCell class="table-small"align="center">Edit</TableCell>
+                            </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {this.getIndividualTable()}
+                            </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <DayPicker date={this.state.drawer_date}></DayPicker>
-                  <TableContainer component={Paper}>
-                    <Table className={classes.table} aria-label="simple table">
-                        <TableHead>
-                        <TableRow>
-                            <TableCell ></TableCell>
-                            <TableCell align="center">Route</TableCell>
-                            <TableCell align="center">Working hrs</TableCell>
-                            <TableCell align="center">Leaves</TableCell>
-                            <TableCell align="center">Comment</TableCell>
-                        </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {this.getIndividualTable()}
-                        </TableBody>
-                    </Table>
-                  </TableContainer>
                 </div>
               </Drawer>
               <Modal 
@@ -480,15 +496,15 @@ class OperatorPage extends React.Component {
                         {this.state.onScreenData.map((row) => 
                           (
                             <TableRow key={row.employee_id}>
-                            <TableCell component="th" scope="row">
+                            <TableCell className={classes.tableCell} component="th" scope="row">
                                 {row.name}
                             </TableCell>
-                            <TableCell align="center">{row.working_hrs}</TableCell>
-                            <TableCell align="center">{row.leave_hrs}</TableCell>
-                            <TableCell align="center">{row.overtime_hrs}</TableCell>
-                            <TableCell align="center">{row.holiday_hrs}</TableCell>
-                            <TableCell align="center">{row.swept_total}</TableCell>
-                            <TableCell align="center">{row.missed_total}</TableCell>
+                            <TableCell className={classes.tableCell} align="center">{row.working_hrs}</TableCell>
+                            <TableCell className={classes.tableCell} align="center">{row.leave_hrs}</TableCell>
+                            <TableCell className={classes.tableCell} align="center">{row.overtime_hrs}</TableCell>
+                            <TableCell className={classes.tableCell} align="center">{row.holiday_hrs}</TableCell>
+                            <TableCell className={classes.tableCell} align="center">{row.swept_total}</TableCell>
+                            <TableCell className={classes.tableCell} align="center">{row.missed_total}</TableCell>
                             </TableRow>
                           )
                         )}
@@ -511,9 +527,9 @@ class DayPicker extends React.Component {
 	}
 	render() {
 		return (
-			<div className="day-picker">
-				<div className="day-display">{GetDayDisplay(this.props.date)}</div>
-				<div className="day-picker-arrow">
+			<div className="drawer-date-div">
+				<div className="drawer-date-display">{GetDayDisplay(this.props.date)}</div>
+				<div className="drawer-date-down-arrow">
 					<DownArrowIcon/>
 				</div>
 			</div>
@@ -588,18 +604,18 @@ class AddLeaveAlertDialog extends React.Component {
 				aria-describedby="alert-dialog-description">
 					<DialogTitle id="alert-dialog-title">Add Leave for {this.props.name} on {this.props.shift} shift</DialogTitle>
 					<DialogContent>
-            <TextField id="start_time" label="Start time" type="time" defaultValue="08:00" onChange={this.handleLeaveTimeChange}
-                        InputLabelProps={{shrink: true,}}
-                        inputProps={{step: 600}}/>
-            <TextField id="end_time" label="End time" type="time" defaultValue="12:00" onChange={this.handleLeaveTimeChange}
-                        InputLabelProps={{shrink: true,}}
-                        inputProps={{step: 600}}/><br/>
+            <TextField id="start_time" label="Leave from" type="time" defaultValue="08:00" onChange={this.handleLeaveTimeChange}
+                       InputLabelProps={{shrink: true,}}
+                       inputProps={{step: 600}}/>
+            <TextField id="end_time" label="Leave to" type="time" defaultValue="12:00" onChange={this.handleLeaveTimeChange}
+                       InputLabelProps={{shrink: true,}}
+                       inputProps={{step: 600}}/><br/>
             <InputLabel shrink>Reason</InputLabel>
-            <Select onChange={this.handleLeaveReasonChange}>
-              <MenuItem value='PBL'>Personal Businsess Leave</MenuItem>
-              <MenuItem value='SICK'>Sick</MenuItem>
-              <MenuItem value='VOC'>Vacation</MenuItem>
-              <MenuItem value='FAM'>Family</MenuItem>
+            <Select onChange={this.handleLeaveReasonChange} autoWidth>
+              <MenuItem value='PBL' >Personal Businsess Leave</MenuItem>
+              <MenuItem value='SICK' >Sick</MenuItem>
+              <MenuItem value='VOC' >Vacation</MenuItem>
+              <MenuItem value='FAM' >Family</MenuItem>
             </Select>
           </DialogContent>
 					<DialogActions>
@@ -700,7 +716,7 @@ class DeleteOperatorAlertDialog extends React.Component {
 	render() {
 		return (
 			<div>
-				<div className="action-div" onClick={this.handleClickOpen} >
+				<div className="action-text" onClick={this.handleClickOpen} >
 					<TrashIcon /> Remove
 				</div>
         <Dialog open={this.state.open} onClose={this.handleCancel} 
