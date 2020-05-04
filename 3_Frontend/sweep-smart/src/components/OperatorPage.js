@@ -130,7 +130,7 @@ class OperatorPage extends React.Component {
     if (this.props.viewType === 'week') {
       API.get("/operator/week", {
         params: {
-          'date': this.state.date.toISOString().slice(0, 10)
+          'date': this.props.date.toISOString().slice(0, 10)
         }})
         .then(res => res['data'])
         .then(
@@ -145,7 +145,7 @@ class OperatorPage extends React.Component {
     }else{
       API.get("/operator/day/onduty", {
         params: {
-          'date': this.state.date.toISOString().slice(0, 10)
+          'date': this.props.date.toISOString().slice(0, 10)
         }})
         .then(res => res['data'])
         .then(
@@ -196,6 +196,9 @@ class OperatorPage extends React.Component {
         this.setState({onScreenData: this.state.data.night});
     }
     if (prevProps.viewType != this.props.viewType){
+      this.makeMainPageAPICall();
+    }
+    if (prevProps.date != this.props.date){
       this.makeMainPageAPICall();
     }
   }
