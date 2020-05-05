@@ -17,80 +17,122 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import Paper from '@material-ui/core/Paper';
 import Select from '@material-ui/core/Select';
 import { withStyles } from '@material-ui/styles';
+import { makeStyles } from '@material-ui/core/styles';
 import './vehiclePage.css';
 
-const AddVehicleButton = styled(Button)({
+const AddVehicleButton = styled(({viewType, ...other}) => <Button {...other}/>)({
+	left: (props) => props.viewType === 'week' ? 630 : 400,
 	border: 0,
 	padding: 0,
 	margin: 0,
 	minWidth: '40px',
+	position: 'absolute',
+	width: 150,
+	height: 35,
+	top: -50,
+	zIndex: 1,
 });
 
-const NoBottomTableCell = styled(TableCell) ({
-  border: 0,
-  borderCollapse: 'collapse'
+const NoBottomTableCell = styled(({color, ...other}) => <TableCell {...other}/>)({
+	color: (props) => {
+		if (props.color === 'green') {
+			return '#70C295';
+		} else if (props.color === 'red') {
+			return '#D68080';
+		} else {
+			return '#3A423E';
+		}
+	},
+	fontWeight: (props) => props.bold ? 'bold' : 'normal',
+	border: 0,
+	borderCollapse: 'collapse',
+	textAlign: 'center',
+	fontSize: 16
 });
+
+const StyledTableHeadCell = styled(TableCell) ({
+	height: 60,
+	color: '#7A827F',
+	fontFamily: 'Lato, sans-serif',
+	fontStyle: 'normal',
+	fontWeight: 900,
+	fontSize: 16,
+	textAlign: 'center'
+});
+
+function GetDateFormat(date) {
+	let month = date.getMonth() + 1;
+	let day = date.getDate();
+	let year = date.getYear() + 1900;
+	if (day < 10) {
+		day = '0' + day;
+	}
+	if (month < 10) {
+		month = '0' + month;
+	}
+	return year + '-' + month + '-' + day;
+}
 
 class VehiclePage extends React.Component {
 	constructor(props) {
 		super(props);
-	}
-
-  render() {
-  	let contentTable;
-  	if (this.props.viewType === "week") {
-  		contentTable = <WeeklyTable date={this.props.date} />
-  	} else if (this.props.viewType === "day") {
-  		contentTable = <DailyTable date={this.props.date} />
-  	}
-    return (
-	    <div className="content-container">
-	      {contentTable}
-	    </div>
-    );
-  }
-}
-
-class WeeklyTable extends React.Component {
-	constructor(props) {
-		super(props);
 		this.state = {
-			onScreenData: [],
-			data: null
-		}
+			weeklyData: null,
+			dailyDayData: null,
+			dailyNightData: null
+		};
 		this.handleDelete = this.handleDelete.bind(this);
 		this.handlePost = this.handlePost.bind(this);
-		this.makeAPICalls = this.makeAPICalls.bind(this);
+		this.fetchVehicleData = this.fetchVehicleData.bind(this);
 	}
 
 	componentDidMount() {
-		this.makeAPICalls();
+		this.fetchVehicleData();
 	}
 
-	makeAPICalls() {
-	    API.get("/vehicle/week", {
-	    	params: {'date': this.props.date}
-	    }).then(res => res['data'])
-	      .then(
-	        (result) => {
-	          this.setState({data: result, onScreenData: result.data});
-	        },
-	        (error) => {
-	          console.log(error)
-	        }
-	      )
+	componentDidUpdate(prevProps) {
+		if (this.props.date !== prevProps.date) {
+			this.fetchVehicleData();
+		}
 	}
 
-	handleDelete(vehicle_id) {
+	fetchVehicleData() {
+		API.get("/vehicle/week", {
+			params: {'date': GetDateFormat(this.props.date)}
+		}).then(res => res['data'])
+		.then((result) => {
+			this.setState({weeklyData: result});
+		});
+		API.get("/vehicle/day", {
+			params: {'date': GetDateFormat(this.props.date), 'shift': 'day'}
+		}).then(res => res['data'])
+		.then((result) => {
+			this.setState({dailyDayData: result});
+		});
+		API.get("/vehicle/day", {
+			params: {'date': GetDateFormat(this.props.date), 'shift': 'night'}
+		}).then(res => res['data'])
+		.then((result) => {
+			this.setState({dailyNightData: result});
+		});
+	}
+
+	handleDelete(vid) {
 		let params = new URLSearchParams();
-		params.append('vehicle_id', vehicle_id);
+		params.append('vehicle_id', vid);
 		API({
 			method: 'delete',
 			url: '/vehicle/action',
 			withCredentials: false,
 			data: params
+		}).then(res => {
+			if (res['status'] === 204) {
+				this.fetchVehicleData();
+				alert("Delete successful!");
+			} else {
+				alert("Delete unsuccessful!");
+			}
 		});
-		this.componentDidMount();
 	}
 
 	handlePost(vid) {
@@ -102,9 +144,9 @@ class WeeklyTable extends React.Component {
 			withCredentials: false,
 			data: params
 		}).then(res => {
-			if (res['status'] == 201) {
+			if (res['status'] === 201) {
+				this.fetchVehicleData();
 				alert("Successfully added vehicle " + vid + ".");
-				this.componentDidMount();
 			} else {
 				alert("Invalid vehicle ID or vehicle ID already exists!");
 			}
@@ -112,40 +154,187 @@ class WeeklyTable extends React.Component {
 	}
 
 	render() {
-		let content = this.state.onScreenData.map((value, _) => 
+		return (
+			<div className="content-container">
+				<AddVehicleDialog viewType={this.props.viewType} handlePost={this.handlePost}/>
+				<TableContainer>
+					<Table fullWidth={true}>
+						<VehicleTableHead viewType={this.props.viewType} tab={this.props.tab}/>
+						<VehicleTableBody viewType={this.props.viewType}
+							tab={this.props.tab}
+							weeklyData={this.state.weeklyData}
+							dailyDayData={this.state.dailyDayData}
+							dailyNightData={this.state.dailyNightData}
+							handleDelete={this.handleDelete}/>
+					</Table>
+				</TableContainer>
+			</div>
+		);
+	}
+}
+
+function VehicleTableHead (props) {
+	let headRow;
+	if (props.viewType === 'week') {
+		headRow = (
 			<TableRow>
-				<NoBottomTableCell align="center" size="medium">{value.vehicle_id}</NoBottomTableCell>
-				{GetWeeklyStatusFormat(value.status)}
-				<NoBottomTableCell align="center" size="medium">20</NoBottomTableCell>
-				<NoBottomTableCell align="center" size="medium">5</NoBottomTableCell>
-				<NoBottomTableCell align="center" size="medium">0</NoBottomTableCell>
-				<NoBottomTableCell align="center" size="medium">
-				<DeleteAlertDialog handleDelete={this.handleDelete} vid={value.vehicle_id}/>
-				</NoBottomTableCell>
+				<StyledTableHeadCell width="150">Vehicle #</StyledTableHeadCell>
+				<StyledTableHeadCell width="200">Status</StyledTableHeadCell>
+				<StyledTableHeadCell width="150">Total maps swept</StyledTableHeadCell>
+				<StyledTableHeadCell width="150">Available days</StyledTableHeadCell>
+				<StyledTableHeadCell width="150">Out-of-service days</StyledTableHeadCell>
+				<StyledTableHeadCell width="150">Delete</StyledTableHeadCell>
 			</TableRow>
 		);
+	} else if (props.viewType === 'day' && props.tab === 'Day Shift') {
+		headRow = (
+			<TableRow>
+				<StyledTableHeadCell width="100">Vehicle #</StyledTableHeadCell>
+				<StyledTableHeadCell width="95">8-12<br/>shift</StyledTableHeadCell>
+				<StyledTableHeadCell width="150">8-12<br/>operator</StyledTableHeadCell>
+				<StyledTableHeadCell width="130">8-12<br/>status</StyledTableHeadCell>
+				<StyledTableHeadCell width="95">12-4<br/>shift</StyledTableHeadCell>
+				<StyledTableHeadCell width="150">12-4<br/>operator</StyledTableHeadCell>
+				<StyledTableHeadCell width="130">12-4<br/>status</StyledTableHeadCell>
+				<StyledTableHeadCell width="100">Comment</StyledTableHeadCell>
+			</TableRow>
+		);
+	} else if (props.viewType === 'day' && props.tab === 'Night Shift') {
+		headRow = (
+			<TableRow>
+				<StyledTableHeadCell width="100">Vehicle #</StyledTableHeadCell>
+				<StyledTableHeadCell width="95">0-3<br/>shift</StyledTableHeadCell>
+				<StyledTableHeadCell width="150">0-3<br/>operator</StyledTableHeadCell>
+				<StyledTableHeadCell width="130">0-3<br/>status</StyledTableHeadCell>
+				<StyledTableHeadCell width="95">3-6<br/>shift</StyledTableHeadCell>
+				<StyledTableHeadCell width="150">3-6<br/>operator</StyledTableHeadCell>
+				<StyledTableHeadCell width="130">3-6<br/>status</StyledTableHeadCell>
+				<StyledTableHeadCell width="100">Comment</StyledTableHeadCell>
+			</TableRow>
+		);
+	}
+	return <TableHead>{headRow}</TableHead>;
+}
+
+function VehicleTableBody (props) {
+	let content;
+	if (props.viewType === 'week' && props.weeklyData !== null) {
+		content = Object.entries(props.weeklyData).map((value) => {
+			let color = value[1]['status'] === 'available' ? 'green' : 'red';
+			let status = value[1]['status'] === 'available' ? 'Available' : 'Out-of-service';
+			return (
+				<TableRow>
+					<NoBottomTableCell size="medium" bold={true}>{value[0]}</NoBottomTableCell>
+					<NoBottomTableCell size="medium" color={color} bold={true}>{status}</NoBottomTableCell>
+					<NoBottomTableCell size="medium">{value[1]['maps_swept']}</NoBottomTableCell>
+					<NoBottomTableCell size="medium">{value[1]['available_days']}</NoBottomTableCell>
+					<NoBottomTableCell size="medium">{value[1]['out_of_service_days']}</NoBottomTableCell>
+					<NoBottomTableCell size="medium">
+						<DeleteAlertDialog handleDelete={props.handleDelete} vid={value[0]}/>
+					</NoBottomTableCell>
+				</TableRow>
+			);
+		});
+	} else if (props.viewType === 'day' && props.tab === 'Day Shift' && props.dailyDayData !== null) {
+		content = Object.entries(props.dailyDayData).map((value) => 
+			<TableRow>
+				<NoBottomTableCell size="medium" bold={true}>{value[0]}</NoBottomTableCell>
+				<NoBottomTableCell size="medium">{value[1]['8-12 shift']}</NoBottomTableCell>
+				<NoBottomTableCell size="medium">{value[1]['8-12 operator']}</NoBottomTableCell>
+				<NoBottomTableCell size="medium"><DailyStatus status={value[1]['8-12 status']}/></NoBottomTableCell>
+				<NoBottomTableCell size="medium">{value[1]['12-4 shift']}</NoBottomTableCell>
+				<NoBottomTableCell size="medium">{value[1]['12-4 operator']}</NoBottomTableCell>
+				<NoBottomTableCell size="medium"><DailyStatus status={value[1]['12-4 status']}/></NoBottomTableCell>
+				<NoBottomTableCell size="medium"><CommentIcon/></NoBottomTableCell>
+			</TableRow>
+		);
+	} else if (props.viewType === 'day' && props.tab === 'Night Shift' && props.dailyNightData !== null) {
+		content = Object.entries(props.dailyNightData).map((value) => 
+			<TableRow>
+				<NoBottomTableCell size="medium" bold={true}>{value[0]}</NoBottomTableCell>
+				<NoBottomTableCell size="medium">{value[1]['0-3 shift']}</NoBottomTableCell>
+				<NoBottomTableCell size="medium">{value[1]['0-3 operator']}</NoBottomTableCell>
+				<NoBottomTableCell size="medium"><DailyStatus status={value[1]['0-3 status']}/></NoBottomTableCell>
+				<NoBottomTableCell size="medium">{value[1]['3-6 shift']}</NoBottomTableCell>
+				<NoBottomTableCell size="medium">{value[1]['3-6 operator']}</NoBottomTableCell>
+				<NoBottomTableCell size="medium"><DailyStatus status={value[1]['3-6 status']}/></NoBottomTableCell>
+				<NoBottomTableCell size="medium"><CommentIcon/></NoBottomTableCell>
+			</TableRow>
+		);
+	}
+	return <TableBody>{content}</TableBody>;
+}
+
+class AddVehicleDialog extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {open: false,
+			isAvailable: false,
+			newVID: ''};
+		this.handleClickOpen = this.handleClickOpen.bind(this);
+		this.handleCancel = this.handleCancel.bind(this);
+		this.handlePost = this.handlePost.bind(this);
+		this.handleVIDChange = this.handleVIDChange.bind(this);
+	}
+
+	handleClickOpen() {
+		this.setState({open: true});
+	};
+
+	handleCancel() {
+		this.setState({open: false});
+	}
+
+	handlePost(event) {
+		event.preventDefault();
+		let vid = this.state.newVID;
+		if (vid != '') {
+			this.props.handlePost(vid);
+		}
+		this.setState({open: false,
+			newVID: ''});
+	};
+
+	handleVIDChange(event) {
+		let vid = event.target.value;
+		if (vid != '') {
+			this.setState({isAvailable: true});
+		} else {
+			this.setState({isAvailable: false});
+		}
+		this.setState({newVID: vid});
+	}
+
+	render() {
 		return (
 			<div>
-				<div className="add-vehicle-icon-week">
-	    			<AddVehicleDialog handlePost={this.handlePost}/>
-	    		</div>
-			<TableContainer>
-			<Table class="vehicle-weekly-table">
-			<TableHead>
-			  <TableRow>
-			    <TableCell class="vehicle-weekly-vid-head">Vehicle #</TableCell>
-			    <TableCell class="vehicle-weekly-status-head">Status</TableCell>
-			    <TableCell class="vehicle-weekly-total-head">Total maps swept</TableCell>
-			    <TableCell class="vehicle-weekly-available-head">Available days</TableCell>
-			    <TableCell class="vehicle-weekly-outofservice-head">Out-of-service days</TableCell>
-			    <TableCell class="vehicle-weekly-action-head">Delete</TableCell>
-			  </TableRow>
-			</TableHead>
-			<TableBody>
-			  {content}
-			</TableBody>
-			</Table>
-			</TableContainer>
+				<AddVehicleButton color="primary" viewType={this.props.viewType} onClick={this.handleClickOpen}>
+					<AddVehicleIcon/>
+				</AddVehicleButton>
+			<Dialog open={this.state.open} onClose={this.handleCancel} aria-labelledby="form-dialog-title">
+			<DialogTitle id="form-dialog-title">Add Vehicle</DialogTitle>
+			<DialogContent>
+			<DialogContentText>
+			Fill in the vehicle information.
+			</DialogContentText>
+			<TextField
+				required
+				autoFocus
+				id="vid"
+				label="Vehicle ID"
+				fullWidth
+				onChange={this.handleVIDChange}
+			/>
+			</DialogContent>
+			<DialogActions>
+			<Button onClick={this.handleCancel} color="primary">
+			Cancel
+			</Button>
+			<Button onClick={this.handlePost} disabled={!this.state.isAvailable} color="primary">
+			Submit
+			</Button>
+			</DialogActions>
+			</Dialog>
 			</div>
 		);
 	}
@@ -203,214 +392,15 @@ class DeleteAlertDialog extends React.Component {
 	}
 }
 
-function GetWeeklyStatusFormat(status) {
-	if (status == 'available') {
-		return <NoBottomTableCell  align="center"  size="small" class="weekly-status-available">Available</NoBottomTableCell>
-	} else if (status == 'out-of-service') {
-		return <NoBottomTableCell  align="center"  size="small" class="weekly-status-outofservice">Out-of-service</NoBottomTableCell>
+function DailyStatus(props) {
+	if (props.status == 'in-use') {
+		return <InUseIcon/>;
+	} else if (props.status === 'available') {
+		return <AvailableIcon/>;
+	} else if (props.status === 'out-of-service') {
+		return <OutOfServiceIcon/>;
 	} else {
-		return <NoBottomTableCell>{status}</NoBottomTableCell>
-	}
-}
-
-class DailyTable extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {
-			onScreenData: [],
-			data: null
-		}
-		this.handlePost = this.handlePost.bind(this);
-	}
-
-	componentDidMount() {
-		API.get("/vehicle/day", {
-	    	params: {'date': this.props.date}
-	    }).then(res => res['data'])
-		.then(
-			(result) => {
-				console.log(result)
-				this.setState({data: result, onScreenData: result});
-			},
-			(error) => {
-				console.log(error)
-			}
-		)
-	}
-
-	handlePost(vid) {
-		let params = new URLSearchParams();
-		params.append('vehicle_id', vid);
-		API({
-			method: 'post',
-			url: '/vehicle/action',
-			withCredentials: false,
-			data: params
-		}).then(res => {
-			if (res['status'] == 201) {
-				alert("Successfully added vehicle " + vid + ".");
-				this.componentDidMount();
-			} else {
-				alert("Invalid vehicle ID or vehicle ID already exists!");
-			}
-		})
-	}
-
-	render() {
-		let data = [[7171, "7A-1", "R.Rogers", "in-use", "6A-1", "R. Rogers", "in-use"],
-					[7172, "7A-2", "W. Howard", "in-use", "6A-2", "W. Howard", "in-use"],
-					[7173, "7A-3", "M. Ornelas", "in-use", "6A-3", "M. Ornelas", "in-use"],
-					[7174, "7B-1", "Y. Girma", "in-use", "6B-1", "Y. Girma", "in-use"],
-					[7175, "7B-2", "W. Howard", "in-use", "6B-2", "W. Howard", "in-use"],
-					[7176, "7B-3", "W. Howard", "in-use", "6B-3", "W. Howard", "in-use"],
-					[7177, "7C-1", "W. Howard", "in-use", "6C-1", "W. Howard", "in-use"],
-					[7178, "7C-2", "W. Howard", "in-use", "6C-2", "W. Howard", "in-use"],
-					[7271, "7C-3", "W. Howard", "in-use", "6D-1", "W. Howard", "in-use"],
-					[7272, "7D", "W. Howard", "in-use", "6D-2", "W. Howard", "in-use"],
-					[7273, "Dumpsite", "W. Howard", "in-use", "6E", "W. Howard", "in-use"],
-					[7274, "", "", "available", "", "", "available"],
-					[7275, "", "", "available", "", "", "available"],
-					[7276, "", "", "available", "", "", "available"],
-					[7277, "", "", "out-of-service", "", "", "out-of-service"]];
-		let linebreaks = [10, 13];
-		let content = data.map((value, index) => {
-			if (linebreaks.includes(index)) {
-				return (
-					<TableRow class="linebreak">
-					{value.map((item, _) => {
-						if (item == "in-use") {
-							return (<TableCell><InUseIcon/></TableCell>);
-						} else if (item == "available") {
-							return (<TableCell><AvailableIcon/></TableCell>);
-						} else if (item == "out-of-service") {
-							return (<TableCell><OutOfServiceIcon/></TableCell>);
-						} else {
-							return (<TableCell>{item}</TableCell>);
-						}
-					})}
-					<TableCell><CommentIcon/></TableCell>
-					</TableRow>
-				);
-			} else {
-				return (
-					<TableRow>
-					{value.map((item, _) => {
-						if (item == "in-use") {
-							return (<TableCell><InUseIcon/></TableCell>);
-						} else if (item == "available") {
-							return (<TableCell><AvailableIcon/></TableCell>);
-						} else if (item == "out-of-service") {
-							return (<TableCell><OutOfServiceIcon/></TableCell>);
-						} else {
-							return (<TableCell>{item}</TableCell>);
-						}
-					})}
-					<TableCell><CommentIcon/></TableCell>
-					</TableRow>
-				);
-			}
-		});
-		return (
-			<div>
-			<div className="add-vehicle-icon-day">
-    			<AddVehicleDialog handlePost={this.handlePost}/>
-    		</div>
-			<TableContainer>
-			<Table class="vehicle-daily-table">
-			  <TableHead>
-			  <TableRow>
-			    <TableCell class="vehicle-daily-vid-head">Vehicle #</TableCell>
-			    <TableCell class="vehicle-daily-am-shift-head">8-12<br/>shift</TableCell>
-			    <TableCell class="vehicle-daily-am-operator-head">8-12<br/>operator</TableCell>
-			    <TableCell class="vehicle-daily-am-status-head">8-12<br/>status</TableCell>
-			    <TableCell class="vehicle-daily-pm-shift-head">12-4<br/>shift</TableCell>
-			    <TableCell class="vehicle-daily-pm-operator-head">12-4<br/>operator</TableCell>
-			    <TableCell class="vehicle-daily-pm-status-head">12-4<br/>status</TableCell>
-			    <TableCell class="vehicle-daily-comment-head">Comment</TableCell>
-			  </TableRow>
-			  </TableHead>
-			  <TableBody>
-			  {content}
-			  </TableBody>
-			</Table>
-			</TableContainer>
-			</div>
-		);
-	}
-}
-
-class AddVehicleDialog extends React.Component {
-	constructor(props) {
-		super(props);
-		this.state = {open: false,
-			isAvailable: false,
-			newVID: ''};
-		this.handleClickOpen = this.handleClickOpen.bind(this);
-		this.handleCancel = this.handleCancel.bind(this);
-		this.handlePost = this.handlePost.bind(this);
-		this.handleVIDChange = this.handleVIDChange.bind(this);
-	}
-
-	handleClickOpen() {
-		this.setState({open: true});
-	};
-
-	handleCancel() {
-		this.setState({open: false});
-	}
-
-	handlePost(event) {
-		event.preventDefault();
-		let vid = this.state.newVID;
-		if (vid != '') {
-			this.props.handlePost(vid);
-		}
-		this.setState({open: false,
-			newVID: ''});
-	};
-
-	handleVIDChange(event) {
-		let vid = event.target.value;
-		if (vid != '') {
-			this.setState({isAvailable: true});
-		} else {
-			this.setState({isAvailable: false});
-		}
-		this.setState({newVID: vid});
-	}
-
-	render() {
-		return (
-			<div>
-				<AddVehicleButton color="primary" onClick={this.handleClickOpen}>
-					<AddVehicleIcon/>
-				</AddVehicleButton>
-			<Dialog open={this.state.open} onClose={this.handleCancel} aria-labelledby="form-dialog-title">
-			<DialogTitle id="form-dialog-title">Add Vehicle</DialogTitle>
-			<DialogContent>
-			<DialogContentText>
-			Fill in the vehicle information.
-			</DialogContentText>
-			<TextField
-				required
-				autoFocus
-				id="vid"
-				label="Vehicle ID"
-				fullWidth
-				onChange={this.handleVIDChange}
-			/>
-			</DialogContent>
-			<DialogActions>
-			<Button onClick={this.handleCancel} color="primary">
-			Cancel
-			</Button>
-			<Button onClick={this.handlePost} disabled={!this.state.isAvailable} color="primary">
-			Submit
-			</Button>
-			</DialogActions>
-			</Dialog>
-			</div>
-		);
+		return;
 	}
 }
 
