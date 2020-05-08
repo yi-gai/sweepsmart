@@ -12,15 +12,16 @@ class OperatorChart extends Component {
    constructor(props){
       super(props);
       this.createBarChart = this.createBarChart.bind(this);
+      this.processAPIData = this.processAPIData.bind(this);
 
       let tempData = [{"Operator": "John B.", "Scheduled": 10, "Completion": 9},
-      {"Operator": "Jack A.", "Scheduled": 10, "Completion": 9},
-      {"Operator": "Allen D.", "Scheduled": 10, "Completion": 9},
+      {"Operator": "Jack A.", "Scheduled": 10, "Completion": 8},
+      {"Operator": "Allen D.", "Scheduled": 10, "Completion": 6},
       {"Operator": "Henry H.", "Scheduled": 10, "Completion": 9},
-      {"Operator": "Zack K.", "Scheduled": 10, "Completion": 9},
-      {"Operator": "Christ H.", "Scheduled": 10, "Completion": 9},
+      {"Operator": "Zack K.", "Scheduled": 10, "Completion": 7},
+      {"Operator": "Christ H.", "Scheduled": 10, "Completion": 10},
       {"Operator": "Martin S.", "Scheduled": 10, "Completion": 9},
-      {"Operator": "Josh E.", "Scheduled": 10, "Completion": 9}]
+      {"Operator": "Josh E.", "Scheduled": 10, "Completion": 10}];
       
       let currentTab = "";
       let date = new Date();
@@ -30,18 +31,39 @@ class OperatorChart extends Component {
     			data: tempData};
    }
    componentDidMount() {
-      this.createBarChart()
+   		API.get("performance/month", {
+			params: {'date': GetDateFormat(this.props.date)}
+		}).then(res => this.processAPIData(res));
+
+      this.createBarChart();
    }
    // componentDidUpdate() {
    //    this.createBarChart()
    // }
+
+   processAPIData(res) {
+   	let newData = [];
+   	for(var key in res) {
+  		var row = {};
+  		// row[]
+
+	}
+
+   }
+
    createBarChart() {
       const node = this.node
       const stats = this.state.data
 
-      const width = 450;
-	  const height = 650;
-	  const barwidth = 30;
+      const width = 430;
+	  const height = 600;
+
+      const allOperatorSchedule = stats.map(function(d){return d.Scheduled});
+      const xScaleOp = d3.scaleLinear().domain([0, d3.max(allOperatorSchedule)]).range([0, width-80]);
+
+      
+	  const n = allOperatorSchedule.length;
+  	  const barwidth = parseInt(height/(n+1)) - 6;
 	  
 	    const container = d3.select(this.refs.opBar)
 	    .append("svg")
@@ -50,44 +72,50 @@ class OperatorChart extends Component {
 	    .style("margin-left", 10);
 	  
 	  const componentGroup = 
-	        container.selectAll("g") 
-	           .data(stats)
-	           .enter().append("g")
-	           .attr("class", "barGroup")
-	           .attr("transform", (d, i) => `translate(0, ${((i+1) * 35)})`); // transform gives the x, y coordinates of each group 
-	  
-	  componentGroup
-	  .append("rect")
-	  .attr("width", d => d.Scheduled*30)
-	  .attr("height", barwidth)
-	  .attr("x", 75)
-	  .attr("y", 2) // the y-coordinate for the bars has been defined above
-	  .attr("opacity", 0.2)
-	  .attr("fill", "steelblue");
-	  
-	  componentGroup
-	  .append("rect")
-	  .attr("width", d => d.Completion*30)
-	  .attr("height", barwidth)
-	  .attr("x", 75)
-	  .attr("y", 2) // the y-coordinate for the bars has been defined above
-	  .attr("fill", "steelblue");
-	  
-	  componentGroup
-	     .append("text")
-	       .attr("fill", "pink")
-	        .attr("x", d => d.Completion*30 + 30)
-	         .attr("y", 23)
-	          .attr("text-anchor","right")
-	         .text(d => ((d.Completion/d.Scheduled)* 100).toFixed(0) + '%');
-	  
-	  componentGroup
-	     .append("text")
-	       .attr("fill", "black")
-	        .attr("x", 0)
-	         .attr("y", 23)
-	          .attr("text-anchor","right")
-	         .text(d => d.Operator);
+        container.selectAll("g") 
+           .data(stats)
+           .enter().append("g")
+           .attr("class", "barGroup")
+           .attr("transform", (d, i) => `translate(0, ${((i+1) * (barwidth + 6))})`); // transform gives the x, y coordinates of each group 
+  
+  componentGroup
+  .append("rect")
+  .attr("width", d => xScaleOp(d.Scheduled))
+  .attr("height", barwidth)
+  .attr("x", 75)
+  .attr("y", 2) // the y-coordinate for the bars has been defined above
+  .attr("opacity", 0.2)
+  .attr("fill", "#538F6E");
+  
+  componentGroup
+  .append("rect")
+  .attr("width", d => xScaleOp(d.Completion))
+  .attr("height", barwidth)
+  .attr("x", 75)
+  .attr("y", 2) // the y-coordinate for the bars has been defined above
+  .attr("fill", "#538F6E");
+  
+  componentGroup
+     .append("text")
+       .attr("fill", "#E4d9f3")
+        .attr("x", d => xScaleOp(d.Completion) + 30)
+         .attr("y", barwidth/2 + 5)
+          .attr("text-anchor","right")
+          .attr("font-size", "15px")
+       	  .attr("font-family", "sans-serif")
+       	  .attr("font-weight", "bold")
+         .text(d => ((d.Completion/d.Scheduled)* 100).toFixed(0) + '%');
+  
+  componentGroup
+     .append("text")
+       .attr("fill", "black")
+        .attr("x", 0)
+         .attr("y", barwidth/2 + 5)
+          .attr("text-anchor","right")
+          .attr("font-size", "15px")
+       	  .attr("font-family", "sans-serif")
+       	  .attr("font-weight", "bold")
+         .text(d => d.Operator);
 	  
 
 	  return container;
@@ -100,7 +128,18 @@ render() {
    }
 }
 
-
+function GetDateFormat(date) {
+	let month = date.getMonth() + 1;
+	let day = date.getDate();
+	let year = date.getYear() + 1900;
+	if (day < 10) {
+		day = '0' + day;
+	}
+	if (month < 10) {
+		month = '0' + month;
+	}
+	return year + '-' + month + '-' + day;
+}
 
 export default OperatorChart;
 

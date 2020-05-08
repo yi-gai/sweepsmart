@@ -63,18 +63,21 @@ class PerformancePage extends React.Component {
 
 	render() {
         const { classes } = this.props;
-		return (
-			<div className="content-container">
-                <OperatorBar> 
-                    <OperatorChart/>
-                </OperatorBar>
-                <RouteBar> 
-                    <RouteChart/>
-                </RouteBar>
+        let mainContent;
+        if (this.props.tab === 'Completion') {
+            mainContent = (<div> 
+                            <OperatorBar> <OperatorChart date={this.props.date}/> </OperatorBar>
+                            <RouteBar> <RouteChart date={this.props.date}/> </RouteBar> 
+                          </div>);
+        } else {
+            mainContent = (<div> </div>);
+        }
 
-				
-			</div>
-        );
+        return (
+                <div className="content-container">
+                    {mainContent}
+                </div>
+            );
     }
 }
 

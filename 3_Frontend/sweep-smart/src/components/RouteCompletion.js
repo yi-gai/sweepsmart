@@ -12,6 +12,7 @@ class RouteChart extends Component {
    constructor(props){
       super(props);
       this.createBarChart = this.createBarChart.bind(this);
+      this.processAPIData = this.processAPIData.bind(this);
 
       let tempData = [{"Route": "2B", "Scheduled": 12, "Completion": 12},
       {"Route": "2A", "Scheduled": 12, "Completion": 10},
@@ -26,32 +27,56 @@ class RouteChart extends Component {
       {"Route": "5E", "Scheduled": 6, "Completion": 6},
       {"Route": "4B", "Scheduled": 6, "Completion": 6}]
       
-      let currentTab = "";
       let date = new Date();
 
-      this.state = {currentTab: currentTab,
-    			date: date,
+      this.state = {date: date,
     			data: tempData};
    }
    componentDidMount() {
+   	  API.get("performance/month", {
+			params: {'date': GetDateFormat(this.props.date)}
+		}).then(res => this.processAPIData(res['data']));
+
+      // this.createBarChart();
+   }
+
+   componentDidUpdate() {
       this.createBarChart()
    }
-   // componentDidUpdate() {
-   //    this.createBarChart()
-   // }
+
+   processAPIData(res) {
+   	let newData = [];
+   	for(var key in res) {
+   		if(key.includes('dummy')) {
+   			continue;
+   		}
+  		var row = {};
+  		row["Route"] = key;
+  		row["Scheduled"] = res[key]["frequency"];
+  		row["Completion"] = res[key]["times_swept"];
+  		newData.push(row);
+	}
+	this.setState({data: newData});
+	console.log(this.state);
+
+   }
+
    createBarChart() {
       const node = this.node
       const route = this.state.data
 
-      const width = 440;
-	  const height = 650;
+      const width = 430;
+	  const height = 600;
 
       const allRouteSchedule = route.map(function(d){return d.Scheduled});
-      const xScaleRoute = d3.scaleLinear().domain([0, d3.max(allRouteSchedule)]).range([0, width-30])
+      const xScaleRoute = d3.scaleLinear().domain([0, d3.max(allRouteSchedule)]).range([0, width-60])
 
       
 	  const n = allRouteSchedule.length;
-  	  const barwidth = parseInt(height/(n+1)) - 6;
+  	  var barwidth = parseInt(height/(n+1)) - 6;
+  	  if (barwidth < 10) {
+  	  	barwidth = 10;
+  	  }
 	  
 	    const container = d3.select(this.refs.routeBar)
 	    .append("svg")
@@ -70,33 +95,39 @@ class RouteChart extends Component {
   .append("rect")
   .attr("width", d => xScaleRoute(d.Scheduled))
   .attr("height", barwidth)
-  .attr("x", 25)
+  .attr("x", 50)
   .attr("y", 2) // the y-coordinate for the bars has been defined above
   .attr("opacity", 0.2)
-  .attr("fill", "steelblue");
+  .attr("fill", "#538F6E");
   
   componentGroup
   .append("rect")
   .attr("width", d => xScaleRoute(d.Completion))
   .attr("height", barwidth)
-  .attr("x", 25)
+  .attr("x", 50)
   .attr("y", 2) // the y-coordinate for the bars has been defined above
-  .attr("fill", "steelblue");
+  .attr("fill", "#538F6E");
   
   componentGroup
      .append("text")
-       .attr("fill", "pink")
-        .attr("x", d => xScaleRoute(d.Completion) - 15)
-         .attr("y", barwidth/2 + 3)
+       .attr("fill", "#E4d9f3")
+        .attr("x", d => xScaleRoute(d.Completion) + 10)
+         .attr("y", barwidth/2 + 5)
           .attr("text-anchor","right")
+          .attr("font-size", "15px")
+       	  .attr("font-family", "sans-serif")
+       	  .attr("font-weight", "bold")
          .text(d => ((d.Completion/d.Scheduled)* 100).toFixed(0) + '%');
   
   componentGroup
      .append("text")
        .attr("fill", "black")
         .attr("x", 0)
-         .attr("y", barwidth/2 + 3)
+         .attr("y", barwidth/2 + 5)
           .attr("text-anchor","right")
+          .attr("font-size", "15px")
+       	  .attr("font-family", "sans-serif")
+       	  .attr("font-weight", "bold")
          .text(d => d.Route);
 	  
 
@@ -110,7 +141,18 @@ render() {
    }
 }
 
-
+function GetDateFormat(date) {
+	let month = date.getMonth() + 1;
+	let day = date.getDate();
+	let year = date.getYear() + 1900;
+	if (day < 10) {
+		day = '0' + day;
+	}
+	if (month < 10) {
+		month = '0' + month;
+	}
+	return year + '-' + month + '-' + day;
+}
 
 export default RouteChart;
 
