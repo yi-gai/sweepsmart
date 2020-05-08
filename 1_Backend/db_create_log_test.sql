@@ -33,4 +33,21 @@ INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUE
 INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('6-1',14551,7165,'2020-04-28','PM');
 INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('6-2',20972,7167,'2020-04-28','PM');
 
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1C-1',2882,7160,'2020-05-06','PM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1D-1',8097,7164,'2020-05-06','AM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('7',1536,7171,'2020-05-06','AM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('6-1',14551,7165,'2020-05-06','PM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('6-2',20972,7167,'2020-05-06','PM');
+
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1C-1',2882,7160,'2020-05-07','PM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1D-1',8097,7164,'2020-05-07','AM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('7',1536,7171,'2020-05-07','AM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('6-1',14551,7165,'2020-05-07','PM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('6-2',20972,7167,'2020-05-07','PM');
+
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1C-1',2882,7160,'2020-05-08','PM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1D-1',8097,7164,'2020-05-08','AM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('7',1536,7171,'2020-05-08','AM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('6-1',14551,7165,'2020-05-08','PM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('6-2',20972,7167,'2020-05-08','PM');
 
