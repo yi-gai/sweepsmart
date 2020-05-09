@@ -7,10 +7,21 @@ import './schedulePage.css';
 import { styled } from '@material-ui/core/styles';
 import API from "../API/api";
 
+const bgPaper = styled(Paper)({
+  position: "absolute",
+  width: 1000,
+  height: 1670,
+  left: 0,
+  top: 50,
+
+  background: '#FFFFFF',
+  borderRadius: 5,
+});
+
 const OperatorBar = styled(Paper)({
   position: "absolute",
   width: 450,
-  height: 650,
+  height: 1610,
   left: 10,
   top: 80,
 
@@ -21,7 +32,7 @@ const OperatorBar = styled(Paper)({
 const RouteBar = styled(Paper)({
   position: "absolute",
   width: 450,
-  height: 650,
+  height: 1610,
   left: 480,
   top: 80,
 
@@ -65,17 +76,17 @@ class PerformancePage extends React.Component {
         const { classes } = this.props;
         let mainContent;
         if (this.props.tab === 'Completion') {
-            mainContent = (<div> 
+            mainContent = (<bgPaper> 
                             <OperatorBar> <OperatorChart date={this.props.date}/> </OperatorBar>
                             <RouteBar> <RouteChart date={this.props.date}/> </RouteBar> 
-                          </div>);
+                          </bgPaper>);
         } else {
-            mainContent = (<div> </div>);
+            mainContent = (<bgPaper> </bgPaper>);
         }
 
         return (
                 <div className="content-container">
-                    {mainContent}
+                    <bgPaper>{mainContent}</bgPaper>
                 </div>
             );
     }

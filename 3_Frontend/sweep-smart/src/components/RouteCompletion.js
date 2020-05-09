@@ -36,18 +36,16 @@ class RouteChart extends Component {
    	  API.get("performance/month", {
 			params: {'date': GetDateFormat(this.props.date)}
 		}).then(res => this.processAPIData(res['data']));
-
-      // this.createBarChart();
    }
 
-   componentDidUpdate() {
-      this.createBarChart()
-   }
+   // componentDidUpdate() {
+   //    this.createBarChart()
+   // }
 
    processAPIData(res) {
    	let newData = [];
    	for(var key in res) {
-   		if(key.includes('dummy')) {
+   		if(key.includes('dummy') || key.includes('.')) {
    			continue;
    		}
   		var row = {};
@@ -58,7 +56,7 @@ class RouteChart extends Component {
 	}
 	this.setState({data: newData});
 	console.log(this.state);
-
+	this.createBarChart();
    }
 
    createBarChart() {
@@ -66,7 +64,7 @@ class RouteChart extends Component {
       const route = this.state.data
 
       const width = 430;
-	  const height = 600;
+	  var height = 600;
 
       const allRouteSchedule = route.map(function(d){return d.Scheduled});
       const xScaleRoute = d3.scaleLinear().domain([0, d3.max(allRouteSchedule)]).range([0, width-60])
@@ -76,6 +74,7 @@ class RouteChart extends Component {
   	  var barwidth = parseInt(height/(n+1)) - 6;
   	  if (barwidth < 10) {
   	  	barwidth = 10;
+  	  	height = (barwidth + 6) * (n+1) + 60
   	  }
 	  
 	    const container = d3.select(this.refs.routeBar)
@@ -89,7 +88,7 @@ class RouteChart extends Component {
            .data(route)
            .enter().append("g")
            .attr("class", "barGroup")
-           .attr("transform", (d, i) => `translate(0, ${((i+1) * (barwidth + 6))})`); // transform gives the x, y coordinates of each group 
+           .attr("transform", (d, i) => `translate(0, ${((i+1) * (barwidth + 6) + 50)})`); // transform gives the x, y coordinates of each group 
   
   componentGroup
   .append("rect")
@@ -111,10 +110,10 @@ class RouteChart extends Component {
   componentGroup
      .append("text")
        .attr("fill", "#E4d9f3")
-        .attr("x", d => xScaleRoute(d.Completion) + 10)
+        .attr("x", d => xScaleRoute(d.Completion) + 50)
          .attr("y", barwidth/2 + 5)
           .attr("text-anchor","right")
-          .attr("font-size", "15px")
+          .attr("font-size", "12px")
        	  .attr("font-family", "sans-serif")
        	  .attr("font-weight", "bold")
          .text(d => ((d.Completion/d.Scheduled)* 100).toFixed(0) + '%');
@@ -125,7 +124,7 @@ class RouteChart extends Component {
         .attr("x", 0)
          .attr("y", barwidth/2 + 5)
           .attr("text-anchor","right")
-          .attr("font-size", "15px")
+          .attr("font-size", "14px")
        	  .attr("font-family", "sans-serif")
        	  .attr("font-weight", "bold")
          .text(d => d.Route);
