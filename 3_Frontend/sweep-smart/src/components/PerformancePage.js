@@ -1,14 +1,46 @@
 import React from 'react';
 import Paper from '@material-ui/core/Paper';
-import OperatorChart from './charts';
+import OperatorChart from './OperatorCompletion';
+import RouteChart from './RouteCompletion';
+import VacationChart from './VacationChart';
 
-// import './schedulePage.css';
-import {withStyles} from "@material-ui/styles/index";
+import './schedulePage.css';
+import { styled } from '@material-ui/core/styles';
 import API from "../API/api";
 
-const styles = theme => (
-    { }
-);
+
+const OperatorBar = styled(Paper)({
+  position: "absolute",
+  width: 450,
+  height: 1540,
+  left: 10,
+  top: 80,
+
+  background: '#FFFFFF',
+  borderRadius: 5,
+});
+
+const RouteBar = styled(Paper)({
+  position: "absolute",
+  width: 450,
+  height: 1540,
+  left: 480,
+  top: 80,
+
+  background: '#FFFFFF',
+  borderRadius: 5,
+});
+
+const VacationPaper = styled(Paper)({
+  position: "absolute",
+  width: 930,
+  height: 1540,
+  left: 10,
+  top: 80,
+
+  background: '#FFFFFF',
+  borderRadius: 5,
+});
 
 
 
@@ -44,14 +76,21 @@ class PerformancePage extends React.Component {
 
 	render() {
         const { classes } = this.props;
-		return (
-			<div className="content-container">
-                <div>
-                    <OperatorChart/>
+        let mainContent;
+        if (this.props.tab === 'Completion') {
+            mainContent = (<div> 
+                            <OperatorBar> <OperatorChart date={this.props.date}/> </OperatorBar>
+                            <RouteBar> <RouteChart date={this.props.date}/> </RouteBar> 
+                          </div>);
+        } else {
+            mainContent = (<div> <VacationPaper><VacationChart date={this.props.date}/></VacationPaper></div>);
+        }
+
+        return (
+                <div className="big-container">
+                    {mainContent}
                 </div>
-				
-			</div>
-        );
+            );
     }
 }
 

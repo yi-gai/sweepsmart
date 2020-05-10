@@ -207,7 +207,7 @@ def change_route_week():
     elif request.method == 'PUT':
         # modify database
         emp_id = db.engine.execute("select employee_id from DRIVERS where employee_name={e}".format(e=driver))
-        db.engine.execute("update ROUTE_LOG set route_id={r},date_swept={d},shift={s},driver={e},completion={c} where log_id={l_id};".format(r=route,d=date,s=shift,e=emp_id,c=status,l_id=l_id))
+        db.engine.execute("update ROUTE_LOG set route_id='{r}',date_swept='{d}',shift='{s}',driver={e},completion='{c}' where log_id={l_id};".format(r=route,d=date,s=shift,e=emp_id,c=status,l_id=l_id))
 
         if int(permanent) == 1:
             pass
@@ -384,19 +384,8 @@ def get_daily_route_schedule():
     week_of_month = pendulum.parse(date).week_of_month
     data = defaultdict(list)
 
-    data['am'] = [{'route': '1A',
-                   'driver': 'Rogers',
-                   'route_status': 'completed',
-                   'driver_status': 'regular', # ANNA what is driver status
-                   'vehicle': 7815},
-                  {'route': '2A',
-                   'driver': None,
-                   'route_status': 'disabled',
-                   'driver_status': None,
-                   'vehicle': None}]
-
     # get from database
-    route_log_db_query = "select route_id,employee_id,employee_status,vehicle_id,completion,shift from ROUTE_LOG where date_swept={d};".format(d=date)
+    route_log_db_query = "select route_id,employee_id,employee_status,vehicle_id,completion,shift from ROUTE_LOG where date_swept='{d}';".format(d=date)
     route_db = db.engine.execute(route_log_db_query)
     #route_db = db.engine.execute("select r.route_id, r.completion, r.vehicle_id, r.shift, D.employee_name from ROUTE_LOG r join DRIVERS D on r.employee_id = D.employee_id where date_swept={d} and shift='AM';".format(d=date))
     for route_log in route_db:
@@ -1245,14 +1234,18 @@ def get_absences():
     data = {}
     date_dt = datetime.strptime(date,"%Y-%m-%d")
     # get from database
-    month_query = "select sum(time_missed) from ABSENCES where employee_id='{e}' and MONTH(date_absence)={m} and YEAR(date_absence)={y};"
+    month_query = "select HOUR(sum(time_missed)) from ABSENCES where employee_id='{e}' and MONTH(date_absence)={m} and YEAR(date_absence)={y};"
     year_query = "select HOUR(sum(time_missed)) from ABSENCES where employee_id='{e}' and YEAR(date_absence)={y};"
     drivers = db.engine.execute("select employee_id,employee_name from DRIVERS;")
     for driver_info in drivers:
         e_id = driver_info[0]
         e_name = driver_info[1]
         month_absence = db.engine.execute(month_query.format(e=e_id,m=date_dt.month,y=date_dt.year)).fetchone()[0]
+        if not month_absence:
+        	month_absence = 0
         year_absence = db.engine.execute(year_query.format(e=e_id,y=date_dt.year)).fetchone()[0]
+        if not year_absence:
+        	year_absence = 0
         data[e_name] = {'employee_id':e_id,'month':month_absence,'year':year_absence}
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
