@@ -2,7 +2,7 @@ import React from 'react';
 import Paper from '@material-ui/core/Paper';
 import OperatorChart from './charts';
 
-import './schedulePage.css';
+// import './schedulePage.css';
 import {withStyles} from "@material-ui/styles/index";
 import API from "../API/api";
 

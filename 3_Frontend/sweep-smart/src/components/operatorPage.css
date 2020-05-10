@@ -1,6 +1,6 @@
-.MuiPaper-root{
+/* .MuiPaper-root{
     width: 50%
-}
+} */
 
 .operator-top-div {
     height: 25%;
@@ -77,8 +77,11 @@
     vertical-align: middle;
 }
 
-.drawer-date-div {
+.date-picker {
     width: 90%;
+    margin: auto;
+}
+.drawer-date-div {
     margin: auto;
     display:flex;
 }
