@@ -472,7 +472,7 @@ class OperatorPage extends React.Component {
                     </div>
                     <div className="action-div">
                       <div className="action-text" onClick={() => this.handleModalClick()}>
-                        <div className="align-bottom"><CalendarIcon/>Route Assignment</div>
+                        <div className="align-bottom"><CalendarIcon/><span class="text-margin">Route Assignment</span></div>
                       </div>
                       <DeleteOperatorAlertDialog handleOperatorDelete={this.handleOperatorDelete} eid={this.state.drawer_data.employee_id}/>
                     </div>
@@ -799,7 +799,7 @@ class DeleteOperatorAlertDialog extends React.Component {
 		return (
 			<div>
 				<div className="action-text" onClick={this.handleClickOpen} >
-					<TrashIcon /> Remove
+					<TrashIcon /><span class="text-margin">Remove</span>
 				</div>
         <Dialog open={this.state.open} onClose={this.handleCancel} 
           aria-labelledby="alert-dialog-title"
