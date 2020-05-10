@@ -1234,14 +1234,18 @@ def get_absences():
     data = {}
     date_dt = datetime.strptime(date,"%Y-%m-%d")
     # get from database
-    month_query = "select sum(time_missed) from ABSENCES where employee_id='{e}' and MONTH(date_absence)={m} and YEAR(date_absence)={y};"
+    month_query = "select HOUR(sum(time_missed)) from ABSENCES where employee_id='{e}' and MONTH(date_absence)={m} and YEAR(date_absence)={y};"
     year_query = "select HOUR(sum(time_missed)) from ABSENCES where employee_id='{e}' and YEAR(date_absence)={y};"
     drivers = db.engine.execute("select employee_id,employee_name from DRIVERS;")
     for driver_info in drivers:
         e_id = driver_info[0]
         e_name = driver_info[1]
         month_absence = db.engine.execute(month_query.format(e=e_id,m=date_dt.month,y=date_dt.year)).fetchone()[0]
+        if not month_absence:
+        	month_absence = 0
         year_absence = db.engine.execute(year_query.format(e=e_id,y=date_dt.year)).fetchone()[0]
+        if not year_absence:
+        	year_absence = 0
         data[e_name] = {'employee_id':e_id,'month':month_absence,'year':year_absence}
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
