@@ -33,11 +33,10 @@ class OperatorChart extends Component {
     			data: tempData};
    }
    componentDidMount() {
-   		API.get("performance/month", {
+   		API.get("/performance/month/operator", {
 			params: {'date': GetDateFormat(this.props.date)}
-		}).then(res => this.processAPIData(res));
+		}).then(res => this.processAPIData(res['data']));
 
-      this.createBarChart();
    }
    // componentDidUpdate() {
    //    this.createBarChart()
@@ -46,11 +45,18 @@ class OperatorChart extends Component {
    processAPIData(res) {
    	let newData = [];
    	for(var key in res) {
+   		if(key.includes('Fake')) {
+   			continue;
+   		}
   		var row = {};
-  		// row[]
-
+  		row["Operator"] = key;
+  		row["Scheduled"] = res[key]["assigned"];
+  		row["Completion"] = res[key]["completed"];
+  		newData.push(row);
 	}
-
+	this.setState({data: newData});
+	console.log(this.state);
+	this.createBarChart();
    }
 
    createBarChart() {
@@ -58,14 +64,19 @@ class OperatorChart extends Component {
       const stats = this.state.data
 
       const width = 430;
-	  const height = 600;
+	  const height = 1400;
 
       const allOperatorSchedule = stats.map(function(d){return d.Scheduled});
-      const xScaleOp = d3.scaleLinear().domain([0, d3.max(allOperatorSchedule)]).range([0, width-190]);
+      var maxSchedule = d3.max(allOperatorSchedule);
+      if (maxSchedule < 10) {
+      	maxSchedule = 10
+      }
+      const xScaleOp = d3.scaleLinear().domain([0, maxSchedule]).range([0, width-190]);
 
       
 	  const n = allOperatorSchedule.length;
-  	  const barwidth = parseInt(height/(n+1)) - 6;
+  	  var barwidth = parseInt(height/(n+2)) - 6;
+  	  if (barwidth > 40) { barwidth = 40}
 	  
 	    const container = d3.select(this.refs.opBar)
 	    .append("svg")
@@ -120,11 +131,11 @@ class OperatorChart extends Component {
            .data(stats)
            .enter().append("g")
            .attr("class", "barGroup")
-           .attr("transform", (d, i) => `translate(0, ${((i+1) * (barwidth + 6)) + 10})`); // transform gives the x, y coordinates of each group 
+           .attr("transform", (d, i) => `translate(0, ${((i+1) * (barwidth + 6)) + 20})`); // transform gives the x, y coordinates of each group 
   
   componentGroup
   .append("rect")
-  .attr("width", d => xScaleOp(d.Scheduled))
+  .attr("width", d => xScaleOp(Math.max(d.Scheduled, 1)))
   .attr("height", barwidth)
   .attr("x", 75)
   .attr("y", 2) // the y-coordinate for the bars has been defined above
@@ -142,13 +153,13 @@ class OperatorChart extends Component {
   componentGroup
      .append("text")
        .attr("fill", "#E4d9f3")
-        .attr("x", d => xScaleOp(d.Completion) + 30)
+        .attr("x", d => Math.max(xScaleOp(d.Completion), 50) + 30)
          .attr("y", barwidth/2 + 5)
           .attr("text-anchor","right")
           .attr("font-size", "15px")
        	  .attr("font-family", "sans-serif")
        	  .attr("font-weight", "bold")
-         .text(d => ((d.Completion/d.Scheduled)* 100).toFixed(0) + '%');
+         .text(d => ((d.Completion/(Math.max(d.Scheduled, 1))) * 100).toFixed(0) + '%');
 
   componentGroup
      .append("text")

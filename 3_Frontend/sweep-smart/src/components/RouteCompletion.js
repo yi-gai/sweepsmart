@@ -152,7 +152,7 @@ class RouteChart extends Component {
   componentGroup
      .append("text")
        .attr("fill", "#E4d9f3")
-        .attr("x", d => xScaleRoute(d.Completion) + 50)
+        .attr("x", d => Math.max(xScaleRoute(d.Completion), 50) + 15)
          .attr("y", barwidth/2 + 5)
           .attr("text-anchor","right")
           .attr("font-size", "12px")
