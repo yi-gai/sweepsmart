@@ -67,7 +67,7 @@ class RouteChart extends Component {
 	  var height = 600;
 
       const allRouteSchedule = route.map(function(d){return d.Scheduled});
-      const xScaleRoute = d3.scaleLinear().domain([0, d3.max(allRouteSchedule)]).range([0, width-60])
+      const xScaleRoute = d3.scaleLinear().domain([0, d3.max(allRouteSchedule)]).range([0, width-150])
 
       
 	  const n = allRouteSchedule.length;
@@ -82,6 +82,48 @@ class RouteChart extends Component {
 	    .attr("width", width)
 	    .attr("height", height)
 	    .style("margin-left", 10);
+
+	    // Added Graph Title and number column title (legend)
+	    container.append("text")
+	    	.attr("fill", "black")
+	        .attr("x", 235)
+	         .attr("y", 30)
+	          .attr("text-anchor","middle")
+	          .attr("font-size", "20px")
+	       	  .attr("font-family", "sans-serif")
+	       	  .attr("font-weight", "bold")
+	         .text("Monthly Completion by Route");
+
+	    container.append("text")
+	    	.attr("fill", "#A680d6")
+	        .attr("x", 235)
+	         .attr("y", 60)
+	          .attr("text-anchor","left")
+	          .attr("font-size", "10px")
+	       	  .attr("font-family", "sans-serif")
+	       	  .attr("font-weight", "bold")
+	         .text("Completion%");
+
+	    container.append("text")
+	    	.attr("fill", "#538F6E")
+	        .attr("x", 325)
+	         .attr("y", 60)
+	          .attr("text-anchor","left")
+	          .attr("font-size", "10px")
+	       	  .attr("font-family", "sans-serif")
+	       	  .attr("font-weight", "bold")
+	         .text("Completed");
+
+	    container.append("text")
+	    	.attr("fill", "#538F6E")
+	        .attr("x", 380)
+	         .attr("y", 60)
+	          .attr("text-anchor","left")
+	          .attr("font-size", "10px")
+	       	  .attr("font-family", "sans-serif")
+	       	  .attr("font-weight", "bold")
+	       	  .attr("opacity", 0.6)
+	         .text("Scheduled");
 	  
 	  const componentGroup = 
         container.selectAll("g") 
@@ -128,7 +170,29 @@ class RouteChart extends Component {
        	  .attr("font-family", "sans-serif")
        	  .attr("font-weight", "bold")
          .text(d => d.Route);
-	  
+
+  componentGroup
+     .append("text")
+       .attr("fill", "#538F6E")
+        .attr("x", 340)
+         .attr("y", barwidth/2 + 5)
+          .attr("text-anchor","right")
+          .attr("font-size", "15px")
+       	  .attr("font-family", "sans-serif")
+       	  .attr("font-weight", "bold")
+         .text(d => d.Completion);
+
+   componentGroup
+     .append("text")
+       .attr("fill", "#538F6E")
+        .attr("x", 390)
+         .attr("y", barwidth/2 + 5)
+          .attr("text-anchor","right")
+          .attr("font-size", "15px")
+       	  .attr("font-family", "sans-serif")
+       	  .attr("font-weight", "bold")
+       	  .attr("opacity", 0.4)
+         .text(d => d.Scheduled); 
 
 	  return container;
 

@@ -1,1 +1,6 @@
+.big-container {
+	min-height: 1600px;
 
+	background: #FFFFFF;
+	border-radius: 5px;
+}

@@ -2,26 +2,17 @@ import React from 'react';
 import Paper from '@material-ui/core/Paper';
 import OperatorChart from './OperatorCompletion';
 import RouteChart from './RouteCompletion';
+import VacationChart from './VacationChart';
 
 import './schedulePage.css';
 import { styled } from '@material-ui/core/styles';
 import API from "../API/api";
 
-const bgPaper = styled(Paper)({
-  position: "absolute",
-  width: 1000,
-  height: 1670,
-  left: 0,
-  top: 50,
-
-  background: '#FFFFFF',
-  borderRadius: 5,
-});
 
 const OperatorBar = styled(Paper)({
   position: "absolute",
   width: 450,
-  height: 1610,
+  height: 1540,
   left: 10,
   top: 80,
 
@@ -32,8 +23,19 @@ const OperatorBar = styled(Paper)({
 const RouteBar = styled(Paper)({
   position: "absolute",
   width: 450,
-  height: 1610,
+  height: 1540,
   left: 480,
+  top: 80,
+
+  background: '#FFFFFF',
+  borderRadius: 5,
+});
+
+const VacationPaper = styled(Paper)({
+  position: "absolute",
+  width: 930,
+  height: 1540,
+  left: 10,
   top: 80,
 
   background: '#FFFFFF',
@@ -76,17 +78,17 @@ class PerformancePage extends React.Component {
         const { classes } = this.props;
         let mainContent;
         if (this.props.tab === 'Completion') {
-            mainContent = (<bgPaper> 
+            mainContent = (<div> 
                             <OperatorBar> <OperatorChart date={this.props.date}/> </OperatorBar>
                             <RouteBar> <RouteChart date={this.props.date}/> </RouteBar> 
-                          </bgPaper>);
+                          </div>);
         } else {
-            mainContent = (<bgPaper> </bgPaper>);
+            mainContent = (<div> <VacationPaper><VacationChart date={this.props.date}/></VacationPaper></div>);
         }
 
         return (
-                <div className="content-container">
-                    <bgPaper>{mainContent}</bgPaper>
+                <div className="big-container">
+                    {mainContent}
                 </div>
             );
     }
