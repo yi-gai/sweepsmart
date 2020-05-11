@@ -143,19 +143,42 @@ def get_weekly_route_schedule():
     data['wk_days'] = wk_days
     
     day = datetime.strptime(wk_start,"%Y-%m-%d")
+    day_count = 0
     for d in wk_days:
+        d_shift = d.split('_')[1]
         day_str = datetime.strftime(day,"%Y-%m-%d")
         routes_assigned = db.engine.execute("select route_id from ROUTES where {d}=1;".format(d=d))
         for r in routes_assigned:
             route = r[0]
-            route_log_info = db.engine.execute("select d.employee_name, r.completion from ROUTE_LOG r join DRIVERS d on r.employee_id=d.employee_id where r.route_id='{r}' and r.date_swept='{d}';".format(r=route,d=day_str))
+            route_log_info = db.engine.execute("select d.employee_name, r.completion from ROUTE_LOG r left join DRIVERS d on r.employee_id=d.employee_id where r.route_id='{r}' and r.date_swept='{d}' and r.shift='{s}';".format(r=route,d=day_str,s=d_shift))
             driver_name = ''
-            route_status = None
+            route_status = 'Unassigned'
             for l in route_log_info:
                 driver_name = l[0]
                 route_status = l[1]
+                if not driver_name:
+                    driver_name = ''
+                if not route_status:
+                    route_status = 'Assigned'
             data[d].append({'route':route, 'driver':driver_name, 'route_status':route_status})
-        day = day + timedelta(days=1)
+
+        # extra routes that were added but aren't originally assigned for the day
+        extra_query = "select route_id from ROUTES where {d}=1".format(d=d)
+        routes_extra = db.engine.execute("select r.route_id, d.employee_name, r.completion from ROUTE_LOG r join DRIVERS d on r.employee_id=d.employee_id where r.route_id not in ({q}) and r.date_swept='{d}' and r.shift='{s}';".format(q=extra_query,d=day_str,s=d_shift))
+        for r_e in routes_extra:
+            route_id = r_e[0]
+            e_name = r_e[1]
+            r_stat = r_e[2]
+            if not e_name:
+                e_name = ''
+                r_stat = 'Unassigned'
+            elif not r_stat:
+                r_stat = 'Assigned'
+            data[d].append({'route':r_e[0], 'driver':e_name, 'route_status':r_stat})
+        day_count += 1
+        if day_count == 3:
+            day = day + timedelta(days=1)
+            day_count = 0
     
     return Response(json.dumps(data), status=200, mimetype='application/json')
 

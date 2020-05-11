@@ -217,7 +217,7 @@ CREATE TABLE `ROUTE_LOG` (
   `route_id` varchar(255) NOT NULL,
   `employee_id` int(11) default NULL,
   `employee_status` varchar(255) default NULL,
-  `vehicle_id` varchar(255) NOT NULL,
+  `vehicle_id` int(11) default NULL,
   `date_swept` date NOT NULL,
   `shift` varchar(255) default NULL,
   `notes` varchar(255) default NULL,
@@ -235,9 +235,9 @@ CREATE TABLE `ROUTE_LOG` (
 
 LOCK TABLES `ROUTE_LOG` WRITE;
 /*!40000 ALTER TABLE `ROUTE_LOG` DISABLE KEYS */;
-INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('1A_dummy',1234,'vid_1234','2020-03-15','AM','completed');
-INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('1A_dummy2',1234,'vid_1234','2020-03-15','PM','completed');
-INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('1A_dummy',4567,'vid_1234','2020-03-20','AM','completed');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('1A_dummy',1234,1234,'2020-03-15','AM','completed');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('1A_dummy2',1234,1234,'2020-03-15','PM','completed');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('1A_dummy',4567,1234,'2020-03-20','AM','completed');
 
 /*!40000 ALTER TABLE `ROUTE_LOG` ENABLE KEYS */;
 UNLOCK TABLES;
