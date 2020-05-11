@@ -17,8 +17,11 @@ import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import "./scheduleDrawer.css";
 
-const drawerMain = styled(Drawer)({
-	width: 1600,
+const ContainerPaper = styled(Paper)({
+	position: "absolute",
+	width: 1450,
+	height: '100%',
+
 	background: '#E5E5E5',
 });
 
@@ -75,6 +78,39 @@ const UnplannedPanel = styled(Paper)({
 
 	background: '#FFFFFF',
 	borderRadius: 5,
+});
+
+const OverviewNameTableCell = styled(({column, ...other}) => <TableCell {...other}/>)({
+	width: (props) => {
+		if (props.column === 1) {return  100;}
+		if (props.column === 2) {return  120;}
+		if (props.column === 3) {return  120;}
+	},
+	paddingLeft: (props) => props.column === 1 ? 25 : 0,
+	fontFamily: 'Lato, sans-serif',
+	fontStyle: 'normal',
+	fontWeight: 'bold',
+	fontSize: 16,
+	color: '#3A423E',
+	paddingRight: 0,
+	marginRight: 0,
+
+	border: 0,
+	borderCollapse: 'collapse',
+});
+
+const OverviewNumberTableCell = styled(TableCell)({
+	fontFamily: 'Lato, sans-serif',
+	fontStyle: 'normal',
+	fontWeight: 'normal',
+	fontSize: 16,
+	color: '#3A423E',
+	width: 40,
+	textAlign: 'center',
+	paddingLeft: 0,
+
+	border: 0,
+	borderCollapse: 'collapse',
 });
 
 const OperatorTableHeadCell = styled(TableCell)({
@@ -151,7 +187,6 @@ class ScheduleDrawer extends React.Component {
 			missed: 0,
 			todo: 0,
 			success: 0.0
-
 		};
 		this.makeAPICalls = this.makeAPICalls.bind(this);
 	}
@@ -193,8 +228,9 @@ class ScheduleDrawer extends React.Component {
 	render() {
 				
 		return (
-			<Drawer anchor='right' open={this.props.drawer} className="drawerMain">
+			<Drawer anchor='right' open={this.props.drawer}>
 				<div className="background-container">
+				<ContainerPaper>
 				<Button style={{width: 75, height: 80}} onClick={this.props.handleClose}>
 					<CloseIcon />
 				</Button>
@@ -203,35 +239,16 @@ class ScheduleDrawer extends React.Component {
 					<div className="week-numebr-display">{GetWeekdayNumber(this.props.date)}</div>
 				</div>
 					<OverviewPanel className="overview"> 
-						<h4> Overview </h4>
-						<table className="tableFrame">
-						<tr>
-							<td className="overviewTable"><div> Morning maps </div></td>
-							<td className="overviewNumber"> {this.state.morning} </td>
-							<td className="overviewTable"><div> Total maps served </div></td>
-							<td className="overviewNumber"> {this.state.served} </td>
-							<td className="overviewTable"><div> Total Holiday Maps </div></td>
-							<td className="overviewNumber"> {this.state.holiday} </td>
-						</tr>
-						<tr>
-							<td className="overviewTable"><div> Afternoon maps  </div></td>
-							<td className="overviewNumber"> {this.state.afternoon} </td>
-							<td className="overviewTable"> <div> Total maps missed </div></td>
-							<td className="overviewNumber"> {this.state.missed} </td>
-							<td className="overviewTable"> Success Rate </td>
-							<td className="overviewNumber"> {this.state.success} </td>
-						</tr>
-						<tr>
-							<td className="overviewTable"><div> Total maps </div></td>
-							<td className="overviewNumber"> {this.state.morning + this.state.afternoon} </td>
-							<td className="overviewTable"> <div> Total maps to-do </div></td>
-							<td className="overviewNumber"> {this.state.todo} </td>
-							<td className="overviewTable">  </td>
-						</tr>
-					</table>
+						<OverviewPanelContent morning={this.state.morning}
+							afternoon={this.state.afternoon}
+							served={this.state.served}
+							missed={this.state.missed}
+							success={this.state.success}
+							todo={this.state.todo}
+							holiday={this.state.holiday}/>
 					</OverviewPanel>
 					<WeatherPanel className="weatherPaper"> 
-						<h4> Weather </h4>
+						<WeatherPanelContent/>
 					</WeatherPanel>
 					<OperatorPanel className="operatorPaper"> 
 						<OperatorPanelContent operators={this.state.operators}
@@ -245,8 +262,64 @@ class ScheduleDrawer extends React.Component {
 					<UnplannedPanel>
 						<h4> Unplanned routes </h4>
 					</UnplannedPanel>
+				</ContainerPaper>
 				</div>
+
 			</Drawer>
+		);
+	}
+}
+
+class OverviewPanelContent extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+
+	render() {
+		return (
+			<TableContainer>
+			<h4> Overview </h4>
+			<Table fullWidth={true}>
+				<TableRow>
+					<OverviewNameTableCell size="small" column={1}>Morning maps</OverviewNameTableCell>
+					<OverviewNumberTableCell size="small" >{this.props.morning}</OverviewNumberTableCell>
+					<OverviewNameTableCell size="small" column={2}>Total maps served</OverviewNameTableCell>
+					<OverviewNumberTableCell size="small" >{this.props.served}</OverviewNumberTableCell>
+					<OverviewNameTableCell size="small" column={3}>Total Holiday Maps</OverviewNameTableCell>
+					<OverviewNumberTableCell size="small" >{this.props.holiday}</OverviewNumberTableCell>
+				</TableRow>
+				<TableRow>
+					<OverviewNameTableCell size="small" column={1}>Afternoon maps</OverviewNameTableCell>
+					<OverviewNumberTableCell size="small" >{this.props.afternoon}</OverviewNumberTableCell>
+					<OverviewNameTableCell size="small" column={2}>Total maps missed</OverviewNameTableCell>
+					<OverviewNumberTableCell size="small" >{this.props.missed}</OverviewNumberTableCell>
+					<OverviewNameTableCell size="small" column={3}>Success Rate</OverviewNameTableCell>
+					<OverviewNumberTableCell size="small" >{this.props.success}</OverviewNumberTableCell>
+				</TableRow>
+				<TableRow>
+					<OverviewNameTableCell size="small" column={1}>Total maps</OverviewNameTableCell>
+					<OverviewNumberTableCell size="small" >{this.props.morning + this.props.afternoon}</OverviewNumberTableCell>
+					<OverviewNameTableCell size="small" column={2}>Total maps to-do</OverviewNameTableCell>
+					<OverviewNumberTableCell size="small" >{this.props.todo} </OverviewNumberTableCell>
+				</TableRow>
+			</Table>
+			</TableContainer>
+		);
+	}
+}
+
+class WeatherPanelContent extends React.Component {
+	constructor(props) {
+		super(props);
+	}
+
+	render() {
+		return (
+			<div>
+				<h4>Weather</h4>
+				<SunnyIcon/>
+				<SunnyText/>
+			</div>
 		);
 	}
 }
@@ -309,7 +382,7 @@ class OperatorPanelContent extends React.Component {
 				</OperatorTableCell>
 				<OperatorTableCell align="center" size="medium"></OperatorTableCell>
 				<OperatorTableCell align="center" size="medium">
-				 <StyledSelect>
+				 	<StyledSelect>
 						<MenuItem value="completed">Completed</MenuItem>
 						<MenuItem value="missed">Missed</MenuItem>
 						<MenuItem value="assigned">Assigned</MenuItem>
@@ -463,6 +536,30 @@ function ArrowDownSmall() {
 	return (
 		<svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<path id="arrow" d="M9.81437 0.185523C9.69076 0.0618069 9.54423 0 9.37492 0H0.625047C0.455668 0 0.30924 0.0618069 0.185523 0.185523C0.0618069 0.309377 0 0.455805 0 0.625081C0 0.794323 0.0618069 0.940751 0.185523 1.0645L4.56048 5.43946C4.68433 5.56317 4.83076 5.62512 5 5.62512C5.16924 5.62512 5.31581 5.56317 5.43942 5.43946L9.81437 1.06447C9.93795 0.940752 10 0.794323 10 0.625047C10 0.455805 9.93795 0.309377 9.81437 0.185523Z" fill="#7A827F"/>
+		</svg>
+	);
+}
+
+function SunnyIcon() {
+	return (
+		<svg width="37" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path d="M12.5001 5.56421C8.66948 5.56421 5.56421 8.66948 5.56421 12.5001C5.56421 16.3307 8.66948 19.436 12.5001 19.436C16.3307 19.436 19.436 16.3307 19.436 12.5001C19.4316 8.67135 16.3289 5.56857 12.5001 5.56421ZM12.5001 18.3722C9.25708 18.3722 6.62804 15.7431 6.62804 12.5001C6.62804 9.25708 9.25708 6.62804 12.5001 6.62804C15.7431 6.62804 18.3722 9.25708 18.3722 12.5001C18.3684 15.7417 15.7417 18.3684 12.5001 18.3722Z" fill="#3A423E"/>
+			<path d="M13.0321 3.24469V0.531916C13.0321 0.238116 12.794 0 12.5002 0C12.2064 0 11.9683 0.238116 11.9683 0.531916V3.24469C11.9683 3.53849 12.2064 3.7766 12.5002 3.7766C12.794 3.7766 13.0321 3.53849 13.0321 3.24469Z" fill="#3A423E"/>
+			<path d="M12.5002 21.2234C12.2064 21.2234 11.9683 21.4616 11.9683 21.7554V24.4681C11.9683 24.7619 12.2064 25.0001 12.5002 25.0001C12.794 25.0001 13.0321 24.7619 13.0321 24.4681V21.7554C13.0321 21.4616 12.794 21.2234 12.5002 21.2234Z" fill="#3A423E"/>
+			<path d="M24.4681 11.9681H21.7553C21.4615 11.9681 21.2234 12.2063 21.2234 12.5001C21.2234 12.7939 21.4615 13.032 21.7553 13.032H24.4681C24.7619 13.032 25 12.7939 25 12.5001C25 12.2063 24.7619 11.9681 24.4681 11.9681Z" fill="#3A423E"/>
+			<path d="M3.7766 12.5001C3.7766 12.2063 3.53849 11.9681 3.24469 11.9681H0.531916C0.238116 11.9681 0 12.2063 0 12.5001C0 12.7939 0.238116 13.032 0.531916 13.032H3.24469C3.53849 13.032 3.7766 12.7939 3.7766 12.5001Z" fill="#3A423E"/>
+			<path d="M19.4287 6.32351L21.3156 4.43666C21.5219 4.22867 21.5211 3.89311 21.3139 3.68616C21.107 3.47901 20.7714 3.47817 20.5634 3.6845L18.6766 5.57135C18.5413 5.70536 18.4879 5.90172 18.5369 6.08602C18.5862 6.27011 18.73 6.41389 18.9141 6.46314C19.0984 6.51217 19.2947 6.45877 19.4287 6.32351Z" fill="#3A423E"/>
+			<path d="M5.5715 18.6765L3.68465 20.5634C3.54918 20.6976 3.49599 20.8939 3.54503 21.078C3.59406 21.2621 3.73805 21.4061 3.92215 21.4551C4.10624 21.5042 4.30259 21.451 4.43682 21.3155L6.32366 19.4287C6.45893 19.2947 6.51233 19.0983 6.46329 18.914C6.41405 18.7299 6.27026 18.5861 6.08617 18.5369C5.90187 18.4878 5.70552 18.5412 5.5715 18.6765Z" fill="#3A423E"/>
+			<path d="M19.4287 18.6765C19.2947 18.5412 19.0984 18.4878 18.9141 18.5369C18.73 18.5861 18.5862 18.7299 18.5369 18.914C18.4879 19.0983 18.5413 19.2947 18.6766 19.4287L20.5634 21.3155C20.7714 21.5218 21.107 21.521 21.3139 21.3139C21.5211 21.1069 21.5219 20.7713 21.3156 20.5634L19.4287 18.6765Z" fill="#3A423E"/>
+			<path d="M5.57135 6.32351C5.70536 6.45877 5.90172 6.51217 6.08602 6.46314C6.27011 6.41389 6.41389 6.27011 6.46314 6.08602C6.51217 5.90172 6.45877 5.70536 6.32351 5.57135L4.43666 3.6845C4.22867 3.47817 3.89311 3.47901 3.68616 3.68616C3.47901 3.89311 3.47817 4.22867 3.6845 4.43666L5.57135 6.32351Z" fill="#3A423E"/>
+		</svg>
+	);
+}
+
+function SunnyText() {
+	return (
+		<svg width="37" height="11" viewBox="0 0 37 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+			<path d="M5.40524 2.078C5.34924 2.18067 5.26291 2.232 5.14624 2.232C5.07624 2.232 4.99691 2.20633 4.90824 2.155C4.81958 2.10367 4.70991 2.04767 4.57924 1.987C4.45324 1.92167 4.30158 1.86333 4.12424 1.812C3.94691 1.756 3.73691 1.728 3.49424 1.728C3.28424 1.728 3.09524 1.756 2.92724 1.812C2.75924 1.86333 2.61458 1.93567 2.49324 2.029C2.37658 2.12233 2.28558 2.232 2.22024 2.358C2.15958 2.47933 2.12924 2.61233 2.12924 2.757C2.12924 2.939 2.18058 3.09067 2.28324 3.212C2.39058 3.33333 2.53058 3.43833 2.70324 3.527C2.87591 3.61567 3.07191 3.695 3.29124 3.765C3.51058 3.83033 3.73458 3.90267 3.96324 3.982C4.19658 4.05667 4.42291 4.14067 4.64224 4.234C4.86158 4.32733 5.05758 4.444 5.23024 4.584C5.40291 4.724 5.54058 4.89667 5.64324 5.102C5.75058 5.30267 5.80424 5.54533 5.80424 5.83C5.80424 6.15667 5.74591 6.46 5.62924 6.74C5.51258 7.01533 5.33991 7.25567 5.11124 7.461C4.88258 7.66167 4.60258 7.82033 4.27124 7.937C3.93991 8.05367 3.55724 8.112 3.12324 8.112C2.62858 8.112 2.18058 8.03267 1.77924 7.874C1.37791 7.71067 1.03724 7.503 0.757242 7.251L1.05124 6.775C1.08858 6.71433 1.13291 6.66767 1.18424 6.635C1.23558 6.60233 1.30324 6.586 1.38724 6.586C1.47124 6.586 1.55991 6.61867 1.65324 6.684C1.74658 6.74933 1.85858 6.82167 1.98924 6.901C2.12458 6.98033 2.28558 7.05267 2.47224 7.118C2.66358 7.18333 2.90158 7.216 3.18624 7.216C3.42891 7.216 3.64124 7.18567 3.82324 7.125C4.00524 7.05967 4.15691 6.97333 4.27824 6.866C4.39958 6.75867 4.48824 6.635 4.54424 6.495C4.60491 6.355 4.63524 6.20567 4.63524 6.047C4.63524 5.851 4.58158 5.69 4.47424 5.564C4.37158 5.43333 4.23391 5.32367 4.06124 5.235C3.88858 5.14167 3.69024 5.06233 3.46624 4.997C3.24691 4.927 3.02058 4.85467 2.78724 4.78C2.55858 4.70533 2.33224 4.62133 2.10824 4.528C1.88891 4.43 1.69291 4.30867 1.52024 4.164C1.34758 4.01933 1.20758 3.842 1.10024 3.632C0.997576 3.41733 0.946242 3.15833 0.946242 2.855C0.946242 2.58433 1.00224 2.32533 1.11424 2.078C1.22624 1.826 1.38958 1.60667 1.60424 1.42C1.81891 1.22867 2.08258 1.077 2.39524 0.965C2.70791 0.853 3.06491 0.797 3.46624 0.797C3.93291 0.797 4.35058 0.871666 4.71924 1.021C5.09258 1.16567 5.41458 1.36633 5.68524 1.623L5.40524 2.078ZM8.49355 0.909V5.431C8.49355 5.96767 8.61722 6.383 8.86455 6.677C9.11189 6.971 9.48522 7.118 9.98455 7.118C10.3486 7.118 10.6916 7.03167 11.0136 6.859C11.3356 6.68633 11.6319 6.446 11.9026 6.138V0.909H13.1486V8H12.4066C12.2292 8 12.1172 7.91367 12.0706 7.741L11.9726 6.978C11.6646 7.31867 11.3192 7.594 10.9366 7.804C10.5539 8.00933 10.1152 8.112 9.62055 8.112C9.23322 8.112 8.89022 8.049 8.59155 7.923C8.29755 7.79233 8.05022 7.61033 7.84955 7.377C7.64889 7.14367 7.49722 6.86133 7.39455 6.53C7.29655 6.19867 7.24755 5.83233 7.24755 5.431V0.909H8.49355ZM15.1949 8V0.909H15.9369C16.1142 0.909 16.2262 0.995333 16.2729 1.168L16.3709 1.938C16.6789 1.59733 17.0219 1.322 17.3999 1.112C17.7825 0.902 18.2235 0.797 18.7229 0.797C19.1102 0.797 19.4509 0.862333 19.7449 0.993C20.0435 1.119 20.2909 1.301 20.4869 1.539C20.6875 1.77233 20.8392 2.05467 20.9419 2.386C21.0445 2.71733 21.0959 3.08367 21.0959 3.485V8H19.8499V3.485C19.8499 2.94833 19.7262 2.533 19.4789 2.239C19.2362 1.94033 18.8629 1.791 18.3589 1.791C17.9902 1.791 17.6449 1.87967 17.3229 2.057C17.0055 2.23433 16.7115 2.47467 16.4409 2.778V8H15.1949ZM22.9741 8V0.909H23.7161C23.8935 0.909 24.0055 0.995333 24.0521 1.168L24.1501 1.938C24.4581 1.59733 24.8011 1.322 25.1791 1.112C25.5618 0.902 26.0028 0.797 26.5021 0.797C26.8895 0.797 27.2301 0.862333 27.5241 0.993C27.8228 1.119 28.0701 1.301 28.2661 1.539C28.4668 1.77233 28.6185 2.05467 28.7211 2.386C28.8238 2.71733 28.8751 3.08367 28.8751 3.485V8H27.6291V3.485C27.6291 2.94833 27.5055 2.533 27.2581 2.239C27.0155 1.94033 26.6421 1.791 26.1381 1.791C25.7695 1.791 25.4241 1.87967 25.1021 2.057C24.7848 2.23433 24.4908 2.47467 24.2201 2.778V8H22.9741ZM32.6137 10.093C32.5717 10.1863 32.518 10.261 32.4527 10.317C32.392 10.373 32.2964 10.401 32.1657 10.401H31.2417L32.5367 7.587L29.6107 0.909H30.6887C30.796 0.909 30.88 0.937 30.9407 0.993C31.0014 1.04433 31.0457 1.10267 31.0737 1.168L32.9707 5.634C33.0127 5.73667 33.0477 5.83933 33.0757 5.942C33.1084 6.04467 33.1364 6.14967 33.1597 6.257C33.1924 6.14967 33.225 6.04467 33.2577 5.942C33.2904 5.83933 33.3277 5.73433 33.3697 5.627L35.2107 1.168C35.2387 1.09333 35.2854 1.03267 35.3507 0.985999C35.4207 0.934666 35.4954 0.909 35.5747 0.909H36.5687L32.6137 10.093Z" fill="#7A827F"/>
 		</svg>
 	);
 }

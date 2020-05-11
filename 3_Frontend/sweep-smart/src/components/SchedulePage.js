@@ -26,8 +26,15 @@ const DateClickButton = styled(Button)({
     display: 'inline-block',
 });
 
-const NoBorderTableCell = styled(TableCell) ({
-    border: 0,
+const NoBottomTableCell = styled(TableCell) ({
+    borderBottom: 0,
+    borderRight: '1px solid #DCDCDC',
+    borderCollapse: 'collapse'
+});
+
+const BottomTableCell = styled(TableCell) ({
+    borderBottom: '1px solid #DCDCDC',
+    borderRight: '1px solid #DCDCDC',
     borderCollapse: 'collapse'
 });
 
@@ -211,7 +218,7 @@ class SchedulePage extends React.Component {
 				<TableContainer>
 					<Table fullWidth={true}>
 						<ScheduleTableHead date={this.props.date} handleDateClick={this.handleDateClick}/>
-						<ScheduleTableBody onScreenData={this.state.onScreenData}/>
+						<ScheduleTableBody onScreenData={this.state.onScreenData} tab={this.props.tab}/>
 					</Table>
 				</TableContainer>
 			</div>
@@ -254,8 +261,8 @@ class ScheduleTableBody extends React.Component {
         if (this.props.onScreenData.length !== 0) {
             let first = GetScheduleDataByRow(this.props.onScreenData[0]);
             let second = GetScheduleDataByRow(this.props.onScreenData[1]);
-            first_half = first.map((row, index) => (GetSingleRow(row, index===first.length-1)));
-            second_half = second.map((row, index) => (GetSingleRow(row, false)));
+            first_half = first.map((row, index) => (GetSingleRow(row, index === first.length-1, this.props.tab)));
+            second_half = second.map((row, index) => (GetSingleRow(row, false, this.props.tab)));
         }
         return (
             <TableBody>
@@ -286,23 +293,28 @@ function GetScheduleDataByRow(data) {
     return rows;
 }
 
-function GetSingleRow(row, border) {
+function GetSingleRow(row, border, tab) {
+    let shift;
+    if (tab === 'Day Shift') {
+        shift = 'day';
+    } else if (tab === 'Night Shift') {
+        shift = 'night';
+    }
     return (
         <TableRow>
             {row.map((route) => {
                 let block;
                 if (route !== null) {
                     block = <RouteBlock key={route.route}
-                                onClick={() => {console.log("Clicked")}}
-                                shift={route.shift}
+                                shift={shift}
                                 status={route.route_status}
                                 route={route.route}
                                 operator={route.driver}></RouteBlock>;
                 }
                 if (border) {
-                    return <TableCell align="center" width="20%">{block}</TableCell>;
+                    return <BottomTableCell align="center" width="20%" size="small">{block}</BottomTableCell>;
                 } else {
-                    return <NoBorderTableCell align="center" width="20%">{block}</NoBorderTableCell>;
+                    return <NoBottomTableCell align="center" width="20%" size="small">{block}</NoBottomTableCell>;
                 }
             })}
         </TableRow>

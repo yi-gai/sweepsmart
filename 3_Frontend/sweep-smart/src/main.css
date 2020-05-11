@@ -1,9 +1,9 @@
 .main-tab {
 	position: absolute;
 	width: 950px;
-	min-height: 750px;
 	left: 60px;
 	top: 120px;
+	padding-bottom: 50px;
 
 	border-radius: 5px;
 }

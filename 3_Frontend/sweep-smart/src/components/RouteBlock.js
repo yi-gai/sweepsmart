@@ -1,5 +1,5 @@
 import React from 'react';
-import {AccessTime, Block, CheckCircle, Cancel} from '@material-ui/icons';
+import {AccessTime, Block, CheckCircle, Cancel, HelpOutline} from '@material-ui/icons';
 import Grid from '@material-ui/core/Grid';
 import Popover from '@material-ui/core/Popover';
 import { makeStyles } from '@material-ui/core/styles';
@@ -12,13 +12,15 @@ import './routeBlock.css';
 
 function rtBlockIcon(status) {
     if (status === 'assigned') {
-        return (<AccessTime />);
+        return <AccessTime />;
     } else if (status === 'disabled') {
-        return (<Block />);
+        return <Block />;
     } else if (status === 'completed') {
-        return (<CheckCircle />)
+        return <CheckCircle />;
     } else if (status === 'missed') {
-        return (<Cancel />)
+        return <Cancel />;
+    } else if (status === 'unassigned') {
+        return <HelpOutline />;
     }
 }
 
@@ -58,6 +60,21 @@ function RouteBlock({
         setOperatorName(event.currentTarget.value);
     };
 
+    if (operator === '') {
+        operator = 'Unassigned';
+    } else {
+        let name = operator.split(' ');
+        operator = name[1].charAt(0) + '. ' + name[0];
+    }
+
+    if (status === null) {
+        if (operator === 'Unassigned') {
+            status = 'unassigned';
+        } else {
+            status = 'assigned';
+        }
+    }
+
     return (
         <div>
             <div className={`rtBlock rtBlock--${shift}--${status}`} onClick={handleClick}>
@@ -83,8 +100,7 @@ function RouteBlock({
                 transformOrigin={{
                     vertical: 'top',
                     horizontal: 'left',
-                }}
-            >
+                }}>
                 <div className={`routePopover`}>
                     <h3>{route}</h3>
                     <Grid container wrap="nowrap" direction="row" alignItems="center">
@@ -97,8 +113,7 @@ function RouteBlock({
                                     labelId="demo-simple-select-label"
                                     id="demo-simple-select"
                                     value={operatorName}
-                                    onChange={handleChange}
-                                >
+                                    onChange={handleChange}>
                                     <MenuItem>R.Rogers</MenuItem>
                                     <MenuItem>J.Smith</MenuItem>
                                     <MenuItem>G.Garrett</MenuItem>

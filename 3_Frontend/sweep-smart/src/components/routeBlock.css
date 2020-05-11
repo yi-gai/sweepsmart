@@ -3,20 +3,22 @@
     --day--completed: #80C7D6;
     --night--assigned: rgba(166, 128, 214, 0.3);
     --night--completed: #A680D6;
-    --unassigned: #ffffff;
+    --unassigned: #FFFFFF;
     --missed: #D68080;
     --disabled: #DCDCDC;
 }
 
 .rtBlock {
-    width: 150px;
     height: 40px;
     font-family: "Lato", sans-serif;
     font-weight: bold;
     border-radius: 5px;
     cursor: pointer;
     transition: transform 0.3s ease;
-    margin: 10px 8px;
+    margin-bottom: 3px;
+    padding: 0;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .rtBlock:hover {
@@ -35,33 +37,33 @@
 
 .rtBlock--day--assigned {
     background-color: var(--day--assigned);
-    border: var(--day--completed);
+    border: 1px solid var(--day--completed);
 }
 
 .rtBlock--day--unassigned {
     background-color: var(--unassigned);
-    border: var(--day--completed);
+    border: 1px solid var(--day--completed);
 }
 
 .rtBlock--day--completed {
     background-color: var(--day--completed);
-    color: #ffffff;
+    color: #FFFFFF;
     border: none;
 }
 
 .rtBlock--night--assigned {
     background-color: var(--night--assigned);
-    border: var(--night--completed);
+    border: 1px solid var(--night--completed);
 }
 
-.rtBlock--day--unassigned {
+.rtBlock--night--unassigned {
     background-color: var(--unassigned);
-    border: var(--night--completed);
+    border: 1px solid var(--night--completed);
 }
 
 .rtBlock--night--completed {
     background-color: var(--night--completed);
-    color: #ffffff;
+    color: #FFFFFF;
     border: none;
 }
 
@@ -71,7 +73,7 @@
 
 .rtBlock--day--missed, .rtBlock--night--missed {
     background-color: var(--missed);
-    color: #ffffff;
+    color: #FFFFFF;
     border: none;
 }
 

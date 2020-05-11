@@ -1,7 +1,6 @@
 .background-container {
-	background: #E5E5E5;
-	width: 143%;
-	height: 100%
+	width: 1450px;
+	height: 100%;
 }
 
 .date {
@@ -29,30 +28,6 @@
 
 	color: #7A827F;
 }
-
-.overviewTable {
-	padding: 7px;
-	font-family: 'Lato';
-	font-style: normal;
-	font-weight: bold;
-	font-size: 16px;
-	color: #3A423E;
-	text-align: left;
-	max-width: 25px;
-}
-
-.overviewNumber {
-	font-family: 'Lato';
-	font-weight: bold;
-	font-size: 16px;
-	color: #3A423E;
-	text-align: left;
-}
-
-.tableFrame {
-	margin-left: 16px;
-}
-
 
 h4 {
 	height: 29px;
