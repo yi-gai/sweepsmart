@@ -245,7 +245,7 @@ function VehicleTableBody (props) {
 				<NoBottomTableCell size="medium">{value[1]['12-4 shift']}</NoBottomTableCell>
 				<NoBottomTableCell size="medium">{value[1]['12-4 operator']}</NoBottomTableCell>
 				<NoBottomTableCell size="medium"><DailyStatus status={value[1]['12-4 status']}/></NoBottomTableCell>
-				<NoBottomTableCell size="medium"><CommentIcon/></NoBottomTableCell>
+				<NoBottomTableCell size="medium"><AddCommentDialog/></NoBottomTableCell>
 			</TableRow>
 		);
 	} else if (props.viewType === 'day' && props.tab === 'Night Shift' && props.dailyNightData !== null) {
@@ -258,7 +258,7 @@ function VehicleTableBody (props) {
 				<NoBottomTableCell size="medium">{value[1]['3-6 shift']}</NoBottomTableCell>
 				<NoBottomTableCell size="medium">{value[1]['3-6 operator']}</NoBottomTableCell>
 				<NoBottomTableCell size="medium"><DailyStatus status={value[1]['3-6 status']}/></NoBottomTableCell>
-				<NoBottomTableCell size="medium"><CommentIcon/></NoBottomTableCell>
+				<NoBottomTableCell size="medium"><AddCommentDialog/></NoBottomTableCell>
 			</TableRow>
 		);
 	}
@@ -384,6 +384,54 @@ class DeleteAlertDialog extends React.Component {
 						</Button>
 						<Button onClick={this.handleDelete} color="primary" autoFocus>
 						Yes
+						</Button>
+					</DialogActions>
+				</Dialog>
+			</div>
+		);
+	}
+}
+
+class AddCommentDialog extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {open: false};
+		this.handleClickOpen = this.handleClickOpen.bind(this);
+		this.handleCancel = this.handleCancel.bind(this);
+	}
+
+	handleClickOpen() {
+		this.setState({open: true});
+	};
+
+	handleCancel() {
+		this.setState({open: false});
+	}
+
+	render() {
+		return (
+			<div>
+				<Button onClick={this.handleClickOpen} >
+					<CommentIcon />
+				</Button>
+				<Dialog open={this.state.open}
+				onClose={this.handleCancel}
+				aria-labelledby="alert-dialog-title"
+				aria-describedby="alert-dialog-description">
+					<DialogTitle id="alert-dialog-title">{"Add comment for this vehicle."}</DialogTitle>
+					<DialogContent>
+						<TextField
+							required
+							autoFocus
+							label="Comment"
+							fullWidth/>
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={this.handleCancel} color="primary">
+						Cancel
+						</Button>
+						<Button onClick={this.handleCancel} color="primary" autoFocus>
+						Submit
 						</Button>
 					</DialogActions>
 				</Dialog>

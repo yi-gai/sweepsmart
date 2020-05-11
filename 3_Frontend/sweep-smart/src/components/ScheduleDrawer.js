@@ -15,6 +15,12 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableRow from '@material-ui/core/TableRow';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
+import Dialog from '@material-ui/core/Dialog';
+import DialogActions from '@material-ui/core/DialogActions';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogContentText from '@material-ui/core/DialogContentText';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import TextField from '@material-ui/core/TextField';
 import "./scheduleDrawer.css";
 
 const ContainerPaper = styled(Paper)({
@@ -429,23 +435,35 @@ class OperatorPanelContent extends React.Component {
 						{vehicles.map((vid) => <MenuItem value={vid[0]}>{vid[0]}</MenuItem>)}
 					</StyledSelect>
 				</OperatorTableCell>
-				<OperatorTableCell align="center" size="medium"></OperatorTableCell>
 				<OperatorTableCell align="center" size="medium">
-					<StyledSelect>
+					<StyledSelect autoWidth={true}>
+						<MenuItem value="completed">7</MenuItem>
+						<MenuItem value="missed">7A</MenuItem>
+						<MenuItem value="assigned">7B</MenuItem>
+					</StyledSelect>
+				</OperatorTableCell>
+				<OperatorTableCell align="center" size="medium">
+					<StyledSelect autoWidth={true}>
 						<MenuItem value="completed">Completed</MenuItem>
 						<MenuItem value="missed">Missed</MenuItem>
 						<MenuItem value="assigned">Assigned</MenuItem>
 					</StyledSelect>
 				</OperatorTableCell>
-				<OperatorTableCell align="center" size="medium"></OperatorTableCell>
 				<OperatorTableCell align="center" size="medium">
-				 	<StyledSelect>
+					<StyledSelect autoWidth={true}>
+						<MenuItem value="completed">7</MenuItem>
+						<MenuItem value="missed">7A</MenuItem>
+						<MenuItem value="assigned">7B</MenuItem>
+					</StyledSelect>
+				</OperatorTableCell>
+				<OperatorTableCell align="center" size="medium">
+				 	<StyledSelect autoWidth={true}>
 						<MenuItem value="completed">Completed</MenuItem>
 						<MenuItem value="missed">Missed</MenuItem>
 						<MenuItem value="assigned">Assigned</MenuItem>
 					</StyledSelect>
 				</OperatorTableCell>
-				<OperatorTableCell align="center" size="medium"><CommentIcon/></OperatorTableCell>
+				<OperatorTableCell align="center" size="small"><AddCommentDialog/></OperatorTableCell>
 			</TableRow>
 		);
 		let scrolls;
@@ -469,6 +487,54 @@ class OperatorPanelContent extends React.Component {
 			</Table>
 				{scrolls}
 			</TableContainer>
+		);
+	}
+}
+
+class AddCommentDialog extends React.Component {
+	constructor(props) {
+		super(props);
+		this.state = {open: false};
+		this.handleClickOpen = this.handleClickOpen.bind(this);
+		this.handleCancel = this.handleCancel.bind(this);
+	}
+
+	handleClickOpen() {
+		this.setState({open: true});
+	};
+
+	handleCancel() {
+		this.setState({open: false});
+	}
+
+	render() {
+		return (
+			<div>
+				<Button onClick={this.handleClickOpen} >
+					<CommentIcon />
+				</Button>
+				<Dialog open={this.state.open}
+				onClose={this.handleCancel}
+				aria-labelledby="alert-dialog-title"
+				aria-describedby="alert-dialog-description">
+					<DialogTitle id="alert-dialog-title">{"Add comment for this operator."}</DialogTitle>
+					<DialogContent>
+						<TextField
+							required
+							autoFocus
+							label="Comment"
+							fullWidth/>
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={this.handleCancel} color="primary">
+						Cancel
+						</Button>
+						<Button onClick={this.handleCancel} color="primary" autoFocus>
+						Submit
+						</Button>
+					</DialogActions>
+				</Dialog>
+			</div>
 		);
 	}
 }
