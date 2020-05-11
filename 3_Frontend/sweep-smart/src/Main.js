@@ -11,7 +11,6 @@ import PerformancePage from './components/PerformancePage';
 // import DatePicker from './components/DatePicker';
 import SSDatePicker from './components/Calendar';
 
-import StaffPanel from './components/StaffPanel';
 import Select from '@material-ui/core/Select';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
@@ -151,9 +150,6 @@ class Main extends React.Component {
 				<div className="main-tab">
 					{buttons}
 					{mainContent}
-				</div>
-				<div>
-					<StaffPanel/> 
 				</div>
 			</div>
 			

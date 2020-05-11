@@ -7,6 +7,7 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Button from '@material-ui/core/Button';
+import StaffPanel from './StaffPanel';
 
 import './schedulePage.css';
 import ScheduleDrawer from "./ScheduleDrawer";
@@ -164,7 +165,7 @@ class SchedulePage extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.date !== prevProps.date) {
+        if (this.props.datedate !== prevProps.date) {
             this.fetchWeeklyScheduleData();
         } else if (this.props.tab !== prevProps.tab) {
             this.updateOnScreenData(this.state.data);
@@ -223,6 +224,9 @@ class SchedulePage extends React.Component {
 						<ScheduleTableBody onScreenData={this.state.onScreenData} tab={this.props.tab}/>
 					</Table>
 				</TableContainer>
+                <div>
+                    <StaffPanel date={this.props.date}/>
+                </div>
 			</div>
         );
     }
