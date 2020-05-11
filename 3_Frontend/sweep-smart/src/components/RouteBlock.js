@@ -12,15 +12,15 @@ import './routeBlock.css';
 
 function rtBlockIcon(status) {
     if (status === 'assigned') {
-        return <AccessTime />;
+        return <AccessTime style={{paddingTop: '5px'}}/>;
     } else if (status === 'disabled') {
-        return <Block />;
+        return <Block style={{paddingTop: '5px'}}/>;
     } else if (status === 'completed') {
-        return <CheckCircle />;
+        return <CheckCircle style={{paddingTop: '5px'}}/>;
     } else if (status === 'missed') {
-        return <Cancel />;
+        return <Cancel style={{paddingTop: '5px'}}/>;
     } else if (status === 'unassigned') {
-        return <HelpOutline />;
+        return <HelpOutline style={{paddingTop: '5px'}}/>;
     }
 }
 
@@ -68,11 +68,9 @@ function RouteBlock({
     }
 
     if (status === null) {
-        if (operator === 'Unassigned') {
-            status = 'unassigned';
-        } else {
-            status = 'assigned';
-        }
+        status = 'unassigned';
+    } else {
+        status = status.toLowerCase();
     }
 
     return (

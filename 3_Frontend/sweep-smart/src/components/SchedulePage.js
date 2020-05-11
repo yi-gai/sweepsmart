@@ -29,13 +29,15 @@ const DateClickButton = styled(Button)({
 const NoBottomTableCell = styled(TableCell) ({
     borderBottom: 0,
     borderRight: '1px solid #DCDCDC',
-    borderCollapse: 'collapse'
+    borderCollapse: 'collapse',
+    padding: '10px 15px 0px 15px'
 });
 
 const BottomTableCell = styled(TableCell) ({
     borderBottom: '1px solid #DCDCDC',
     borderRight: '1px solid #DCDCDC',
-    borderCollapse: 'collapse'
+    borderCollapse: 'collapse',
+    padding: '10px 15px 10px 15px'
 });
 
 function ProcessRawData (rawData) {
@@ -262,7 +264,7 @@ class ScheduleTableBody extends React.Component {
             let first = GetScheduleDataByRow(this.props.onScreenData[0]);
             let second = GetScheduleDataByRow(this.props.onScreenData[1]);
             first_half = first.map((row, index) => (GetSingleRow(row, index === first.length-1, this.props.tab)));
-            second_half = second.map((row, index) => (GetSingleRow(row, false, this.props.tab)));
+            second_half = second.map((row, index) => (GetSingleRow(row, index === second.length-1, this.props.tab)));
         }
         return (
             <TableBody>

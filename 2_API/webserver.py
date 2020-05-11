@@ -375,28 +375,40 @@ def get_overview_day():
     data['unassigned'] = unassigned_routes
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/schedule/day/weather', methods=["GET", "PUT"])
+@app.route('/schedule/day/weather', methods=["GET", "PUT", "OPTIONS"])
 def weather_condition():
+    if request.method == 'OPTIONS':
+        headers = {
+            'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+            'Access-Control-Allow-Origin': '*'
+        }
+        return Response(None, status=200, headers=headers)
     if request.method == 'GET':
         date = request.args.get('date')
         if date == None:
             date = datetime.now().strftime("%Y-%m-%d")
         # retrieve weather from database
         w_db = db.engine.execute("select weather from DAY_LOG where log_date='{d}';".format(d=date))
-        weather = 'Sunny' # in case of no entries for day
+        weather = ''
         for w in w_db:
             weather = w[0]
     elif request.method == 'PUT':
         date = request.args.get('date')
         if date == None:
             date = datetime.now().strftime("%Y-%m-%d")
-        if request.headers['Content-Type'] == 'application/json':
+        if 'application/json'in request.headers['Content-Type']:
             arguments = request.get_json()
-        if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+        if 'application/x-www-form-urlencoded' in request.headers['Content-Type']:
             arguments = request.form
         weather = arguments.get("weather")
         # put weather info in database
-        db.engine.execute("update DAY_LOG set weather='{w}' where log_date={d};".format(w=weather,d=date))
+        existing_weather = db.engine.execute("select weather from DAY_LOG where log_date='{d}';".format(d=date))
+        if existing_weather.fetchone() is not None:
+            query = "UPDATE DAY_LOG SET weather='{w}' where log_date='{d}';".format(w=weather,d=date)
+        else:
+            query = "INSERT INTO `DAY_LOG` (log_date,weather) VALUES ('{d}','{w}');".format(w=weather,d=date)
+        db.engine.execute(query)
+        db.session.commit()
     return Response(json.dumps({'weather': weather}), status=200, mimetype='application/json')
 
 @app.route('/schedule/day/main', methods=["GET"])
