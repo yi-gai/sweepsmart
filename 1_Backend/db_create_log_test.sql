@@ -51,3 +51,22 @@ INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUE
 INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('6-1',14551,7165,'2020-05-08','PM');
 INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('6-2',20972,7167,'2020-05-08','PM');
 
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1-1',2882,7160,'2020-05-11','AM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1-2',8097,7164,'2020-05-11','AM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('3-1',1536,7171,'2020-05-11','AM');
+INSERT INTO `ROUTE_LOG` (route_id,shift,date_swept,completion) VALUES ('3A-2','AM','2020-05-11','Disabled');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('3A-2',1627,7171,'2020-05-11','PM');
+
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1B-1',14551,7165,'2020-05-11','PM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1C-2',20972,7167,'2020-05-11','PM');
+
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1-1',2882,7160,'2020-05-12','AM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('3-1',8097,7164,'2020-05-12','AM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('7',1536,7171,'2020-05-12','AM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1C-3',14551,7165,'2020-05-12','PM');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1D-1',20972,7167,'2020-05-12','PM');
+
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('12',20972,7167,'2020-05-15','night');
+INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('12',20972,7167,'2020-05-11','night');
+
+
