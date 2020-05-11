@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import API from '../API/api';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/styles';
@@ -25,6 +25,11 @@ import TextField from '@material-ui/core/TextField';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
+import DateFnsUtils from '@date-io/date-fns';
+import {
+  MuiPickersUtilsProvider,
+  DatePicker,
+} from '@material-ui/pickers';
 
 import './operatorPage.css';
 
@@ -44,6 +49,12 @@ const styles = theme => (
     },
     tableCell: {
       borderBottom: "none"
+    },
+    drawerPaper: {
+      width: '50%',
+    },
+    drawer: {
+      width: '50%',
     }
   }
 );
@@ -79,6 +90,7 @@ const StyledTableBoldCell = styled(TableCell) ({
 class OperatorPage extends React.Component {
   constructor(props) {
     super(props);
+    this.handleDrawerDateChange = this.handleDrawerDateChange.bind(this)
     this.state = {
       onScreenData: [],
       tab: props.tab, // 'Day Shift' or 'Night Shift'
@@ -199,6 +211,7 @@ class OperatorPage extends React.Component {
       this.makeMainPageAPICall();
     }
     if (prevProps.date != this.props.date){
+      this.setState({drawer_date: this.props.date})
       this.makeMainPageAPICall();
     }
   }
@@ -283,6 +296,12 @@ class OperatorPage extends React.Component {
 			}
 		})
   }
+
+  handleDrawerDateChange = (date) => {
+    this.setState({drawer_date: date});
+    this.makeDrawerAPICall();
+  }
+
 
   getIndividualTable() {
     let table = []
@@ -431,7 +450,10 @@ class OperatorPage extends React.Component {
                       </TableBody>
                   </Table>
               </TableContainer>
-              <Drawer anchor='right' open={this.state.drawer}>
+              <Drawer className={classes.drawer} anchor='right' open={this.state.drawer} 
+                classes={{
+                  paper: classes.drawerPaper,
+                }}>
                 <div className="operator-drawer">
                   <div className="operator-top-div">
                     <div class="close-btn">
@@ -450,13 +472,13 @@ class OperatorPage extends React.Component {
                     </div>
                     <div className="action-div">
                       <div className="action-text" onClick={() => this.handleModalClick()}>
-                        <div className="align-bottom"><CalendarIcon/>Route Assignment</div>
+                        <div className="align-bottom"><CalendarIcon/><span class="text-margin">Route Assignment</span></div>
                       </div>
                       <DeleteOperatorAlertDialog handleOperatorDelete={this.handleOperatorDelete} eid={this.state.drawer_data.employee_id}/>
                     </div>
                   </div>
                   <div>
-                    <DayPicker date={this.state.drawer_date}></DayPicker>
+                    <DayPicker handleDrawerDateChange= {this.handleDrawerDateChange} date={this.state.drawer_date}/>
                     <div className="drawer-table-container">
                       <TableContainer component={Paper}>
                         <Table className={classes.table} aria-label="simple table">
@@ -553,20 +575,48 @@ class OperatorPage extends React.Component {
     }
 }
 
-class DayPicker extends React.Component {
-	constructor(props) {
-		super(props);
-	}
-	render() {
+function GetDayDisplay(date) {
+	let month = date.getMonth() + 1;
+	let day = date.getDate();
+	let year = date.getYear() + 1900;
+	return month + "/" + day + ", " + year;
+}
+
+const DayPicker = (props) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedDate, handleDateChange] = useState(GetDayDisplay(props.date));
+
 		return (
-			<div className="drawer-date-div">
-				<div className="drawer-date-display">{GetDayDisplay(this.props.date)}</div>
-				<div className="drawer-date-down-arrow">
-					<DownArrowIcon/>
-				</div>
-			</div>
+      <div className="date-picker">
+        <div className="drawer-date-div">
+				  <div className="drawer-date-display">{selectedDate}</div>
+				  <div className="drawer-date-down-arrow" onClick={() => setIsOpen(true)}>
+					  <DownArrowIcon/>
+				  </div>
+			  </div>
+        <div>
+          <MuiPickersUtilsProvider utils={DateFnsUtils}>
+            <DatePicker
+              fullWidth
+              autoOk
+              open={isOpen}
+              onOpen={() => setIsOpen(true)}
+              onClose={() => setIsOpen(false)}
+              disableToolbar
+              variant="inline"
+              format="MM/dd/yyyy"
+              margin="normal"
+              value={selectedDate}
+              onChange={(newDate) => {props.handleDrawerDateChange(newDate); handleDateChange(GetDayDisplay(newDate))}}
+              KeyboardButtonProps={{
+                'aria-label': 'change date',
+              }}
+              TextFieldComponent={() => null}
+            />
+          </MuiPickersUtilsProvider>
+        </div>
+      </div>
 		);
-	}
 }
 
 class AddLeaveAlertDialog extends React.Component {
@@ -749,7 +799,7 @@ class DeleteOperatorAlertDialog extends React.Component {
 		return (
 			<div>
 				<div className="action-text" onClick={this.handleClickOpen} >
-					<TrashIcon /> Remove
+					<TrashIcon /><span class="text-margin">Remove</span>
 				</div>
         <Dialog open={this.state.open} onClose={this.handleCancel} 
           aria-labelledby="alert-dialog-title"
@@ -768,13 +818,6 @@ class DeleteOperatorAlertDialog extends React.Component {
 			</div>
 		);
 	}
-}
-
-function GetDayDisplay(date) {
-	let month = date.getMonth() + 1;
-	let day = date.getDate();
-	let year = date.getYear() + 1900;
-	return month + "/" + day + ", " + year;
 }
 
 function CalendarIcon() {

@@ -16,6 +16,7 @@ import Select from '@material-ui/core/Select';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormControl from '@material-ui/core/FormControl';
+import { ArrowDownward } from "@material-ui/icons";
 
 const CurButtonTab = styled(Button)({
 	fontFamily:  'Lato',
@@ -200,7 +201,24 @@ class NotCurButton extends React.Component {
 class WeekAndDayPicker extends React.Component {
 	constructor(props) {
 		super(props);
+		this.state = {isOpen : false}
+		this.handleClickDown = this.handleClickDown.bind(this)
+		this.handleCalendarClose = this.handleCalendarClose.bind(this)
+		this.handleCalendarOpen = this.handleCalendarOpen.bind(this)
 	}
+
+	handleClickDown () {
+		this.setState({isOpen: true})
+	}
+
+	handleCalendarClose () {
+		this.setState({isOpen: false})
+	}
+
+	handleCalendarOpen () {
+		this.setState({isOpen: true})
+	}
+	
 
 	render() {
 		const options = [{value: "week", label: "Week"},
@@ -210,12 +228,14 @@ class WeekAndDayPicker extends React.Component {
 			weekAndDayPicker = <WeekPicker
 				date={this.props.date}
 				handleClickLeft={this.props.handleClickLeftWeek}
-				handleClickRight={this.props.handleClickRightWeek}/>
+				handleClickRight={this.props.handleClickRightWeek}
+				handleClickDown={this.handleClickDown}/>
 		} else if (this.props.viewType === "day") {
 			weekAndDayPicker = <DayPicker
 				date={this.props.date}
 				handleClickLeft={this.props.handleClickLeftDay}
-				handleClickRight={this.props.handleClickRightDay}/>
+				handleClickRight={this.props.handleClickRightDay}
+				handleClickDown={this.handleClickDown}/>
 		}
 		let weekAndDayDropdown = (<div></div>);
 		if (this.props.pageName == 'Operators' || this.props.pageName == 'Vehicles') {
@@ -238,8 +258,12 @@ class WeekAndDayPicker extends React.Component {
 					{weekAndDayPicker}
 					{weekAndDayDropdown}
 				</div>
-				<SSDatePicker date={this.props.date} handleDateChange={this.props.handleDateChange}/>
-				
+				<SSDatePicker 
+					date={this.props.date} 
+					handleDateChange={this.props.handleDateChange}
+					isOpen={this.state.isOpen}
+					handleCalendarOpen={this.handleCalendarOpen}
+					handleCalendarClose={this.handleCalendarClose}/>
 			</div>
 		);
 	}
@@ -254,6 +278,7 @@ class WeekPicker extends React.Component {
 			<div className="week-picker">
 				<div className="week-display">{GetWeekRange(this.props.date)}</div>
 				<div className="week-picker-arrows">
+					<SwitchDateButton onClick={this.props.handleClickDown}><DownArrowIcon/></SwitchDateButton>
 					<SwitchDateButton onClick={this.props.handleClickLeft}><LeftArrowIcon/></SwitchDateButton>
 					<SwitchDateButton onClick={this.props.handleClickRight}><RightArrowIcon/></SwitchDateButton>
 				</div>
@@ -271,6 +296,7 @@ class DayPicker extends React.Component {
 			<div className="day-picker">
 				<div className="day-display">{GetDayDisplay(this.props.date)}</div>
 				<div className="day-picker-arrows">
+					<SwitchDateButton onClick={this.props.handleClickDown}><DownArrowIcon/></SwitchDateButton>
 					<SwitchDateButton onClick={this.props.handleClickLeft}><LeftArrowIcon/></SwitchDateButton>
 					<SwitchDateButton onClick={this.props.handleClickRight}><RightArrowIcon/></SwitchDateButton>
 				</div>
@@ -314,6 +340,14 @@ function RightArrowIcon() {
 	return (
 		<svg id="svg-right-arrow" width="13" height="20" viewBox="0 0 13 20" fill="none" xmlns="http://www.w3.org/2000/svg">
 		<path d="M1.18355 0.371254C0.936114 0.618481 0.8125 0.911541 0.8125 1.25016L0.8125 18.7499C0.8125 19.0887 0.936114 19.3815 1.18355 19.629C1.43125 19.8764 1.72411 20 2.06266 20C2.40115 20 2.694 19.8764 2.9415 19.629L11.6914 10.879C11.9388 10.6313 12.0627 10.3385 12.0627 10C12.0627 9.66152 11.9388 9.36839 11.6914 9.12116L2.94144 0.371254C2.694 0.124094 2.40115 0 2.06259 0C1.72411 0 1.43125 0.124094 1.18355 0.371254Z" fill="#7A827F"/>
+		</svg>
+	);
+}
+
+function DownArrowIcon() {
+	return (
+		<svg id="svg-down-arrow" width="20" height="12" viewBox="0 0 20 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M19.6287 0.371047C19.3815 0.123614 19.0885 0 18.7498 0H1.25009C0.911336 0 0.61848 0.123614 0.371047 0.371047C0.123614 0.618753 0 0.911609 0 1.25016C0 1.58865 0.123614 1.8815 0.371047 2.129L9.12095 10.8789C9.36866 11.1263 9.66152 11.2502 10 11.2502C10.3385 11.2502 10.6316 11.1263 10.8788 10.8789L19.6287 2.12894C19.8759 1.8815 20 1.58865 20 1.25009C20 0.91161 19.8759 0.618753 19.6287 0.371047Z" fill="#7A827F"/>
 		</svg>
 	);
 }
