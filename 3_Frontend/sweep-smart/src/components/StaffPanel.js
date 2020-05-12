@@ -126,7 +126,7 @@ class StaffPanel extends React.Component {
         const { classes } = this.props;
         return (
             <div className="staff-container">
-                <div><h2>Staff</h2></div>
+                <div style={{paddingLeft: 20}}><h2><strong>Staff</strong></h2></div>
                 <ExpansionPanel>
                     <ExpansionPanelSummary
                         expandIcon={<ExpandMoreIcon />}

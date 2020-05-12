@@ -10,7 +10,7 @@
 
 .rtBlock {
     height: 40px;
-    font-family: "Lato", sans-serif;
+    font-family: Lato;
     font-weight: bold;
     border-radius: 5px;
     cursor: pointer;

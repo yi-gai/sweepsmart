@@ -83,7 +83,7 @@
 
 .page-name {
 	width: 450px;
-	font-family:  'Lato', sans-serif;
+	font-family:  Lato;
 	font-style: normal;
 	font-weight: bold;
 	font-size: 18px;
@@ -93,7 +93,7 @@
 
 .week-display {
 	width: 420px;
-	font-family:  'Lato', sans-serif;
+	font-family:  Lato;
 	font-style: normal;
 	font-weight: 900;
 	font-size: 36px;
@@ -103,7 +103,7 @@
 
 .day-display {
 	width: 200px;
-	font-family:  'Lato', sans-serif;
+	font-family:  Lato;
 	font-style: normal;
 	font-weight: 900;
 	font-size: 36px;

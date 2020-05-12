@@ -16,16 +16,16 @@ class VacationChart extends Component {
 
       let tempData = [{"Operator": "Reginald Tolan", "Month": 3, "Year": 9},
       {"Operator": "Michael Cortez", "Month": 7, "Year": 16},
-      {"Operator": "John B.", "Month": 3, "Year": 5},
-      {"Operator": "John B.", "Month": 8, "Year": 20},
-      {"Operator": "John B.", "Month": 12, "Year": 12},
-      {"Operator": "John B.", "Month": 4, "Year": 16},
-      {"Operator": "John B.", "Month": 20, "Year": 24},
-      {"Operator": "John B.", "Month": 10, "Year": 10},
-      {"Operator": "John B.", "Month": 6, "Year": 10},
-      {"Operator": "John B.", "Month": 2, "Year": 7},
-      {"Operator": "John B.", "Month": 0, "Year": 0},
-      {"Operator": "John B.", "Month": 0, "Year": 9}];
+      {"Operator": "Randy Rogers", "Month": 3, "Year": 5},
+      {"Operator": "Walter Howard", "Month": 8, "Year": 20},
+      {"Operator": "Esquivel Flores", "Month": 12, "Year": 12},
+      {"Operator": "Victor Akinade", "Month": 4, "Year": 16},
+      {"Operator": "Joe Person", "Month": 20, "Year": 24},
+      {"Operator": "Andres Leal", "Month": 10, "Year": 10},
+      {"Operator": "Dominic Galvan  ", "Month": 6, "Year": 10},
+      {"Operator": "Eddie Bridgette", "Month": 2, "Year": 7},
+      {"Operator": "Mario Ornelas ", "Month": 0, "Year": 0},
+      {"Operator": "Paul Garrett", "Month": 0, "Year": 9}];
       
       let currentTab = "";
       let date = new Date();
@@ -102,7 +102,7 @@ class VacationChart extends Component {
         container.append("text")
         .attr("font-size", "20px")
         .attr("font-weight", "bold")
-        .attr("font-family", "sans-serif")
+        .attr("font-family", "Lato")
         .style("text-anchor", "middle")
         .attr("x", width / 2)
         .attr("y", 40)
@@ -111,7 +111,7 @@ class VacationChart extends Component {
         container.append("text")
         .attr("font-size", "15px")
         .attr("font-weight", "bold")
-        .attr("font-family", "sans-serif")
+        .attr("font-family", "Lato")
         .style("text-anchor", "middle")
         .attr("fill", 'dimgrey')
         .attr("x", width / 2)
@@ -139,7 +139,7 @@ class VacationChart extends Component {
       container.append("text")
         .attr("font-size", "12px")
         .attr("font-weight", "bold")
-        .attr("font-family", "sans-serif")
+        .attr("font-family", "Lato")
         .style("text-anchor", "left")
         .attr("fill", 'dimgrey')
         .attr("x", chartWidth + spaceForName + 30)
@@ -149,7 +149,7 @@ class VacationChart extends Component {
         container.append("text")
         .attr("font-size", "12px")
         .attr("font-weight", "bold")
-        .attr("font-family", "sans-serif")
+        .attr("font-family", "Lato")
         .style("text-anchor", "left")
         .attr("fill", 'dimgrey')
         .attr("x", chartWidth + spaceForName + 30)
@@ -164,7 +164,7 @@ class VacationChart extends Component {
           .attr("y", d => (n+1) * barwidth + 20 + ySpaceForTitle)
           .attr("fill", "dimgrey")
           .attr("font-size", "12px")
-          .attr("font-family", "sans-serif")
+          .attr("font-family", "Lato")
           .attr("font-weight", "bold")
           .style("text-anchor", "middle")
           .text(d => d)
@@ -222,7 +222,7 @@ class VacationChart extends Component {
            .attr("fill", "black")
            .attr("font-weight", "bold")
            .attr("font-size", "13px")
-           .attr("font-family", "sans-serif")
+           .attr("font-family", "Lato")
             .attr("x", 0)
              .attr("y", 17)
               .attr("text-anchor","right")

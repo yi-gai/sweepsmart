@@ -19,7 +19,7 @@ const styles = theme => (
 );
 
 const DateClickButton = styled(Button)({
-    fontFamily:  'Lato, sans-serif',
+    fontFamily:  'Lato',
     fontStyle: 'normal',
     fontWeight: 'bold',
     color: '#7A827F',
@@ -165,7 +165,7 @@ class SchedulePage extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.datedate !== prevProps.date) {
+        if (this.props.date !== prevProps.date) {
             this.fetchWeeklyScheduleData();
         } else if (this.props.tab !== prevProps.tab) {
             this.updateOnScreenData(this.state.data);
@@ -212,22 +212,22 @@ class SchedulePage extends React.Component {
 	render() {
         const { classes } = this.props;
 		return (
-			<div className="content-container">
-                <div>
-                    <ScheduleDrawer date={this.state.dailyViewDate}
-                        drawer={this.state.drawer}
-                        handleClose={this.handleClose}/>
-                </div>
-				<TableContainer>
-					<Table fullWidth={true}>
-						<ScheduleTableHead date={this.props.date} handleDateClick={this.handleDateClick}/>
-						<ScheduleTableBody onScreenData={this.state.onScreenData} tab={this.props.tab}/>
-					</Table>
-				</TableContainer>
-                <div>
-                    <StaffPanel date={this.props.date}/>
-                </div>
-			</div>
+            <div>
+    			<div className="content-container">
+                    <div>
+                        <ScheduleDrawer date={this.state.dailyViewDate}
+                            drawer={this.state.drawer}
+                            handleClose={this.handleClose}/>
+                    </div>
+    				<TableContainer>
+    					<Table fullWidth={true}>
+    						<ScheduleTableHead date={this.props.date} handleDateClick={this.handleDateClick}/>
+    						<ScheduleTableBody onScreenData={this.state.onScreenData} tab={this.props.tab}/>
+    					</Table>
+    				</TableContainer>
+    			</div>
+                <StaffPanel date={this.props.date}/>
+            </div>
         );
     }
 }
