@@ -53,7 +53,7 @@ const NoBottomTableCell = styled(({color, ...other}) => <TableCell {...other}/>)
 const StyledTableHeadCell = styled(TableCell) ({
 	height: 60,
 	color: '#7A827F',
-	fontFamily: 'Lato, sans-serif',
+	fontFamily: 'Lato',
 	fontStyle: 'normal',
 	fontWeight: 900,
 	fontSize: 16,

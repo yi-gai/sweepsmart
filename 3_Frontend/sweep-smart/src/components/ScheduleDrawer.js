@@ -93,7 +93,7 @@ const OverviewNameTableCell = styled(({column, ...other}) => <TableCell {...othe
 		if (props.column === 3) {return  120;}
 	},
 	paddingLeft: (props) => props.column === 1 ? 25 : 0,
-	fontFamily: 'Lato, sans-serif',
+	fontFamily: 'Lato',
 	fontStyle: 'normal',
 	fontWeight: 'bold',
 	fontSize: 16,
@@ -106,7 +106,7 @@ const OverviewNameTableCell = styled(({column, ...other}) => <TableCell {...othe
 });
 
 const OverviewNumberTableCell = styled(TableCell)({
-	fontFamily: 'Lato, sans-serif',
+	fontFamily: 'Lato',
 	fontStyle: 'normal',
 	fontWeight: 'normal',
 	fontSize: 16,
@@ -120,7 +120,7 @@ const OverviewNumberTableCell = styled(TableCell)({
 });
 
 const OperatorTableHeadCell = styled(TableCell)({
-	fontFamily: 'Lato, sans-serif',
+	fontFamily: 'Lato',
 	fontStyle: 'normal',
 	textAlign: 'center',
 	fontSize: 16,
@@ -133,7 +133,7 @@ const OperatorNameTableCell = styled(TableCell) ({
 	border: 0,
 	borderCollapse: 'collapse',
 
-	fontFamily: 'Lato, sans-serif',
+	fontFamily: 'Lato',
 	fontStyle: 'normal',
 	fontWeight: 'bold',
 	fontSize: 16,
@@ -145,7 +145,7 @@ const OperatorStatusRegularTableCell = styled(TableCell) ({
 	border: 0,
 	borderCollapse: 'collapse',
 
-	fontFamily: 'Lato, sans-serif',
+	fontFamily: 'Lato',
 	fontStyle: 'normal',
 	fontWeight: 'bold',
 	fontSize: 16,

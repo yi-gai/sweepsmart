@@ -7,6 +7,7 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Button from '@material-ui/core/Button';
+import StaffPanel from './StaffPanel';
 
 import './schedulePage.css';
 import ScheduleDrawer from "./ScheduleDrawer";
@@ -18,7 +19,7 @@ const styles = theme => (
 );
 
 const DateClickButton = styled(Button)({
-    fontFamily:  'Lato, sans-serif',
+    fontFamily:  'Lato',
     fontStyle: 'normal',
     fontWeight: 'bold',
     color: '#7A827F',
@@ -211,19 +212,22 @@ class SchedulePage extends React.Component {
 	render() {
         const { classes } = this.props;
 		return (
-			<div className="content-container">
-                <div>
-                    <ScheduleDrawer date={this.state.dailyViewDate}
-                        drawer={this.state.drawer}
-                        handleClose={this.handleClose}/>
-                </div>
-				<TableContainer>
-					<Table fullWidth={true}>
-						<ScheduleTableHead date={this.props.date} handleDateClick={this.handleDateClick}/>
-						<ScheduleTableBody onScreenData={this.state.onScreenData} tab={this.props.tab}/>
-					</Table>
-				</TableContainer>
-			</div>
+            <div>
+    			<div className="content-container">
+                    <div>
+                        <ScheduleDrawer date={this.state.dailyViewDate}
+                            drawer={this.state.drawer}
+                            handleClose={this.handleClose}/>
+                    </div>
+    				<TableContainer>
+    					<Table fullWidth={true}>
+    						<ScheduleTableHead date={this.props.date} handleDateClick={this.handleDateClick}/>
+    						<ScheduleTableBody onScreenData={this.state.onScreenData} tab={this.props.tab}/>
+    					</Table>
+    				</TableContainer>
+    			</div>
+                <StaffPanel date={this.props.date}/>
+            </div>
         );
     }
 }

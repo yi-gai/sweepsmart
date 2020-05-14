@@ -90,7 +90,7 @@ class RouteChart extends Component {
 	         .attr("y", 30)
 	          .attr("text-anchor","middle")
 	          .attr("font-size", "20px")
-	       	  .attr("font-family", "sans-serif")
+	       	  .attr("font-family", "Lato")
 	       	  .attr("font-weight", "bold")
 	         .text("Monthly Completion by Route");
 
@@ -100,7 +100,7 @@ class RouteChart extends Component {
 	         .attr("y", 60)
 	          .attr("text-anchor","left")
 	          .attr("font-size", "10px")
-	       	  .attr("font-family", "sans-serif")
+	       	  .attr("font-family", "Lato")
 	       	  .attr("font-weight", "bold")
 	         .text("Completion%");
 
@@ -110,7 +110,7 @@ class RouteChart extends Component {
 	         .attr("y", 60)
 	          .attr("text-anchor","left")
 	          .attr("font-size", "10px")
-	       	  .attr("font-family", "sans-serif")
+	       	  .attr("font-family", "Lato")
 	       	  .attr("font-weight", "bold")
 	         .text("Completed");
 
@@ -120,7 +120,7 @@ class RouteChart extends Component {
 	         .attr("y", 60)
 	          .attr("text-anchor","left")
 	          .attr("font-size", "10px")
-	       	  .attr("font-family", "sans-serif")
+	       	  .attr("font-family", "Lato")
 	       	  .attr("font-weight", "bold")
 	       	  .attr("opacity", 0.6)
 	         .text("Scheduled");
@@ -156,7 +156,7 @@ class RouteChart extends Component {
          .attr("y", barwidth/2 + 5)
           .attr("text-anchor","right")
           .attr("font-size", "12px")
-       	  .attr("font-family", "sans-serif")
+       	  .attr("font-family", "Lato")
        	  .attr("font-weight", "bold")
          .text(d => ((d.Completion/d.Scheduled)* 100).toFixed(0) + '%');
   
@@ -167,7 +167,7 @@ class RouteChart extends Component {
          .attr("y", barwidth/2 + 5)
           .attr("text-anchor","right")
           .attr("font-size", "14px")
-       	  .attr("font-family", "sans-serif")
+       	  .attr("font-family", "Lato")
        	  .attr("font-weight", "bold")
          .text(d => d.Route);
 
@@ -178,7 +178,7 @@ class RouteChart extends Component {
          .attr("y", barwidth/2 + 5)
           .attr("text-anchor","right")
           .attr("font-size", "15px")
-       	  .attr("font-family", "sans-serif")
+       	  .attr("font-family", "Lato")
        	  .attr("font-weight", "bold")
          .text(d => d.Completion);
 
@@ -189,7 +189,7 @@ class RouteChart extends Component {
          .attr("y", barwidth/2 + 5)
           .attr("text-anchor","right")
           .attr("font-size", "15px")
-       	  .attr("font-family", "sans-serif")
+       	  .attr("font-family", "Lato")
        	  .attr("font-weight", "bold")
        	  .attr("opacity", 0.4)
          .text(d => d.Scheduled); 
