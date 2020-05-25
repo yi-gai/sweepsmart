@@ -501,6 +501,26 @@ def get_unplanned_routes():
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
+@app.route('/schedule/operator', methods=["GET"])
+def get_operator_list_to_assign():
+    date = request.args.get('date')
+    shift = request.args.get('shift')
+    date_dt = datetime.strptime(date,"%Y-%m-%d")
+    day_of_wk = date_dt.weekday()
+    days = {0:'mon',1:'tue',2:'wed',3:'thu',4:'fri',5:'sat',6:'sun'}
+
+    if shift == 'AM' or shift == 'PM':
+        day_night = 'day'
+    else:
+        day_night = 'night'
+
+    absences_query = "select employee_id from ABSENCES where date_absence='{ds}' and shift='{shift}'".format(ds=date,shift=shift)
+    assigned_query = "select employee_id from ROUTE_LOG where date_swept='{ds}' and shift='{shift}' and employee_id is not null".format(ds=date,shift=shift)
+    drivers = db.engine.execute("select employee_id,employee_name from DRIVERS where (shift_{d}=1 or shift_{d}_pm=1) and shift='{shift}' and employee_id not in ({q1}) and employee_id not in ({q2});".format(d=days[day_of_wk],shift=day_night,q1=absences_query,q2=assigned_query))
+    drivers = [(dict(row.items())) for row in drivers]
+
+    return Response(json.dumps(drivers), status=200, mimetype='application/json')
+
 
 @app.route('/staff/day', methods=["GET"])
 def get_staff_day():
@@ -524,6 +544,8 @@ def get_staff_day():
         data['Night'].append(row[0])
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
+
+
 
 
 driver_night_shifts = ['shift_mon_pm','shift_tue_pm','shift_wed_pm','shift_thu_pm','shift_fri_pm','shift_sat_pm','shift_sun_pm']

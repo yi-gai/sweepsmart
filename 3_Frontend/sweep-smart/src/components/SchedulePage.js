@@ -18,6 +18,13 @@ const styles = theme => (
     { }
 );
 
+const StyledTableCell = styled(({bottom, right, ...other}) => <TableCell {...other}/>)({
+    borderBottom: (props) => props.bottom ? '1px solid #DCDCDC' : 0,
+    borderRight: (props) => props.right ? '1px solid #DCDCDC' : 0,
+    padding: (props) => props.bottom ? '10px 15px 10px 15px' : '10px 15px 0px 15px',
+    borderCollapse: 'collapse',
+});
+
 const DateClickButton = styled(Button)({
     fontFamily:  'Lato',
     fontStyle: 'normal',
@@ -25,20 +32,6 @@ const DateClickButton = styled(Button)({
     color: '#7A827F',
     textTransform: 'none',
     display: 'inline-block',
-});
-
-const NoBottomTableCell = styled(TableCell) ({
-    borderBottom: 0,
-    borderRight: '1px solid #DCDCDC',
-    borderCollapse: 'collapse',
-    padding: '10px 15px 0px 15px'
-});
-
-const BottomTableCell = styled(TableCell) ({
-    borderBottom: '1px solid #DCDCDC',
-    borderRight: '1px solid #DCDCDC',
-    borderCollapse: 'collapse',
-    padding: '10px 15px 10px 15px'
 });
 
 function ProcessRawData (rawData) {
@@ -219,10 +212,10 @@ class SchedulePage extends React.Component {
                             drawer={this.state.drawer}
                             handleClose={this.handleClose}/>
                     </div>
-    				<TableContainer>
+    				<TableContainer fullWidth={true}>
     					<Table fullWidth={true}>
     						<ScheduleTableHead date={this.props.date} handleDateClick={this.handleDateClick}/>
-    						<ScheduleTableBody onScreenData={this.state.onScreenData} tab={this.props.tab}/>
+    						<ScheduleTableBody curMonday={GetMonday(this.props.date)} onScreenData={this.state.onScreenData} tab={this.props.tab}/>
     					</Table>
     				</TableContainer>
     			</div>
@@ -230,6 +223,13 @@ class SchedulePage extends React.Component {
             </div>
         );
     }
+}
+
+function GetMonday(date) {
+    let monday = date.getDate() - date.getDay() + 1;
+    let curr = new Date(date);
+    curr.setDate(monday);
+    return curr;
 }
 
 class ScheduleTableHead extends React.Component {
@@ -267,8 +267,8 @@ class ScheduleTableBody extends React.Component {
         if (this.props.onScreenData.length !== 0) {
             let first = GetScheduleDataByRow(this.props.onScreenData[0]);
             let second = GetScheduleDataByRow(this.props.onScreenData[1]);
-            first_half = first.map((row, index) => (GetSingleRow(row, index === first.length-1, this.props.tab)));
-            second_half = second.map((row, index) => (GetSingleRow(row, index === second.length-1, this.props.tab)));
+            first_half = first.map((row, index) => (GetSingleRow(row, index === first.length-1, this.props.tab, true, this.props.curMonday)));
+            second_half = second.map((row, index) => (GetSingleRow(row, index === second.length-1, this.props.tab, false, this.props.curMonday)));
         }
         return (
             <TableBody>
@@ -299,32 +299,40 @@ function GetScheduleDataByRow(data) {
     return rows;
 }
 
-function GetSingleRow(row, border, tab) {
+function GetSingleRow(row, border, tab, first_half, curMonday) {
     let shift;
     if (tab === 'Day Shift') {
-        shift = 'day';
+        if (first_half === true) {
+            shift = 'AM';
+        } else {
+            shift = 'PM';
+        }
     } else if (tab === 'Night Shift') {
         shift = 'night';
     }
     return (
         <TableRow>
-            {row.map((route) => {
+            {row.map((route, index) => {
                 let block;
                 if (route !== null) {
-                    block = <RouteBlock key={route.route}
+                    block = <RouteBlock
+                                date={GetBlockDate(curMonday, index)}
                                 shift={shift}
-                                status={route.route_status}
                                 route={route.route}
-                                operator={route.driver}></RouteBlock>;
+                                status_init={route.route_status}
+                                operator_init={route.driver}
+                            ></RouteBlock>;
                 }
-                if (border) {
-                    return <BottomTableCell align="center" width="20%" size="small">{block}</BottomTableCell>;
-                } else {
-                    return <NoBottomTableCell align="center" width="20%" size="small">{block}</NoBottomTableCell>;
-                }
+                return <StyledTableCell bottom={border} right={index<4} align="center" width="20%" size="small">{block}</StyledTableCell>
             })}
         </TableRow>
     );
+}
+
+function GetBlockDate(curMonday, index) {
+    let curr = new Date(curMonday);
+    curr.setDate(curMonday.getDate() + index);
+    return curr;
 }
 
 function GetWeekdayDate(date, weekday) {
