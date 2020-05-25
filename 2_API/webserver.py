@@ -224,7 +224,7 @@ def change_route_week():
     if request.method == 'POST':
         # add to database
         employee_id = db.engine.execute("select employee_id from DRIVERS where employee_name='{n}';".format(n=driver))
-        db.engine.execute("insert into ROUTE_LOG (date_swept,route_id,shift,employee_id,completion) VALUES "
+        db.engine.execute("insert into `ROUTE_LOG` (date_swept,route_id,shift,employee_id,completion) VALUES "
             "('{d}','{r}','{s}',{e},'{c}');".format(d=date,r=route,s=shift,e=employee_id,c=status))
         status_code = 201
     elif request.method == 'PUT':
@@ -446,7 +446,7 @@ def change_route_day():
 
     # modify database
     employee_id = db.engine.execute("select employee_id from DRIVERS where employee_name='{n}';".format(n=driver))
-    db.engine.execute("insert into ROUTE_LOG (date_swept,route_id,shift,employee_id,vehicle_id,completion,notes) VALUES "
+    db.engine.execute("insert into `ROUTE_LOG` (date_swept,route_id,shift,employee_id,vehicle_id,completion,notes) VALUES "
         "('{d}','{r}','{s}',{e},{v},'{c}','{n}');".format(d=date,r=route,s=shift,e=employee_id,v=vehicle,c=route_status,n=comment))
 
 
@@ -708,7 +708,6 @@ def get_individual_operator_info():
     if not employee_id:
         employee_id = 2882
     data = {}
-    #date = '2020-04-22' # if testing a specific date
 
     # get from database
     # return: a list of assignments, each assignment includes shift, route, working_hrs, leave_hrs(formatted as such 8:00-10:00, leave it “” if no leave on that day), reason
@@ -729,6 +728,11 @@ def get_individual_operator_info():
         operator_routes.append(operator[3])
         operator_comments = operator[4]
 
+    if not operator_name:
+        operator_info = db.engine.execute("select employee_name,shift,daily_hours from DRIVERS where employee_id={e};".format(e=employee_id)).fetchone()
+        operator_name = operator_info[0]
+        operator_shift = operator_info[1]
+        operator_hours = int(operator_info[2])
 
     absences_query = "select HOUR(sum(time_missed)) from ABSENCES where date_absence='{d}' and employee_id={e};"
     num_leave_hrs = db.engine.execute(absences_query.format(d=date,e=employee_id)).fetchone()[0]
@@ -737,6 +741,8 @@ def get_individual_operator_info():
     leave_times = db.engine.execute("select time_start,time_end from ABSENCES where date_absence='{d}' and employee_id={e};".format(d=date,e=employee_id))
     leave_hrs = ""
     for l in leave_times:
+        if leave_hrs:
+            leave_hrs += ","
         leave_hrs += "{s}-{e}".format(s=l[0],e=l[1])
 
     overtime_query = "select HOUR(sum(time_over)) from OVERTIME where date_overtime='{d}' and employee_id={e};"
@@ -749,7 +755,7 @@ def get_individual_operator_info():
 
     data['assignments'] = [{'shift': operator_shift,
                             'route': operator_routes,
-                            'working_hrs': operator_hours+overtime_hrs-num_leave_hrs,
+                            'working_hrs': max(0,operator_hours+overtime_hrs-num_leave_hrs),
                             'overtime_hrs':overtime_hrs,
                             'leave_hrs':leave_hrs,
                             'num_leave_hrs': num_leave_hrs,
@@ -979,7 +985,7 @@ def change_vehicle_day():
     comment = arguments.get("comment", default="")
     # modify database
     if request.method == 'POST':
-        db.engine.execute("insert into VEHICLE_MAINTENANCE (date_service,vehicle_id,comment) VALUES ('{d}',{v},'{c}');".format(d=date,v=vehicle,c=comment))
+        db.engine.execute("insert into `VEHICLE_MAINTENANCE` (date_service,vehicle_id,comment) VALUES ('{d}',{v},'{c}');".format(d=date,v=vehicle,c=comment))
     elif request.method == 'PUT':
         if vehicle_status.lower() == 'available':
             yester = datetime.strptime(date,'%Y-%m-%d') - timedelta(days=1)
