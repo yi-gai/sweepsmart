@@ -259,21 +259,40 @@ class ScheduleTableHead extends React.Component {
 class ScheduleTableBody extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {
+            first_half: null,
+            second_half: null
+        };
+        this.updateOnScreenData = this.updateOnScreenData.bind(this);
     }
 
-    render() {
-        let first_half;
-        let second_half;
+    updateOnScreenData() {
         if (this.props.onScreenData.length !== 0) {
             let first = GetScheduleDataByRow(this.props.onScreenData[0]);
             let second = GetScheduleDataByRow(this.props.onScreenData[1]);
-            first_half = first.map((row, index) => (GetSingleRow(row, index === first.length-1, this.props.tab, true, this.props.curMonday)));
-            second_half = second.map((row, index) => (GetSingleRow(row, index === second.length-1, this.props.tab, false, this.props.curMonday)));
+            let first_half = first.map((row, index) => (GetSingleRow(row, index === first.length-1, this.props.tab, true, this.props.curMonday)));
+            let second_half = second.map((row, index) => (GetSingleRow(row, index === second.length-1, this.props.tab, false, this.props.curMonday)));
+            console.log(first_half);
+            this.setState({first_half: first_half});
+            this.setState({second_half: second_half});
         }
+    }
+
+    componentDidMount() {
+        this.updateOnScreenData();
+    }
+
+    componentDidUpdate(prevProps) {
+        if (prevProps.onScreenData !== this.props.onScreenData) {
+            this.updateOnScreenData();
+        }
+    }
+
+    render() {
         return (
             <TableBody>
-                {first_half}
-                {second_half}
+                {this.state.first_half}
+                {this.state.second_half}
             </TableBody>
         );
     }
@@ -321,6 +340,7 @@ function GetSingleRow(row, border, tab, first_half, curMonday) {
                                 route={route.route}
                                 status_init={route.route_status}
                                 operator_init={route.driver}
+                                operator_id_init={route.driver_id}
                             ></RouteBlock>;
                 }
                 return <StyledTableCell bottom={border} right={index<4} align="center" width="20%" size="small">{block}</StyledTableCell>

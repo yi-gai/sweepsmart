@@ -15,6 +15,7 @@ import TableCell from '@material-ui/core/TableCell';
 import TableContainer from '@material-ui/core/TableContainer';
 import TableRow from '@material-ui/core/TableRow';
 import { styled } from '@material-ui/core/styles';
+import { useEffect } from "react";
 
 
 import '../App.css';
@@ -35,10 +36,18 @@ function rtBlockIcon(status) {
     }
 }
 
-const NoBottomTableCell = styled(TableCell) ({
+const RightTableCell = styled(TableCell) ({
     borderBottom: 0,
     borderCollapse: 'collapse',
     width: 120,
+    textAlign: 'center'
+});
+
+const LeftTableCell = styled(TableCell) ({
+    borderBottom: 0,
+    borderCollapse: 'collapse',
+    width: 120,
+    textAlign: 'left'
 });
 
 const useStyles = makeStyles((theme) => ({
@@ -49,10 +58,32 @@ const useStyles = makeStyles((theme) => ({
     },
     selectEmpty: {
         marginTop: theme.spacing(2),
+    },
+    cancelButton: {
+        marginTop: theme.spacing(2),
+        fontFamily: 'Lato',
+        fontStyle: 'normal',
+        fontWeight: 'bold',
+        fontSize: 16,
+        textAlign: 'center',
+
+        color: '#9AA7A0'
+    },
+    submitButton: {
+        marginTop: theme.spacing(2),
+        fontFamily: 'Lato',
+        fontStyle: 'normal',
+        fontWeight: 'bold',
+        fontSize: 16,
+        textAlign: 'center',
+
+        color: '#FFFFFF',
+        background: '#70C295',
+        borderRadius: 5
     }
 }));
 
-function RouteBlock({shift, date, route, operator_init, status_init}) {
+function RouteBlock({shift, date, route, operator_init, operator_id_init, status_init}) {
 
     /* Props and state */
 
@@ -63,22 +94,30 @@ function RouteBlock({shift, date, route, operator_init, status_init}) {
         day_night = 'night';
     }
 
-    if (operator_init === '') {
-        operator_init = status_init;
-    } else {
-        operator_init = GetNameFormat(operator_init);
-    }
+    useEffect(() => {
+       processInitValues();
+    }, [date]);
 
-    if (status_init === null) {
-        status_init = 'unassigned';
-    } else {
-        status_init = status_init.toLowerCase();
+    const processInitValues = () => {
+        if (operator_id_init === 0) {
+            operator_init = 'Unassigned';
+        } else {
+            operator_init = GetNameFormat(operator_init);
+        }
+
+        if (status_init === 'disabled') {
+            operator_init = 'Disabled';
+        }
+        setStatus(status_init);
+        setOperatorID(operator_id_init);
+        setOperator(operator_init);
     }
 
     const [status, setStatus] = React.useState(status_init);
+    const [operator_id, setOperatorID] = React.useState(operator_id_init);
     const [operator, setOperator] = React.useState(operator_init);
     const [operators, setOperators] = React.useState([]);
-    const [operator_select_id, setOperatorSelectID] = React.useState('');
+    const [operator_select_id, setOperatorSelectID] = React.useState(-1);
     const [operator_select_name, setOperatorSelectName] = React.useState('');
     const [status_select, setStatusSelect] = React.useState('');
     const [disable_checked, setDisableChecked] = React.useState(false);
@@ -91,7 +130,7 @@ function RouteBlock({shift, date, route, operator_init, status_init}) {
         }).then(res => setOperators(res['data']));
         setAnchorEl(event.currentTarget);
         setOperatorSelectName('');
-        setOperatorSelectID('');
+        setOperatorSelectID(-1);
         setStatusSelect('');
         setDisableChecked(false);
     };
@@ -105,14 +144,12 @@ function RouteBlock({shift, date, route, operator_init, status_init}) {
 
     const handleOperatorChange = (event) => {
         setDisableChecked(false);
-        console.log(event.currentTarget);
         setOperatorSelectID(event.currentTarget.getAttribute('data-value'));
         setOperatorSelectName(event.currentTarget.getAttribute('name'));
     };
     
     const handleStatusChange = (event) => {
         setDisableChecked(false);
-        console.log(event.currentTarget);
         setStatusSelect(event.currentTarget.getAttribute('data-value'));
     }
 
@@ -122,61 +159,69 @@ function RouteBlock({shift, date, route, operator_init, status_init}) {
 
     const handleSubmit = (event) => {
         let updated_status;
+        let updated_operator_id;
         let updated_operator;
 
         if (disable_checked) {
             updated_status = 'disabled';
+            updated_operator_id = 0;
             updated_operator = 'Disabled';
-            finishSubmit(event, updated_operator, updated_status);
+            finishSubmit(event, updated_operator_id, updated_operator, updated_status);
             return;
         }
 
-        if (status_select === '' && operator_select_name === '') {
+        if (status_select === '' && operator_select_id === -1) {
             updated_status = status;
+            updated_operator_id = operator_id;
             updated_operator = operator;
-            finishSubmit(event, updated_operator, updated_status);
+            finishSubmit(event, updated_operator_id, updated_operator, updated_status);
             return;
         }
 
+        updated_operator_id = operator_select_id !== -1 ? operator_select_id : operator_id;
         updated_operator = operator_select_name !== '' ? operator_select_name : operator;
         if (updated_operator === 'Disabled') {updated_operator = 'Unassigned';}
-        updated_status = updated_operator === 'Unassigned' ? 'unassigned' : 'assigned';
+        updated_status = updated_operator_id === 0 || updated_operator_id === '0' ? 'unassigned' : 'assigned';
 
         if (status_select === 'pending') {
-            finishSubmit(event, updated_operator, updated_status);
+            console.log(updated_status);
+            finishSubmit(event, updated_operator_id, updated_operator, updated_status);
             return;
         }
 
         if (status_select === 'completed' || status_select === 'missed') {
             updated_status = status_select;
-            finishSubmit(event, updated_operator, updated_status);
+            finishSubmit(event, updated_operator_id, updated_operator, updated_status);
             return;
         }
 
         if (status === 'completed' || status === 'missed') {
             updated_status = status;
         }
-
-        finishSubmit(event, updated_operator, updated_status);
+        
+        finishSubmit(event, updated_operator_id, updated_operator, updated_status);
     }
 
-    const finishSubmit = (event, updated_operator, updated_status) => {
-        if (updated_status !== status || updated_operator !== operator) {
-            pushUpdate();
+    const finishSubmit = (event, updated_operator_id, updated_operator, updated_status) => {
+        if (updated_operator_id !== operator_id || updated_status !== status) {
             setStatus(updated_status);
+            setOperatorID(updated_operator_id);
             setOperator(updated_operator);
+            pushUpdate(updated_operator_id, updated_status);
         }
 
         event.preventDefault();
         handleClose();
     }
 
-    const pushUpdate = () => {
+    const pushUpdate = (new_operator_id, new_status) => {
         let params = new URLSearchParams();
-        params.append('date', date);
+        params.append('date', GetDateFormat(date));
         params.append('shift', shift);
-        params.append('operator', operator);
-        params.append('status', status);
+        params.append('route', route);
+        params.append('operator', new_operator_id);
+        params.append('status', new_status);
+        params.append('permanent', 0);
         API({
             method: 'put',
             url: '/schedule/week/route/action',
@@ -216,13 +261,13 @@ function RouteBlock({shift, date, route, operator_init, status_init}) {
                         <Table fullWidth={true}>
                             <TableHead>
                                 <TableRow>
-                                    <NoBottomTableCell><div class='route'>{route}</div></NoBottomTableCell>
+                                    <LeftTableCell><div class='route'>{route}</div></LeftTableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 <TableRow>
-                                    <NoBottomTableCell size="small"><p>Assign to</p></NoBottomTableCell>
-                                    <NoBottomTableCell size="small">
+                                    <LeftTableCell size="small"><p>Assign to</p></LeftTableCell>
+                                    <RightTableCell size="small">
                                         <Select
                                             labelId="operator-select-label"
                                             id="operator-select"
@@ -230,13 +275,13 @@ function RouteBlock({shift, date, route, operator_init, status_init}) {
                                             {operators.map(
                                                 (driver) => <MenuItem value={driver.employee_id} name={GetNameFormat(driver.employee_name)}>{GetNameFormat(driver.employee_name)}</MenuItem>)
                                             }
-                                            <MenuItem value={'unassigned'} name={'Unassigned'}>Unassigned</MenuItem> 
+                                            <MenuItem value={0} name={'Unassigned'}>Unassigned</MenuItem> 
                                         </Select>
-                                    </NoBottomTableCell>
+                                    </RightTableCell>
                                 </TableRow>
                                 <TableRow>
-                                    <NoBottomTableCell size="small"><p>Route Status</p></NoBottomTableCell>
-                                    <NoBottomTableCell size="small">
+                                    <LeftTableCell size="small"><p>Route Status</p></LeftTableCell>
+                                    <RightTableCell size="small">
                                         <Select
                                             labelId="status-select-label"
                                             id="status-select"
@@ -245,18 +290,18 @@ function RouteBlock({shift, date, route, operator_init, status_init}) {
                                             <MenuItem value={'missed'}>Missed</MenuItem>
                                             <MenuItem value={'pending'}>Pending</MenuItem>
                                         </Select>
-                                    </NoBottomTableCell>
+                                    </RightTableCell>
                                 </TableRow>
                                 <TableRow>
-                                    <NoBottomTableCell size="small"><p>Disable route</p></NoBottomTableCell>
-                                    <NoBottomTableCell size="small">
+                                    <LeftTableCell size="small"><p>Disable route</p></LeftTableCell>
+                                    <RightTableCell size="small">
                                         <Switch
                                             checked={disable_checked}
                                             onChange={handleDisablenCheck}
                                             color="primary"
                                             name="disable-checked"
                                         />
-                                    </NoBottomTableCell>
+                                    </RightTableCell>
                                 </TableRow>
                             </TableBody>
                         </Table>
@@ -264,13 +309,12 @@ function RouteBlock({shift, date, route, operator_init, status_init}) {
                     <Grid container spacing={1}>
                         <Grid item xs={4}></Grid>
                         <Grid item xs={4}>
-                            <Button onClick={handleClose}>Cancel</Button>
+                            <Button className={classes.cancelButton} onClick={handleClose}>Cancel</Button>
                         </Grid>
                         <Grid item xs={4}>
                             <Button type="submit"
                                 variant="contained"
-                                color="#70C295"
-                                className={classes.submit}>Submit</Button>
+                                className={classes.submitButton}>Confirm</Button>
                         </Grid>
                     </Grid>
                 </form>

@@ -150,31 +150,35 @@ def get_weekly_route_schedule():
         routes_assigned = db.engine.execute("select route_id from ROUTES where {d}=1;".format(d=d))
         for r in routes_assigned:
             route = r[0]
-            route_log_info = db.engine.execute("select d.employee_name, r.completion from ROUTE_LOG r left join DRIVERS d on r.employee_id=d.employee_id where r.route_id='{r}' and r.date_swept='{d}' and r.shift='{s}';".format(r=route,d=day_str,s=d_shift))
+            route_log_info = db.engine.execute("select d.employee_id, d.employee_name, r.completion from ROUTE_LOG r left join DRIVERS d on r.employee_id=d.employee_id where r.route_id='{r}' and r.date_swept='{d}' and r.shift='{s}';".format(r=route,d=day_str,s=d_shift))
+            driver_id = 0
             driver_name = ''
-            route_status = 'Unassigned'
+            route_status = 'unassigned'
             for l in route_log_info:
-                driver_name = l[0]
-                route_status = l[1]
-                if not driver_name:
+                driver_id = l[0]
+                driver_name = l[1]
+                route_status = l[2]
+                if not driver_id:
+                    driver_id = 0
                     driver_name = ''
                 if not route_status:
-                    route_status = 'Assigned'
-            data[d].append({'route':route, 'driver':driver_name, 'route_status':route_status})
+                    route_status = 'unassigned' if driver_id == 0 else 'assigned'
+            data[d].append({'route':route, 'driver_id': driver_id, 'driver':driver_name, 'route_status':route_status})
 
         # extra routes that were added but aren't originally assigned for the day
         extra_query = "select route_id from ROUTES where {d}=1".format(d=d)
-        routes_extra = db.engine.execute("select r.route_id, d.employee_name, r.completion from ROUTE_LOG r join DRIVERS d on r.employee_id=d.employee_id where r.route_id not in ({q}) and r.date_swept='{d}' and r.shift='{s}';".format(q=extra_query,d=day_str,s=d_shift))
+        routes_extra = db.engine.execute("select r.route_id, d.employee_id, d.employee_name, r.completion from ROUTE_LOG r join DRIVERS d on r.employee_id=d.employee_id where r.route_id not in ({q}) and r.date_swept='{d}' and r.shift='{s}';".format(q=extra_query,d=day_str,s=d_shift))
         for r_e in routes_extra:
             route_id = r_e[0]
-            e_name = r_e[1]
-            r_stat = r_e[2]
-            if not e_name:
+            e_id = r_e[1]
+            e_name = r_e[2]
+            r_stat = r_e[3]
+            if not e_id:
+                e_id = 0
                 e_name = ''
-                r_stat = 'Unassigned'
-            elif not r_stat:
-                r_stat = 'Assigned'
-            data[d].append({'route':r_e[0], 'driver':e_name, 'route_status':r_stat})
+            if not r_stat:
+                r_stat = 'unassigned' if e_id == 0 else 'assigned'
+            data[d].append({'route':route_id, 'driver_id': e_id, 'driver':e_name, 'route_status':r_stat})
         day_count += 1
         if day_count == 3:
             day = day + timedelta(days=1)
@@ -207,41 +211,46 @@ def get_avaiable_route_list():
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/schedule/week/route/action', methods=["POST", "PUT", "DELETE"])
+@app.route('/schedule/week/route/action', methods=["PUT", "OPTIONS"])
 def change_route_week():
-    if request.headers['Content-Type'] == 'application/json':
+    if request.method == 'OPTIONS':
+        headers = {
+            'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+            'Access-Control-Allow-Origin': '*'
+        }
+        return Response(None, status=200, headers=headers)
+    if 'application/json'in request.headers['Content-Type']:
         arguments = request.get_json()
-    if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+    if 'application/x-www-form-urlencoded' in request.headers['Content-Type']:
         arguments = request.form
     route = arguments.get("route")
     date = arguments.get("date")
     shift = arguments.get("shift")
-    driver = arguments.get("driver")
-    status = arguments.get("route_status")
+    driver = arguments.get("operator")
+    status = arguments.get("status")
     permanent =  arguments.get("permanent")
+    if driver == '0':
+        driver = 'null'
+    if status == 'assigned' or status == 'unassigned':
+        status = 'null'
+    else:
+        status = "'{}'".format(status)
 
-    l_id = 1234 # for log_id, not sure how to get this for editing/deleting certain route logs
-    if request.method == 'POST':
-        # add to database
-        employee_id = db.engine.execute("select employee_id from DRIVERS where employee_name='{n}';".format(n=driver))
-        db.engine.execute("insert into `ROUTE_LOG` (date_swept,route_id,shift,employee_id,completion) VALUES "
-            "('{d}','{r}','{s}',{e},'{c}');".format(d=date,r=route,s=shift,e=employee_id,c=status))
-        status_code = 201
-    elif request.method == 'PUT':
-        # modify database
-        emp_id = db.engine.execute("select employee_id from DRIVERS where employee_name={e}".format(e=driver))
-        db.engine.execute("update ROUTE_LOG set route_id='{r}',date_swept='{d}',shift='{s}',driver={e},completion='{c}' where log_id={l_id};".format(r=route,d=date,s=shift,e=emp_id,c=status,l_id=l_id))
+    # if exists
+    log_id = db.engine.execute("select log_id from ROUTE_LOG where route_id='{r}' and date_swept='{d}';".format(r=route, d=date)).fetchone()
+    if log_id is not None:
+        query = "update ROUTE_LOG set route_id='{r}',date_swept='{d}',shift='{s}',employee_id={e},completion={c} where log_id={l_id};".format(r=route,d=date,s=shift,e=driver,c=status,l_id=log_id[0])
+    else:
+        query = "insert into `ROUTE_LOG` (date_swept,route_id,shift,employee_id,completion) VALUES ('{d}','{r}','{s}',{e},{c});".format(d=date,r=route,s=shift,e=driver,c=status)
+    db.engine.execute(query)
+    
+    if int(permanent) == 1:
+        pass
+    else:
+        pass
 
-        if int(permanent) == 1:
-            pass
-        else:
-            pass
-        status_code = 200
-    elif request.method == 'DELETE':
-        # delete in database
-        db.engine.execute("delete from ROUTE_LOG where log_id={l}".format(l=l_id))
-        status_code = 204
-    return Response(None, status=status_code, mimetype='application/json')
+    db.session.commit()
+    return Response(None, status=200, mimetype='application/json')
 
 @app.route('/schedule/week/route/item', methods=["GET"])
 def get_route_info_on_click():
