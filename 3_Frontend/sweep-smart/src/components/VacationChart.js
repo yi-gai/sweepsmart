@@ -35,9 +35,9 @@ class VacationChart extends Component {
     			data: tempData};
    }
    componentDidMount() {
-   		API.get("performance/month", {
+   		API.get("performance/absences", {
 			params: {'date': GetDateFormat(this.props.date)}
-		}).then(res => this.processAPIData(res));
+		}).then(res => this.processAPIData(res['data']));
 
       
    }
@@ -48,10 +48,18 @@ class VacationChart extends Component {
    processAPIData(res) {
    	let newData = [];
    	for(var key in res) {
-  		var row = {};
-  		// row[]
+  		if(key.includes('Fake')) {
+        continue;
+      }
+      var row = {};
+      row["Operator"] = key;
+      row["Month"] = res[key]["month"];
+      row["Year"] = res[key]["year"];
+      newData.push(row);
 
 	 }
+    this.setState({data: newData});
+    console.log(this.state);
     this.createBarChart();
    }
 
@@ -69,7 +77,7 @@ class VacationChart extends Component {
 
       const n = allYearVacation.length;
       const barwidth = 30;
-      var maxDay = d3.max(allYearVacation);
+      var maxDay = d3.max(allYearVacation) + 1;
       if (maxDay < 10) {
         maxDay = 24};
 
