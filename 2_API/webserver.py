@@ -28,49 +28,56 @@ def get_wk_start_end(d):
     # d is the date
     day_of_wk = d.weekday()
     #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
-    wk_start = d-timedelta(days=day_of_wk)
-    wk_end = d-timedelta(days=day_of_wk)+timedelta(days=6)
+    wk_start = d-timedelta(days=day_of_wk+1)
+    wk_end = wk_start+timedelta(days=7)
     return (wk_start.strftime("%Y-%m-%d"),wk_end.strftime("%Y-%m-%d"))
 
+def get_week(date):
+    day_of_wk = date.weekday()
+    wk_start = date - timedelta(days=(day_of_wk+1)%7)
+    return [wk_start + timedelta(days=i) for i in range(7)]
+
+def get_week_of_month(date):
+    return (date.day - 1) // 7 + 1;
 
 # user credentials
-@app.route('/menu', methods=["GET"])
-def get_user_information():
-    data = {}
-    # get from database
-    # ANNA how to store secure info (password etc)
+# @app.route('/menu', methods=["GET"])
+# def get_user_information():
+#     data = {}
+#     # get from database
+#     # ANNA how to store secure info (password etc)
 
-    data['username'] = 'bcot'
-    data['name'] = 'bcot'
-    data['email'] = 'bcot'
-    data['role'] = 'bcot'
-    return Response(json.dumps(data), status=200, mimetype='application/json')
+#     data['username'] = 'bcot'
+#     data['name'] = 'bcot'
+#     data['email'] = 'bcot'
+#     data['role'] = 'bcot'
+#     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/menu', methods=["PUT"])
-def login_in():
-    if request.headers['Content-Type'] == 'application/json':
-        arguments = request.get_json()
-    if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
-        arguments = request.form
-    username = arguments.get("username")
-    email = arguments.get("email")
-    password = arguments.get("password")
-    # check with database
-    return Response(None, status=200, mimetype='application/json')
+# @app.route('/menu', methods=["PUT"])
+# def login_in():
+#     if request.headers['Content-Type'] == 'application/json':
+#         arguments = request.get_json()
+#     if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+#         arguments = request.form
+#     username = arguments.get("username")
+#     email = arguments.get("email")
+#     password = arguments.get("password")
+#     # check with database
+#     return Response(None, status=200, mimetype='application/json')
 
-@app.route('/menu', methods=["POST"])
-def sign_up():
-    if request.headers['Content-Type'] == 'application/json':
-        arguments = request.get_json()
-    if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
-        arguments = request.form
-    username = arguments.get("username")
-    password = arguments.get("password")
-    name = arguments.get("name")
-    email = arguments.get("email")
-    role = arguments.get("role")
-    # add to database
-    return Response(None, status=201, mimetype='application/json')
+# @app.route('/menu', methods=["POST"])
+# def sign_up():
+#     if request.headers['Content-Type'] == 'application/json':
+#         arguments = request.get_json()
+#     if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+#         arguments = request.form
+#     username = arguments.get("username")
+#     password = arguments.get("password")
+#     name = arguments.get("name")
+#     email = arguments.get("email")
+#     role = arguments.get("role")
+#     # add to database
+#     return Response(None, status=201, mimetype='application/json')
 
 wk_route_map = {1:['Mon1_AM','Mon1_PM','Mon1_night','Tue1_AM','Tue1_PM','Tue1_night','Wed1_AM','Wed1_PM','Wed1_night','Thu1_AM','Thu1_PM','Thu1_night','Fri1_AM','Fri1_PM','Fri1_night','Sat1_AM','Sat1_PM','Sat1_night','Sun1_AM','Sun1_PM','Sun1_night'],2:['Mon2_AM','Mon2_PM','Mon2_night','Tue2_AM','Tue2_PM','Tue2_night','Wed2_AM','Wed2_PM','Wed2_night','Thu2_AM','Thu2_PM','Thu2_night','Fri2_AM','Fri2_PM','Fri2_night','Sat2_AM','Sat2_PM','Sat2_night','Sun2_AM','Sun2_PM','Sun2_night'],3:['Mon3_AM','Mon3_PM','Mon3_night','Tue3_AM','Tue3_PM','Tue3_night','Wed3_AM','Wed3_PM','Wed3_night','Thu3_AM','Thu3_PM','Thu3_night','Fri3_AM','Fri3_PM','Fri3_night','Sat3_AM','Sat3_PM','Sat3_night','Sun3_AM','Sun3_PM','Sun3_night'],4:['Mon4_AM','Mon4_PM','Mon4_night','Tue4_AM','Tue4_PM','Tue4_night','Wed4_AM','Wed4_PM','Wed4_night','Thu4_AM','Thu4_PM','Thu4_night','Fri4_AM','Fri4_PM','Fri4_night','Sat4_AM','Sat4_PM','Sat4_night','Sun4_AM','Sun4_PM','Sun4_night'],5:['Mon5_AM','Mon5_PM','Mon5_night','Tue5_AM','Tue5_PM','Tue5_night','Wed5_AM','Wed5_PM','Wed5_night','Thu5_AM','Thu5_PM','Thu5_night','Fri5_AM','Fri5_PM','Fri5_night','Sat5_AM','Sat5_PM','Sat5_night','Sun5_AM','Sun5_PM','Sun5_night']}
 
@@ -78,75 +85,36 @@ wk_route_map = {1:['Mon1_AM','Mon1_PM','Mon1_night','Tue1_AM','Tue1_PM','Tue1_ni
 @app.route('/schedule/week/route', methods=["GET"])
 def get_weekly_route_schedule():
     date = request.args.get('date')
-    shift = request.args.get('shift')
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
-        shift = 'day'
-    date_dt = datetime.strptime(date,"%Y-%m-%d")
-    week_of_month = pendulum.parse(date).week_of_month
-    data = defaultdict(list)#{}
-    data['week_of_month'] = week_of_month
-    data['today'] = date
+    date_dt = datetime.strptime(date, "%Y-%m-%d")
 
-    wk_start, wk_end = get_wk_start_end(date_dt)
-    data['Monday'] = wk_start
-    data['Sunday'] = wk_end
+    data = defaultdict(list)
+    week = get_week(date_dt)
+    wk_start, wk_end = week[0], week[-1]
+    data['wk_start'] = wk_start.strftime("%Y-%m-%d")
+    data['wk_end'] = wk_end.strftime("%Y-%m-%d")
 
-    day_of_wk = date_dt.weekday()
-    days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
-    days_of_wk = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri'}
+    shifts = ['AM', 'PM', 'night']
     # get from database
 
-    month_first_dt = datetime(date_dt.year,date_dt.month,1)
-    next_month = date_dt.month + 1
-    next_year = date_dt.year
-    if next_month == 13:
-        next_month = 1
-        next_year += 1
-    next_month_first_dt = datetime(next_year,next_month,1)
-    next_month_first_day = next_month_first_dt.weekday()
-    
+    wk_days = []
 
-    if week_of_month == 1:
-        month_first_day = month_first_dt.weekday()
-        days_this_month = [days[i] for i in range(month_first_day,7)]
-        days_last_month = [days[i] for i in range(0,month_first_day)]
-        wk_days = []
-        for d in wk_route_map[5]:
-            if d[:3] in days_last_month:
-                wk_days.append(d)
-        for d in wk_route_map[1]:
-            if d[:3] in days_this_month:
-                wk_days.append(d)
-    elif next_month_first_dt - timedelta(days=7) < date_dt and next_month_first_day > day_of_wk: 
-        
-        days_this_month = [days[i] for i in range(0,next_month_first_day)]
-        days_next_month = [days[i] for i in range(next_month_first_day,7)]
-        wk_days = []
-        for d in wk_route_map[5]:
-            if d[:3] in days_this_month:
-                wk_days.append(d)
-        for d in wk_route_map[1]:
-            if d[:3] in days_next_month:
-                wk_days.append(d)
-    else:
-        day_break = (month_first_dt + timedelta(days=(7*(week_of_month-1)))).weekday()
-        days_last_week = [days[i] for i in range(0,day_break)]
-        days_this_week = [days[i] for i in range(day_break,7)]
-        wk_days = []
-        for d in wk_route_map[week_of_month-1]:
-            if d[:3] in days_last_week:
-                wk_days.append(d)
-        for d in wk_route_map[week_of_month]:
-            if d[:3] in days_this_week:
-                wk_days.append(d)
+    for i in range(len(week[1:-1])):
+        day = days[i]
+        week_of_month = get_week_of_month(week[1:-1][i])
+        print(week_of_month, file=sys.stderr)
+        for shift in shifts:
+            wk_days.append(day + str(week_of_month) + '_' + shift)
+
     data['wk_days'] = wk_days
     
-    day = datetime.strptime(wk_start,"%Y-%m-%d")
+    day = week[1]
     day_count = 0
     for d in wk_days:
         d_shift = d.split('_')[1]
-        day_str = datetime.strftime(day,"%Y-%m-%d")
+        day_str = datetime.strftime(day, "%Y-%m-%d")
         routes_assigned = db.engine.execute("select route_id from ROUTES where {d}=1;".format(d=d))
         for r in routes_assigned:
             route = r[0]
@@ -186,30 +154,30 @@ def get_weekly_route_schedule():
     
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/schedule/week/route/available', methods=["GET"])
-def get_avaiable_route_list():
-    date = request.args.get('date')
-    shift = request.args.get('shift')
-    if date == None:
-        date = datetime.now().strftime("%Y-%m-%d")
-        shift = 'day'
-    date_dt = datetime.strptime(date,"%Y-%m-%d")
-    week_of_month = pendulum.parse(date).week_of_month
-    data = {'Available':[]}
+# @app.route('/schedule/week/route/available', methods=["GET"])
+# def get_avaiable_route_list():
+#     date = request.args.get('date')
+#     shift = request.args.get('shift')
+#     if date == None:
+#         date = datetime.now().strftime("%Y-%m-%d")
+#         shift = 'day'
+#     date_dt = datetime.strptime(date,"%Y-%m-%d")
+#     week_of_month = pendulum.parse(date).week_of_month
+#     data = {'Available':[]}
 
-    # get from database
-    day_of_wk = date_dt.weekday()
-    #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
-    wk_start, wk_end = get_wk_start_end(date_dt)
-    data['Monday'] = wk_start
-    data['Sunday'] = wk_end
+#     # get from database
+#     day_of_wk = date_dt.weekday()
+#     #days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
+#     wk_start, wk_end = get_wk_start_end(date_dt)
+#     data['Monday'] = wk_start
+#     data['Sunday'] = wk_end
 
-    routes_db = db.engine.execute("select route_id from ROUTES where route_id not in (select route_id from ROUTE_LOG where employee_id is not null and date_swept>='{ds}' and date_swept <= '{de}');".format(ds=wk_start,de=wk_end))
-    #routes_db = db.engine.execute("select route_id from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and employee_id is NULL;".format(ds=wk_start,de=wk_end))
-    for row in routes_db:
-        data['Available'].append(row[0])
+#     routes_db = db.engine.execute("select route_id from ROUTES where route_id not in (select route_id from ROUTE_LOG where employee_id is not null and date_swept>='{ds}' and date_swept <= '{de}');".format(ds=wk_start,de=wk_end))
+#     #routes_db = db.engine.execute("select route_id from ROUTE_LOG where date_swept>='{ds}' and date_swept <= '{de}' and employee_id is NULL;".format(ds=wk_start,de=wk_end))
+#     for row in routes_db:
+#         data['Available'].append(row[0])
 
-    return Response(json.dumps(data), status=200, mimetype='application/json')
+#     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 @app.route('/schedule/week/route/action', methods=["PUT", "OPTIONS"])
 def change_route_week():
@@ -219,7 +187,7 @@ def change_route_week():
             'Access-Control-Allow-Origin': '*'
         }
         return Response(None, status=200, headers=headers)
-    if 'application/json'in request.headers['Content-Type']:
+    if 'application/json' in request.headers['Content-Type']:
         arguments = request.get_json()
     if 'application/x-www-form-urlencoded' in request.headers['Content-Type']:
         arguments = request.form
@@ -252,63 +220,63 @@ def change_route_week():
     db.session.commit()
     return Response(None, status=200, mimetype='application/json')
 
-@app.route('/schedule/week/route/item', methods=["GET"])
-def get_route_info_on_click():
-    route = request.args.get('route')
-    if not route:
-        route = '1A-1' # dummy
-    date = request.args.get('date')
-    shift = request.args.get('shift')
-    data = {}
-    # get from database
-    # ANNA is this the log info or the route info
-    #date_dt = datetime.now()
-    #wk_start, wk_end = get_wk_start_end(date_dt)
-    r_info = db.engine.execute("select route_id,monthly_freq,shift_AM,shift_PM,shift_night from ROUTES where route_id='{r}';".format(r=route))
-    route_info = []
-    for r in r_info:
-        route_info = r
-    if not route_info:
-        data[route] = 'No route info'
-    else:
-        data[route_info[0]] = {'freq':route_info[1],'AM':route_info[2],'PM':route_info[3],'night':route_info[4]}
+# @app.route('/schedule/week/route/item', methods=["GET"])
+# def get_route_info_on_click():
+#     route = request.args.get('route')
+#     if not route:
+#         route = '1A-1' # dummy
+#     date = request.args.get('date')
+#     shift = request.args.get('shift')
+#     data = {}
+#     # get from database
+#     # ANNA is this the log info or the route info
+#     #date_dt = datetime.now()
+#     #wk_start, wk_end = get_wk_start_end(date_dt)
+#     r_info = db.engine.execute("select route_id,monthly_freq,shift_AM,shift_PM,shift_night from ROUTES where route_id='{r}';".format(r=route))
+#     route_info = []
+#     for r in r_info:
+#         route_info = r
+#     if not route_info:
+#         data[route] = 'No route info'
+#     else:
+#         data[route_info[0]] = {'freq':route_info[1],'AM':route_info[2],'PM':route_info[3],'night':route_info[4]}
 
-    return Response(json.dumps(data), status=200, mimetype='application/json')
+#     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/schedule/week/staff', methods=["GET"])
-def get_staff_list():
-    route = request.args.get('route')
-    date = request.args.get('date')
-    shift = request.args.get('shift')
-    status = request.args.get('status')
-    if date == None:
-        date = datetime.now().strftime("%Y-%m-%d")
-        shift = 'am'
-    date_dt = datetime.strptime(date,"%Y-%m-%d")
-    week_of_month = pendulum.parse(date).week_of_month
-    data = {}
+# @app.route('/schedule/week/staff', methods=["GET"])
+# def get_staff_list():
+#     route = request.args.get('route')
+#     date = request.args.get('date')
+#     shift = request.args.get('shift')
+#     status = request.args.get('status')
+#     if date == None:
+#         date = datetime.now().strftime("%Y-%m-%d")
+#         shift = 'am'
+#     date_dt = datetime.strptime(date,"%Y-%m-%d")
+#     week_of_month = pendulum.parse(date).week_of_month
+#     data = {}
 
-    wk_start,wk_end = get_wk_start_end(date_dt)
-    # get from database
-    assigned_staff = []
-    assigned_query = "select employee_id from ROUTE_LOG where route_id='{r}' and date_swept>='{ds}' and date_swept<='{de}'".format(r=route,ds=wk_start,de=wk_end)
-    assigned_query_id = "select employee_id from ROUTE_LOG where route_id='{r}' and date_swept>='{ds}' and date_swept<='{de}'".format(r=route,ds=wk_start,de=wk_end)
-    staff_assigned = db.engine.execute(assigned_query+';')
+#     wk_start,wk_end = get_wk_start_end(date_dt)
+#     # get from database
+#     assigned_staff = []
+#     assigned_query = "select employee_id from ROUTE_LOG where route_id='{r}' and date_swept>='{ds}' and date_swept<='{de}'".format(r=route,ds=wk_start,de=wk_end)
+#     assigned_query_id = "select employee_id from ROUTE_LOG where route_id='{r}' and date_swept>='{ds}' and date_swept<='{de}'".format(r=route,ds=wk_start,de=wk_end)
+#     staff_assigned = db.engine.execute(assigned_query+';')
 
-    staff_unassigned = db.engine.execute("select employee_name from DRIVERS where employee_id not in ({a});".format(a=assigned_query_id))
+#     staff_unassigned = db.engine.execute("select employee_name from DRIVERS where employee_id not in ({a});".format(a=assigned_query_id))
 
-    assigned_list = []
-    unassigned_list = []
-    for s in staff_assigned:
-        assigned_list.append(s[0])
-    for s in staff_unassigned:
-        unassigned_list.append(s[0])
+#     assigned_list = []
+#     unassigned_list = []
+#     for s in staff_assigned:
+#         assigned_list.append(s[0])
+#     for s in staff_unassigned:
+#         unassigned_list.append(s[0])
 
-    data['assigned'] = assigned_list
-    data['unassigned'] = unassigned_list
+#     data['assigned'] = assigned_list
+#     data['unassigned'] = unassigned_list
 
 
-    return Response(json.dumps(data), status=200, mimetype='application/json')
+#     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 # schedule daily view
 @app.route('/schedule/day/overview', methods=["GET"])
@@ -405,7 +373,7 @@ def weather_condition():
         date = request.args.get('date')
         if date == None:
             date = datetime.now().strftime("%Y-%m-%d")
-        if 'application/json'in request.headers['Content-Type']:
+        if 'application/json' in request.headers['Content-Type']:
             arguments = request.get_json()
         if 'application/x-www-form-urlencoded' in request.headers['Content-Type']:
             arguments = request.form
@@ -531,28 +499,28 @@ def get_operator_list_to_assign():
     return Response(json.dumps(drivers), status=200, mimetype='application/json')
 
 
-@app.route('/staff/day', methods=["GET"])
-def get_staff_day():
-    date = request.args.get('date')
-    if date == None:
-        date = datetime.now().strftime("%Y-%m-%d")
-    date_dt = datetime.strptime(date,"%Y-%m-%d")
-    data = {'Day':[],'Night':[],'Off-Duty':[]}
-    day_of_wk = date_dt.weekday()
-    days = {0:'mon',1:'tue',2:'wed',3:'thu',4:'fri',5:'sat',6:'sun'}
-    off_duty_db = db.engine.execute("select employee_name from DRIVERS where shift_{d}=0 and shift_{d}_pm=0;".format(d=days[day_of_wk]))
-    for row in off_duty_db:
-        data['Off-Duty'].append(row[0])
+# @app.route('/staff/day', methods=["GET"])
+# def get_staff_day():
+#     date = request.args.get('date')
+#     if date == None:
+#         date = datetime.now().strftime("%Y-%m-%d")
+#     date_dt = datetime.strptime(date,"%Y-%m-%d")
+#     data = {'Day':[],'Night':[],'Off-Duty':[]}
+#     day_of_wk = date_dt.weekday()
+#     days = {0:'mon',1:'tue',2:'wed',3:'thu',4:'fri',5:'sat',6:'sun'}
+#     off_duty_db = db.engine.execute("select employee_name from DRIVERS where shift_{d}=0 and shift_{d}_pm=0;".format(d=days[day_of_wk]))
+#     for row in off_duty_db:
+#         data['Off-Duty'].append(row[0])
 
-    am_db = db.engine.execute("select employee_name from DRIVERS where shift_{d}=1;".format(d=days[day_of_wk]))
-    for row in am_db:
-        data['Day'].append(row[0])
+#     am_db = db.engine.execute("select employee_name from DRIVERS where shift_{d}=1;".format(d=days[day_of_wk]))
+#     for row in am_db:
+#         data['Day'].append(row[0])
 
-    pm_db = db.engine.execute("select employee_name from DRIVERS where shift_{d}_pm=1;".format(d=days[day_of_wk]))
-    for row in pm_db:
-        data['Night'].append(row[0])
+#     pm_db = db.engine.execute("select employee_name from DRIVERS where shift_{d}_pm=1;".format(d=days[day_of_wk]))
+#     for row in pm_db:
+#         data['Night'].append(row[0])
 
-    return Response(json.dumps(data), status=200, mimetype='application/json')
+#     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 
 

@@ -21,7 +21,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import './vehiclePage.css';
 
 const AddVehicleButton = styled(({viewType, ...other}) => <Button {...other}/>)({
-	left: (props) => props.viewType === 'week' ? 630 : 400,
+	left: (props) => props.viewType === 'week' ? 680 : 450,
 	border: 0,
 	padding: 0,
 	margin: 0,
