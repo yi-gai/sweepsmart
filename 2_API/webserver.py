@@ -899,19 +899,23 @@ def get_daily_vehicle_infomation():
             if v_maint > 0:
                 v_default_stat = 'out-of-service'
             v_data['8-12 shift'] = ''
+            v_data['8-12 operator id'] = 0
             v_data['8-12 operator'] = ''
             v_data['8-12 status'] = v_default_stat
             v_data['12-4 shift'] = ''
+            v_data['12-4 operator id'] = 0
             v_data['12-4 operator'] = ''
             v_data['12-4 status'] = v_default_stat
             v_info = db.engine.execute("select route_id,employee_id,shift from ROUTE_LOG where date_swept='{d}' and vehicle_id={v}".format(d=date,v=v[0]))
             for i in v_info:
                 if i[2].lower() == 'am':
                     v_data['8-12 shift'] = i[0]
+                    v_data['8-12 operator id'] = i[1]
                     v_data['8-12 operator'] = db.engine.execute("select employee_name from DRIVERS where employee_id={e};".format(e=i[1])).fetchone()[0]
                     v_data['8-12 status'] = 'in-use'
                 elif i[2].lower() == 'pm':
                     v_data['12-4 shift'] = i[0]
+                    v_data['8-12 operator id'] = i[1]
                     v_data['12-4 operator'] = db.engine.execute("select employee_name from DRIVERS where employee_id={e};".format(e=i[1])).fetchone()[0]
                     v_data['12-4 status'] = 'in-use'
             data[v[0]] = v_data
@@ -920,25 +924,19 @@ def get_daily_vehicle_infomation():
         for v in vehicles:
             v_data = {}
             v_default_stat = 'available'
-            v_maint = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where date_service='{ds}' and vehicle_id={v};".format(ds=date,v=v[0])).fetchone()[0]
+            v_maint = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where (date_service='{ds}' or (date_service<'{ds}' and date_end>='{ds}')) and vehicle_id={v};".format(ds=date,v=v[0])).fetchone()[0]
             if v_maint > 0:
                 v_default_stat = 'out-of-service'
-            v_data['0-3 shift'] = ''
-            v_data['0-3 operator'] = ''
-            v_data['0-3 status'] = v_default_stat
-            v_data['3-6 shift'] = ''
-            v_data['3-6 operator'] = ''
-            v_data['3-6 status'] = v_default_stat
-            v_info = db.engine.execute("select route_id,employee_id,shift from ROUTE_LOG where date_swept='{d}' and vehicle_id={v}".format(d=date,v=v[0]))
+            v_data['night shift'] = ''
+            v_data['night operator id'] = 0
+            v_data['night operator'] = ''
+            v_data['night status'] = v_default_stat
+            v_info = db.engine.execute("select route_id,employee_id from ROUTE_LOG where date_swept='{d}' and vehicle_id={v} and shift='night'".format(d=date,v=v[0]))
             for i in v_info:
-                if i[2].lower() == 'am':
-                    v_data['8-12 shift'] = i[0]
-                    v_data['8-12 operator'] = db.engine.execute("select employee_name from DRIVERS where employee_id={e};".format(e=i[1])).fetchone()[0]
-                    v_data['8-12 status'] = 'in-use'
-                elif i[2].lower() == 'pm':
-                    v_data['12-4 shift'] = i[0]
-                    v_data['12-4 operator'] = db.engine.execute("select employee_name from DRIVERS where employee_id={e};".format(e=i[1])).fetchone()[0]
-                    v_data['12-4 status'] = 'in-use'
+                v_data['night shift'] = i[0]
+                v_data['night operator id'] = i[1]
+                v_data['night operator'] = db.engine.execute("select employee_name from DRIVERS where employee_id={e};".format(e=i[1])).fetchone()[0]
+                v_data['night status'] = 'in-use'
             data[v[0]] = v_data
 
     return Response(json.dumps(data), status=200, mimetype='application/json')

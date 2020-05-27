@@ -209,6 +209,7 @@ class SchedulePage extends React.Component {
     			<div className="content-container">
                     <div>
                         <ScheduleDrawer date={this.state.dailyViewDate}
+                            tab={this.props.tab}
                             drawer={this.state.drawer}
                             handleClose={this.handleClose}/>
                     </div>

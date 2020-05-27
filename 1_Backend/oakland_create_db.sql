@@ -454,10 +454,11 @@ CREATE TABLE `VEHICLE_MAINTENANCE` (
     #maint_id	vehicle_id			date_service	date_end	hours_service	type	comment
   `maint_id` int(11) NOT NULL AUTO_INCREMENT,
   `vehicle_id` int(11) NOT NULL,
-  `date_service` date default NULL,
+  `date_service` date NOT NULL,
   `date_end` date default (date_service),#NULL,
-  `hours_service` int(11) default NULL,
+  `hours_service` int(11) default 4,
   `type` varchar(255) default NULL,
+  `shift` varchar(255) default NULL,
   `comment` varchar(255) default NULL,
   PRIMARY KEY  (`maint_id`),
   KEY `vehicle_id` (`vehicle_id`)

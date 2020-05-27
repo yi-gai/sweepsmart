@@ -3,6 +3,7 @@ import API from '../API/api';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/styles';
 import { styled } from '@material-ui/core/styles';
+import { makeStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import Drawer from '@material-ui/core/Drawer';
 import CloseIcon from '@material-ui/icons/Close';
@@ -21,6 +22,8 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import TextField from '@material-ui/core/TextField';
+import { useState } from "react";
+import { useEffect } from "react";
 import "./scheduleDrawer.css";
 
 const ContainerPaper = styled(Paper)({
@@ -100,6 +103,7 @@ const OverviewNameTableCell = styled(({column, ...other}) => <TableCell {...othe
 	color: '#3A423E',
 	paddingRight: 0,
 	marginRight: 0,
+	textAlign: 'center',
 
 	border: 0,
 	borderCollapse: 'collapse',
@@ -163,15 +167,46 @@ const VehicleTableCell = styled(TableCell) ({
 	borderCollapse: 'collapse'
 });
 
-const PageUpButton = styled(Button) ({
+const OperatorPageUpButton = styled(Button) ({
 	position: "absolute",
 	top: 15,
 });
 
-const PageDownButton = styled(Button) ({
+const OperatorPageDownButton = styled(Button) ({
 	position: "absolute",
 	top: 40,
 });
+
+const VehiclePageUpButton = styled(Button) ({
+	position: "absolute",
+	top: 22,
+	left: 170,
+});
+
+const VehiclePageDownButton = styled(Button) ({
+	position: "absolute",
+	top: 38,
+	left: 170,
+});
+
+const VehicleShiftPickerButton = styled(({left, current, ...other}) => <Button {...other}/>) ({
+	left: (props) => props.left ? 30 : 143,
+	border: (props) => props.current === true ? '1px solid #70C295' : 0,
+	background: (props) => props.current === true ? '#F5F5F5' : '#FFFFFF',
+	color: '#7A827F',
+	position: "absolute",
+	top: 470,
+	width: 50,
+	height: 40,
+
+	fontFamily: 'Lato',
+    fontStyle: 'normal',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+
+    borderRadius: 5
+})
 
 const StyledSelect = styled(Select) ({
 	height: 16,
@@ -197,7 +232,8 @@ class ScheduleDrawer extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			operators: [],
+			operatorsDay: [],
+			operatorsNight: [],
 			vehiclesDay: null,
 			vehiclesNight: null,
 			morning: 1,
@@ -244,7 +280,8 @@ class ScheduleDrawer extends React.Component {
 
 		API.get("/operator/day/onduty", {
 			params: {'date': GetDateFormat(this.props.date)}
-		}).then(res => this.setState({operators: res['data']['day']}));
+		}).then(res => this.setState({operatorsDay: res['data']['day'],
+			operatorsNight: res['data']['night']}));
 
 		API.get("/schedule/day/overview", {
 			params: {'date': GetDateFormat(this.props.date)}
@@ -300,13 +337,16 @@ class ScheduleDrawer extends React.Component {
 						<WeatherPanelContent weather={this.state.weather} handleClick={this.handleWeatherClick}/>
 					</WeatherPanel>
 					<OperatorPanel className="operatorPaper"> 
-						<OperatorPanelContent operators={this.state.operators}
-							length={this.state.operators.length}
+						<OperatorPanelContent tab={this.props.tab}
+							operatorsDay={this.state.operatorsDay}
+							operatorsNight={this.state.operatorsNight}
 							vehiclesDay={this.state.vehiclesDay}
 							vehiclesNight={this.state.vehiclesNight}/>
 					</OperatorPanel>
 					<VehiclePanel className="vehiclePaper"> 
-						<VehiclePanelContent vehiclesDay={this.state.vehiclesDay} vehiclesNight={this.state.vehiclesNight}/>
+						<VehiclePanelContent tab={this.props.tab}
+							vehiclesDay={this.state.vehiclesDay}
+							vehiclesNight={this.state.vehiclesNight}/>
 					</VehiclePanel>
 					<UnplannedPanel>
 						<h4> Unplanned routes </h4>
@@ -350,6 +390,8 @@ class OverviewPanelContent extends React.Component {
 					<OverviewNumberTableCell size="small" >{this.props.morning + this.props.afternoon}</OverviewNumberTableCell>
 					<OverviewNameTableCell size="small" column={2}>Total maps to-do</OverviewNameTableCell>
 					<OverviewNumberTableCell size="small" >{this.props.todo} </OverviewNumberTableCell>
+					<OverviewNameTableCell size="small" column={3}></OverviewNameTableCell>
+					<OverviewNumberTableCell size="small" ></OverviewNumberTableCell>
 				</TableRow>
 			</Table>
 			</TableContainer>
@@ -390,9 +432,32 @@ class WeatherPanelContent extends React.Component {
 class OperatorPanelContent extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = {curPage: 1};
+		this.state = {curPage: 1, numPages: 1, length: 0};
 		this.handlePageUp = this.handlePageUp.bind(this);
 		this.handlePageDown = this.handlePageDown.bind(this);
+	}
+
+	componentDidMount() {
+		this.calculatePages();
+	}
+
+	componentDidUpdate(prevProps) {
+		if (prevProps.tab !== this.props.tab ||
+			prevProps.operatorsDay !== this.props.operatorsDay ||
+			prevProps.operatorsNight !== this.props.operatorsNight) {
+			this.calculatePages();
+		}
+	}
+
+	calculatePages() {
+		let length = 0;
+		if (this.props.tab === 'Day Shift') {
+			length = this.props.operatorsDay.length;
+		} else if (this.props.tab === 'Night Shift') {
+			length = this.props.operatorsNight.length;
+		}
+		let numPages = Math.floor((length - 1) / 9) + 1;
+		this.setState({length: length, numPages: numPages});
 	}
 
 	handlePageUp() {
@@ -400,8 +465,7 @@ class OperatorPanelContent extends React.Component {
 	}
 
 	handlePageDown() {
-		let numPages = Math.floor((this.props.length - 1) / 9) + 1;
-		this.setState({curPage: Math.min(this.state.curPage + 1, numPages)});
+		this.setState({curPage: Math.min(this.state.curPage + 1, this.state.numPages)});
 	}
 
 	render() {
@@ -419,14 +483,28 @@ class OperatorPanelContent extends React.Component {
 				</TableRow>
 			</TableHead>
 		);
-		let numPages = Math.floor((this.props.length - 1) / 9) + 1;
-		let start_idx = 9 * (this.state.curPage - 1);
-		let end_idx = Math.min(start_idx + 9, this.props.length);
 		let vehicles = [];
-		if (this.props.vehiclesDay !== null) {
-			vehicles = Object.entries(this.props.vehiclesDay);
+		let operators = [];
+		if (this.props.tab === 'Day Shift') {
+			if (this.props.vehiclesDay !== null) {
+				vehicles = Object.entries(this.props.vehiclesDay);
+			}
+			if (this.props.operatorsDay !== null) {
+				operators = this.props.operatorsDay;
+			}
+		} else if (this.props.tab === 'Night Shift') {
+			if (this.props.vehiclesNight !== null) {
+				vehicles = Object.entries(this.props.vehiclesNight);
+			}
+			if (this.props.operatorsNight !== null) {
+				operators = this.props.operatorsNight;
+			}
 		}
-		let contents = this.props.operators.slice(start_idx, end_idx).map((row, _) => 
+		
+		let start_idx = 9 * (this.state.curPage - 1);
+		let end_idx = Math.min(start_idx + 9, this.state.length);
+		
+		let contents = operators.slice(start_idx, end_idx).map((row, _) => 
 			<TableRow>
 				<OperatorNameTableCell align="center" size="medium">{row['name']}</OperatorNameTableCell>
 				<OperatorStatusRegularTableCell align="center" size="medium">Regular</OperatorStatusRegularTableCell>
@@ -467,11 +545,11 @@ class OperatorPanelContent extends React.Component {
 			</TableRow>
 		);
 		let scrolls;
-		if (numPages > 1) {
+		if (this.state.numPages > 1) {
 			scrolls = (
 				<div className="scrolls">
-					<PageUpButton onClick={this.handlePageUp}><ArrowUpSmall/></PageUpButton>
-					<PageDownButton onClick={this.handlePageDown}><ArrowDownSmall/></PageDownButton>
+					<OperatorPageUpButton onClick={this.handlePageUp}><ArrowUpSmall/></OperatorPageUpButton>
+					<OperatorPageDownButton onClick={this.handlePageDown}><ArrowDownSmall/></OperatorPageDownButton>
 				</div>
 			);
 		} else {
@@ -540,26 +618,98 @@ class AddCommentDialog extends React.Component {
 }
 
 function VehiclePanelContent(props) {
-	let entries = [];
-	if (props.vehiclesDay !== null) {
-		entries = Object.entries(props.vehiclesDay);
-	}
-	let	contents = entries.map((value) => (
+	const [entries, setEntries] = useState([]);
+	const [length, setLength] = useState(1);
+	const [numPages, setNumPages] = useState(1);
+	const [curPage, setCurPage] = useState(1);
+	const [startID, setStartID] = useState(0);
+	const [endID, setEndID] = useState(1);
+	const [shift, setShift] = useState('AM');
+
+	useEffect(() => {
+		let len = 1;
+		if (props.tab === 'Day Shift' && props.vehiclesDay !== null) {
+			setEntries(Object.entries(props.vehiclesDay));
+			len = Object.entries(props.vehiclesDay).length;
+		} else if (props.tab === 'Night Shift' && props.vehiclesNight !== null) {
+			setEntries(Object.entries(props.vehiclesNight));
+			len = Object.entries(props.vehiclesNight).length;
+		}
+        calculatePages(len);
+    }, [props.tab, props.vehiclesDay, props.vehiclesNight]);
+
+    const calculatePages = (len) => {
+		setLength(len);
+		setNumPages(Math.floor((len - 1) / 11) + 1);
+		setCurPage(1);
+		setStartID(0);
+		setEndID(Math.min(11, len));
+    }
+
+    const handlePageUp = () => {
+    	let newCurPage = Math.max(curPage - 1, 1);
+    	setCurPage(newCurPage);
+    	setStartID(11 * (newCurPage - 1));
+    	setEndID(Math.min(11 * newCurPage, length));
+    }
+
+    const handlePageDown = () => {
+    	let newCurPage = Math.min(curPage + 1, numPages);
+    	setCurPage(newCurPage);
+    	setStartID(11 * (newCurPage - 1));
+    	setEndID(Math.min(11 * newCurPage, length));
+    }
+
+    let status_type;
+    if (props.tab === 'Day Shift') {
+    	status_type = shift === 'AM' ? '8-12 status' : '12-4 status';
+    } else {
+    	status_type = 'night status';
+    }
+
+	let	contents = entries.slice(startID, endID).map((value) => (
 		<TableRow>
-			<VehicleTableCell align="center" size="small">{value[0]}</VehicleTableCell>
-			<VehicleTableCell align="center" size="small"><DailyStatus status={value[1]['8-12 status']}/></VehicleTableCell>
+			<VehicleTableCell size="small" width="40%" align="right">{value[0]}</VehicleTableCell>
+			<VehicleTableCell size="small" align="center"><DailyStatus status={value[1][status_type]}/></VehicleTableCell>
 		</TableRow>
 	));
+
+	let scrolls;
+	if (numPages > 1) {
+		scrolls = (
+			<div className="scrolls">
+				<VehiclePageUpButton onClick={handlePageUp}><ArrowUpSmall/></VehiclePageUpButton>
+				<VehiclePageDownButton onClick={handlePageDown}><ArrowDownSmall/></VehiclePageDownButton>
+			</div>
+		);
+	} else {
+		scrolls = (<div className="scrolls"></div>);
+	}
+
+	let shiftPicker;
+	if (props.tab === 'Day Shift') {
+		shiftPicker = (
+			<div className="shift-picker">
+				<VehicleShiftPickerButton left={true} current={shift==='AM'} onClick={() => setShift('AM')}>AM</VehicleShiftPickerButton>
+				<VehicleShiftPickerButton left={false} current={shift==='PM'} onClick={() => setShift('PM')}>PM</VehicleShiftPickerButton>
+			</div>
+		);
+	} else {
+		shiftPicker = (<div className="shift-picker"></div>);
+	}
+
 	return (
 		<div>
-			<h4>Vehicles ({entries.length})</h4>
+			<h4>Vehicles ({length})</h4>
 			<TableContainer>
-				<Table>
+				<Table fullWidth={true}>
 					<TableBody>
 						{contents}
 					</TableBody>
 				</Table>
+				{scrolls}
 			</TableContainer>
+			{shiftPicker}
 		</div>
 	);
 }
