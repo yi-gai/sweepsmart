@@ -200,6 +200,7 @@ class SchedulePage extends React.Component {
 
     handleClose() {
         this.setState({drawer: false});
+        this.fetchWeeklyScheduleData();
     }
 
 	render() {
@@ -273,7 +274,6 @@ class ScheduleTableBody extends React.Component {
             let second = GetScheduleDataByRow(this.props.onScreenData[1]);
             let first_half = first.map((row, index) => (GetSingleRow(row, index === first.length-1, this.props.tab, true, this.props.curMonday)));
             let second_half = second.map((row, index) => (GetSingleRow(row, index === second.length-1, this.props.tab, false, this.props.curMonday)));
-            console.log(first_half);
             this.setState({first_half: first_half});
             this.setState({second_half: second_half});
         }

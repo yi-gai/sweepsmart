@@ -232,10 +232,13 @@ class ScheduleDrawer extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
+			routesAM: [],
+			routesPM: [],
+			routesNight: [],
 			operatorsDay: [],
 			operatorsNight: [],
-			vehiclesDay: null,
-			vehiclesNight: null,
+			vehiclesDay: [],
+			vehiclesNight: [],
 			morning: 1,
 			afternoon: 0,
 			holiday: 1,
@@ -248,6 +251,9 @@ class ScheduleDrawer extends React.Component {
 		this.makeAPICalls = this.makeAPICalls.bind(this);
 		this.handleWeatherClick = this.handleWeatherClick.bind(this);
 		this.handleClose = this.handleClose.bind(this);
+		this.fetchOperatorData = this.fetchOperatorData.bind(this);
+		this.fetchVehicleData = this.fetchVehicleData.bind(this);
+		this.fetchRouteData = this.fetchRouteData.bind(this);
 	}
 
 	componentDidMount() {
@@ -266,32 +272,60 @@ class ScheduleDrawer extends React.Component {
 	}
 
 	makeAPICalls() {
+		this.fetchOperatorData();
+		this.fetchVehicleData();
+		this.fetchOverviewData();
+		this.fetchWeatherData();
+		this.fetchRouteData();
+	}
+
+	fetchOperatorData() {
+		API.get("/schedule/day/main", {
+			params: {'date': GetDateFormat(this.props.date)}
+		}).then(res => this.setState({
+			operatorsDay: res['data']['day'],
+			operatorsNight: res['data']['night']
+		}));
+	}
+
+	fetchWeatherData() {
 		API.get("/schedule/day/weather", {
 			params: {'date': GetDateFormat(this.props.date)}
 		}).then(res => this.setState({weather: res['data']['weather']}));
+	}
 
+	fetchVehicleData() {
 		API.get("/vehicle/day", {
 			params: {'date': GetDateFormat(this.props.date), 'shift': 'day'}
-		}).then(res => this.setState({vehiclesDay: res['data']}));
+		}).then(res => this.setState({vehiclesDay: Object.entries(res['data'])}));
 
 		API.get("/vehicle/day", {
 			params: {'date': GetDateFormat(this.props.date), 'shift': 'night'}
-		}).then(res => this.setState({vehiclesNight: res['data']}));
+		}).then(res => this.setState({vehiclesNight: Object.entries(res['data'])}));
+	}
 
-		API.get("/operator/day/onduty", {
-			params: {'date': GetDateFormat(this.props.date)}
-		}).then(res => this.setState({operatorsDay: res['data']['day'],
-			operatorsNight: res['data']['night']}));
-
+	fetchOverviewData() {
 		API.get("/schedule/day/overview", {
 			params: {'date': GetDateFormat(this.props.date)}
-		}).then(res => this.setState({morning: res['data']['maps_am'],
+		}).then(res => this.setState({
+			morning: res['data']['maps_am'],
 			afternoon: res['data']['maps_pm'],
 			holiday: res['data']['maps_holiday'],
 			served: res['data']['maps_served'],
 			missed: res['data']['maps_missed'],
 			todo: res['data']['maps_to_do'],
-			success: res['data']['success_rate']}));
+			success: res['data']['success_rate']
+		}));
+	}
+
+	fetchRouteData() {
+		API.get("/schedule/day/route", {
+			params: {'date': GetDateFormat(this.props.date)}
+		}).then(res => this.setState({
+			routesAM: res['data']['AM'],
+			routesPM: res['data']['PM'],
+			routesNight: res['data']['night']
+		}));
 	}
 
 	handleWeatherClick(weather) {
@@ -312,7 +346,6 @@ class ScheduleDrawer extends React.Component {
 	}
 
 	render() {
-				
 		return (
 			<Drawer anchor='right' open={this.props.drawer}>
 				<div className="background-container">
@@ -337,11 +370,20 @@ class ScheduleDrawer extends React.Component {
 						<WeatherPanelContent weather={this.state.weather} handleClick={this.handleWeatherClick}/>
 					</WeatherPanel>
 					<OperatorPanel className="operatorPaper"> 
-						<OperatorPanelContent tab={this.props.tab}
+						<OperatorPanelContent
+							date={this.props.date}
+							tab={this.props.tab}
 							operatorsDay={this.state.operatorsDay}
 							operatorsNight={this.state.operatorsNight}
+							routesAM={this.state.routesAM}
+							routesPM={this.state.routesPM}
+							routesNight={this.state.routesNight}
 							vehiclesDay={this.state.vehiclesDay}
-							vehiclesNight={this.state.vehiclesNight}/>
+							vehiclesNight={this.state.vehiclesNight}
+							fetchRouteData={this.fetchRouteData}
+							fetchOperatorData={this.fetchOperatorData}
+							fetchVehicleData={this.fetchVehicleData}
+							/>
 					</OperatorPanel>
 					<VehiclePanel className="vehiclePaper"> 
 						<VehiclePanelContent tab={this.props.tab}
@@ -432,20 +474,45 @@ class WeatherPanelContent extends React.Component {
 class OperatorPanelContent extends React.Component {
 	constructor(props) {
 		super(props);
-		this.state = {curPage: 1, numPages: 1, length: 0};
+		this.state = {
+			curPage: 1,
+			numPages: 1,
+			length: 0,
+			amRouteSelectValues: [],
+			amVehicleSelectValues: [],
+			amCompletionSelectValues: [],
+			pmRouteSelectValues: [],
+			pmVehicleSelectValues: [],
+			pmCompletionSelectValues: [],
+			nightRouteSelectValues: [],
+			nightVehicleSelectValues: [],
+			nightCompletionSelectValues: [],
+			amRoutesAvailable: [],
+			pmRoutesAvailable: [],
+			nightRoutesAvailable: [],
+			amVehicleAvailable: [],
+			pmVehicleAvailable: [],
+			nightVehicleAvailable: [],
+		};
 		this.handlePageUp = this.handlePageUp.bind(this);
 		this.handlePageDown = this.handlePageDown.bind(this);
+		this.handleChange = this.handleChange.bind(this);
 	}
 
 	componentDidMount() {
 		this.calculatePages();
+		this.setTableDefaultValues();
 	}
 
 	componentDidUpdate(prevProps) {
 		if (prevProps.tab !== this.props.tab ||
 			prevProps.operatorsDay !== this.props.operatorsDay ||
-			prevProps.operatorsNight !== this.props.operatorsNight) {
+			prevProps.operatorsNight !== this.props.operatorsNight ||
+			prevProps.routesAM !== this.props.routesAM ||
+			prevProps.routesPM !== this.props.routesPM ||
+			prevProps.routesNight !== this.props.routesNight) {
 			this.calculatePages();
+			this.setTableDefaultValues();
 		}
 	}
 
@@ -457,7 +524,79 @@ class OperatorPanelContent extends React.Component {
 			length = this.props.operatorsNight.length;
 		}
 		let numPages = Math.floor((length - 1) / 9) + 1;
-		this.setState({length: length, numPages: numPages});
+		this.setState({
+			length: length,
+			numPages: numPages,
+		});
+	}
+
+	setTableDefaultValues() {
+		let pmRoutesAvailable = [];
+		for (let route in this.props.routesPM) {
+			if (route['driver'] === '' && route['route_status'] !== 'disabled') {
+				pmRoutesAvailable.push(route['route']);
+			}
+		}
+		let nightRoutesAvailable = [];
+		for (let route in this.props.routesNight) {
+			if (route['driver'] === '' && route['route_status'] !== 'disabled') {
+				nightRoutesAvailable.push(route['route']);
+			}
+		}
+		this.setState({
+			amRouteSelectValues: this.props.operatorsDay.map((row, index) => row['am_route']),
+			pmRouteSelectValues: this.props.operatorsDay.map((row, index) => row['pm_route']),
+			nightRouteSelectValues: this.props.operatorsNight.map((row, index) => row['night_route']),
+			amVehicleSelectValues: this.props.operatorsDay.map((row, index) => row['am_vehicle']),
+			pmVehicleSelectValues: this.props.operatorsDay.map((row, index) => row['pm_vehicle']),
+			nightVehicleSelectValues: this.props.operatorsNight.map((row, index) => row['night_vehicle']),
+			amCompletionSelectValues: this.props.operatorsDay.map((row, index) => row['am_completion']),
+			pmCompletionSelectValues: this.props.operatorsDay.map((row, index) => row['pm_completion']),
+			nightCompletionSelectValues: this.props.operatorsNight.map((row, index) => row['night_completion']),
+
+			amRoutesAvailable: this.props.routesAM.map((route) => {
+				if (route['driver'] === '' && route['route_status'] !== 'disabled') {
+					return route['route']
+				} else {
+					return null
+				}
+			}).filter((route) => {return route !== null}),
+			pmRoutesAvailable: this.props.routesPM.map((route) => {
+				if (route['driver'] === '' && route['route_status'] !== 'disabled') {
+					return route['route']
+				} else {
+					return null
+				}
+			}).filter((route) => {return route !== null}),
+			nightRoutesAvailable: this.props.routesNight.map((route) => {
+				if (route['driver'] === '' && route['route_status'] !== 'disabled') {
+					return route['route']
+				} else {
+					return null
+				}
+			}).filter((route) => {return route !== null}),
+			amVehicleAvailable: this.props.vehiclesDay.map((vehicle) => {
+				if (vehicle[1]["8-12 status"] === 'available') {
+					return vehicle[0]
+				} else {
+					return null
+				}
+			}).filter((vehicle) => {return vehicle !== null}),
+			pmVehicleAvailable: this.props.vehiclesDay.map((vehicle) => {
+				if (vehicle[1]["12-4 status"] === 'available') {
+					return vehicle[0]
+				} else {
+					return null
+				}
+			}).filter((vehicle) => {return vehicle !== null}),
+			nightVehicleAvailable: this.props.vehiclesNight.map((vehicle) => {
+				if (vehicle[1]["night status"] === 'available') {
+					return vehicle[0]
+				} else {
+					return null
+				}
+			}).filter((vehicle) => {return vehicle !== null}),
+		});
 	}
 
 	handlePageUp() {
@@ -468,82 +607,313 @@ class OperatorPanelContent extends React.Component {
 		this.setState({curPage: Math.min(this.state.curPage + 1, this.state.numPages)});
 	}
 
+	handleChange(event, type, index, prev) {
+		let value = event.target.value;
+		if (prev[type] !== value) {
+			if (type === 'route') {
+				if (value === 'unassigned') {
+					value = '';
+				}
+				if (prev['shift'] === 'AM') {
+					let newStates = this.state.amRouteSelectValues;
+					newStates[index] = value;
+					this.setState({amRouteSelectValues: newStates});
+
+				} else if (prev['shift'] === 'PM') {
+					let newStates = this.state.pmRouteSelectValues;
+					newStates[index] = value;
+					this.setState({pmRouteSelectValues: newStates});
+				} else if (prev['shift'] === 'night') {
+					let newStates = this.state.nightRouteSelectValues;
+					newStates[index] = value;
+					this.setState({nightRouteSelectValues: newStates});
+				}
+				if (prev[type] !== '') {
+					this.pushUpdate(prev['shift'], prev['route'], '', '', prev['completion']);
+				}
+				if (value !== '') {
+					this.pushUpdate(prev['shift'], value, prev['operator'], '', '');
+				}
+			} else if (type === 'vehicle') {
+				if (prev['route'] === '') {
+					alert("Assign route before vehicle!");
+				} else {
+					if (value === 'unassigned') {
+						value = null;
+					}
+					if (prev['shift'] === 'AM') {
+						let newStates = this.state.amVehicleSelectValues;
+						newStates[index] = value;
+						this.setState({amVehicleSelectValues: newStates});
+					} else if (prev['shift'] === 'PM') {
+						let newStates = this.state.pmVehicleSelectValues;
+						newStates[index] = value;
+						this.setState({pmVehicleSelectValues: newStates});
+					} else if (prev['shift'] === 'night') {
+						let newStates = this.state.nightVehicleSelectValues;
+						newStates[index] = value;
+						this.setState({nightVehicleSelectValues: newStates});
+					}
+					this.pushUpdate(prev['shift'], prev['route'], prev['operator'], value, prev['completion']);
+				}
+			} else if (type === 'completion') {
+				if (prev['route'] === '') {
+					alert("Assign route before completion status!");
+				} else {
+					if (prev['shift'] === 'AM') {
+						let newStates = this.state.amCompletionSelectValues;
+						newStates[index] = value;
+						this.setState({amCompletionSelectValues: newStates});
+					} else if (prev['shift'] === 'PM') {
+						let newStates = this.state.pmCompletionSelectValues;
+						newStates[index] = value;
+						this.setState({pmCompletionSelectValues: newStates});
+					} else if (prev['shift'] === 'night') {
+						let newStates = this.state.nightCompletionSelectValues;
+						newStates[index] = value;
+						this.setState({nightCompletionSelectValues: newStates});
+					}
+					this.pushUpdate(prev['shift'], prev['route'], prev['operator'], prev['vehicle'], value);
+				}
+			}
+		}
+	}
+
+	pushUpdate(shift, route, operator, vehicle, status) {
+        let params = new URLSearchParams();
+        params.append('date', GetDateFormat(this.props.date));
+        params.append('shift', shift);
+        params.append('route', route);
+        params.append('operator', operator);
+        params.append('vehicle', vehicle);
+        params.append('status', status);
+        params.append('permanent', 0);
+        API({
+            method: 'put',
+            url: '/schedule/week/route/action',
+            withCredentials: false,
+            data: params
+        }).then(() => {
+        	this.props.fetchRouteData();
+        	this.props.fetchOperatorData();
+        	this.props.fetchVehicleData();
+        })
+    }
+
 	render() {
-		let heads = (
-			<TableHead>
-				<TableRow>
-					<OperatorTableHeadCell width="18%">Name</OperatorTableHeadCell>
-					<OperatorTableHeadCell width="14%">Status</OperatorTableHeadCell>
-					<OperatorTableHeadCell width="10%">Vehicle #</OperatorTableHeadCell>
-					<OperatorTableHeadCell width="10%">AM Route</OperatorTableHeadCell>
-					<OperatorTableHeadCell width="14%">AM Completion</OperatorTableHeadCell>
-					<OperatorTableHeadCell width="10%">PM Route</OperatorTableHeadCell>
-					<OperatorTableHeadCell width="14%">PM Completion</OperatorTableHeadCell>
-					<OperatorTableHeadCell width="10%">Comment</OperatorTableHeadCell>
-				</TableRow>
-			</TableHead>
-		);
-		let vehicles = [];
-		let operators = [];
+		let heads;
 		if (this.props.tab === 'Day Shift') {
-			if (this.props.vehiclesDay !== null) {
-				vehicles = Object.entries(this.props.vehiclesDay);
-			}
-			if (this.props.operatorsDay !== null) {
-				operators = this.props.operatorsDay;
-			}
+			heads = (
+				<TableHead>
+					<TableRow>
+						<OperatorTableHeadCell width="18%">Name</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="11%">Status</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="9%" size="small">AM Route</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="9%" size="small">AM Vehicle</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="13%" size="small">AM Completion</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="9%" size="small">PM Route</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="9%" size="small">PM Vehicle</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="13%" size="small">PM Completion</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="9%">Comment</OperatorTableHeadCell>
+					</TableRow>
+				</TableHead>
+			);
 		} else if (this.props.tab === 'Night Shift') {
-			if (this.props.vehiclesNight !== null) {
-				vehicles = Object.entries(this.props.vehiclesNight);
-			}
-			if (this.props.operatorsNight !== null) {
-				operators = this.props.operatorsNight;
-			}
+			heads = (
+				<TableHead>
+					<TableRow>
+						<OperatorTableHeadCell width="24%">Name</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="15%">Status</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="17%" size="small">Night Route</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="17%" size="small">Night Vehicle</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="17%" size="small">Night Completion</OperatorTableHeadCell>
+						<OperatorTableHeadCell width="10%">Comment</OperatorTableHeadCell>
+					</TableRow>
+				</TableHead>
+			);
 		}
 		
 		let start_idx = 9 * (this.state.curPage - 1);
 		let end_idx = Math.min(start_idx + 9, this.state.length);
-		
-		let contents = operators.slice(start_idx, end_idx).map((row, _) => 
-			<TableRow>
-				<OperatorNameTableCell align="center" size="medium">{row['name']}</OperatorNameTableCell>
-				<OperatorStatusRegularTableCell align="center" size="medium">Regular</OperatorStatusRegularTableCell>
-				<OperatorTableCell align="center" size="medium">
-					<StyledSelect autoWidth={true}>
-						{vehicles.map((vid) => <MenuItem value={vid[0]}>{vid[0]}</MenuItem>)}
-					</StyledSelect>
-				</OperatorTableCell>
-				<OperatorTableCell align="center" size="medium">
-					<StyledSelect autoWidth={true}>
-						<MenuItem value="completed">7</MenuItem>
-						<MenuItem value="missed">7A</MenuItem>
-						<MenuItem value="assigned">7B</MenuItem>
-					</StyledSelect>
-				</OperatorTableCell>
-				<OperatorTableCell align="center" size="medium">
-					<StyledSelect autoWidth={true}>
-						<MenuItem value="completed">Completed</MenuItem>
-						<MenuItem value="missed">Missed</MenuItem>
-						<MenuItem value="assigned">Assigned</MenuItem>
-					</StyledSelect>
-				</OperatorTableCell>
-				<OperatorTableCell align="center" size="medium">
-					<StyledSelect autoWidth={true}>
-						<MenuItem value="completed">7</MenuItem>
-						<MenuItem value="missed">7A</MenuItem>
-						<MenuItem value="assigned">7B</MenuItem>
-					</StyledSelect>
-				</OperatorTableCell>
-				<OperatorTableCell align="center" size="medium">
-				 	<StyledSelect autoWidth={true}>
-						<MenuItem value="completed">Completed</MenuItem>
-						<MenuItem value="missed">Missed</MenuItem>
-						<MenuItem value="assigned">Assigned</MenuItem>
-					</StyledSelect>
-				</OperatorTableCell>
-				<OperatorTableCell align="center" size="small"><AddCommentDialog/></OperatorTableCell>
-			</TableRow>
-		);
+		let contents;
+
+		if (this.props.tab === 'Day Shift') {
+			contents = this.props.operatorsDay.slice(start_idx, end_idx).map((row, index) => 
+				<TableRow>
+					<OperatorNameTableCell align="center" size="medium">{row['employee_name']}</OperatorNameTableCell>
+					<OperatorStatusRegularTableCell align="center" size="medium">Regular</OperatorStatusRegularTableCell>
+					<OperatorTableCell align="center" size="medium">
+						<StyledSelect autoWidth={true}
+							value={this.state.amRouteSelectValues[index + start_idx]}
+							onChange={(e) => {this.handleChange(e, 'route', index, {
+								'shift': 'AM',
+								'operator': row['employee_id'],
+								'route': row['am_route'],
+								'vehicle': row['am_vehicle'],
+								'completion': row['am_completion']
+							})}}>
+							{this.state.amRoutesAvailable.map((route) => 
+								<MenuItem value={route}>{route}</MenuItem>
+							)}
+							{row['am_route'] !== '' ? (
+								<MenuItem value={row['am_route']}>{row['am_route']}</MenuItem>
+								) : (<div></div>)}
+							<MenuItem value={'unassigned'}>{'N/A'}</MenuItem>
+						</StyledSelect>
+					</OperatorTableCell>
+					<OperatorTableCell align="center" size="medium">
+						<StyledSelect autoWidth={true}
+							value={this.state.amVehicleSelectValues[index + start_idx]}
+							onChange={(e) => {this.handleChange(e, 'vehicle', index, {
+								'shift': 'AM',
+								'operator': row['employee_id'],
+								'route': row['am_route'],
+								'vehicle': row['am_vehicle'],
+								'completion': row['am_completion']
+							})}}>
+							{this.state.amVehicleAvailable.map((vehicle) => 
+								<MenuItem value={vehicle}>{vehicle}</MenuItem>
+							)}
+							{row['am_vehicle'] !== null ? (
+								<MenuItem value={row['am_vehicle']}>{row['am_vehicle']}</MenuItem>
+								) : (<div></div>)}
+							<MenuItem value={'unassigned'}>{'N/A'}</MenuItem>
+						</StyledSelect>
+					</OperatorTableCell>
+					<OperatorTableCell align="center" size="medium">
+						<StyledSelect autoWidth={true}
+							value={this.state.amCompletionSelectValues[index + start_idx]}
+							onChange={(e) => {this.handleChange(e, 'completion', index, {
+								'shift': 'AM',
+								'operator': row['employee_id'],
+								'route': row['am_route'],
+								'vehicle': row['am_vehicle'],
+								'completion': row['am_completion']
+							})}}>
+							<MenuItem value="completed">Completed</MenuItem>
+							<MenuItem value="missed">Missed</MenuItem>
+							<MenuItem value="pending">Pending</MenuItem>
+						</StyledSelect>
+					</OperatorTableCell>
+					<OperatorTableCell align="center" size="medium">
+						<StyledSelect autoWidth={true}
+							value={this.state.pmRouteSelectValues[index + start_idx]}
+							onChange={(e) => {this.handleChange(e, 'route', index, {
+								'shift': 'PM',
+								'operator': row['employee_id'],
+								'route': row['pm_route'],
+								'vehicle': row['pm_vehicle'],
+								'completion': row['pm_completion']
+							})}}>
+							{this.state.pmRoutesAvailable.map((route) => 
+								<MenuItem value={route}>{route}</MenuItem>
+							)}
+							{row['pm_route'] !== '' ? (
+								<MenuItem value={row['pm_route']}>{row['pm_route']}</MenuItem>
+								) : (<div></div>)}
+							<MenuItem value={'unassigned'}>{'N/A'}</MenuItem>
+						</StyledSelect>
+					</OperatorTableCell>
+					<OperatorTableCell align="center" size="medium">
+						<StyledSelect autoWidth={true}
+							value={this.state.pmVehicleSelectValues[index + start_idx]}
+							onChange={(e) => {this.handleChange(e, 'vehicle', index, {
+								'shift': 'PM',
+								'operator': row['employee_id'],
+								'route': row['pm_route'],
+								'vehicle': row['pm_vehicle'],
+								'completion': row['pm_completion']
+							})}}>
+							{this.state.pmVehicleAvailable.map((vehicle) => 
+								<MenuItem value={vehicle}>{vehicle}</MenuItem>
+							)}
+							{row['pm_vehicle'] !== null ? (
+								<MenuItem value={row['pm_vehicle']}>{row['pm_vehicle']}</MenuItem>
+								) : (<div></div>)}
+							<MenuItem value={'unassigned'}>{'N/A'}</MenuItem>
+						</StyledSelect>
+					</OperatorTableCell>
+					<OperatorTableCell align="center" size="medium">
+					 	<StyledSelect autoWidth={true}
+							value={this.state.pmCompletionSelectValues[index + start_idx]}
+							onChange={(e) => {this.handleChange(e, 'completion', index, {
+								'shift': 'PM',
+								'operator': row['employee_id'],
+								'route': row['pm_route'],
+								'vehicle': row['pm_vehicle'],
+								'completion': row['pm_completion']
+							})}}>
+							<MenuItem value="completed">Completed</MenuItem>
+							<MenuItem value="missed">Missed</MenuItem>
+							<MenuItem value="pending">Pending</MenuItem>
+						</StyledSelect>
+					</OperatorTableCell>
+					<OperatorTableCell align="center" size="small"><AddCommentDialog/></OperatorTableCell>
+				</TableRow>
+			);
+		} else if (this.props.tab === 'Night Shift') {
+			contents = this.props.operatorsNight.slice(start_idx, end_idx).map((row, index) => 
+				<TableRow>
+					<OperatorNameTableCell align="center" size="medium">{row['employee_name']}</OperatorNameTableCell>
+					<OperatorStatusRegularTableCell align="center" size="medium">Regular</OperatorStatusRegularTableCell>
+					<OperatorTableCell align="center" size="medium">
+						<StyledSelect autoWidth={true}
+							value={this.state.nightRouteSelectValues[index + start_idx]}
+							onChange={(e) => {this.handleChange(e, 'route', index, {
+								'shift': 'night',
+								'operator': row['employee_id'],
+								'route': row['night_route'],
+								'vehicle': row['night_vehicle'],
+								'completion': row['night_completion']
+							})}}>
+							{this.state.nightRoutesAvailable.map((route) => 
+								<MenuItem value={route}>{route}</MenuItem>
+							)}
+							{row['night_route'] !== '' ? (
+								<MenuItem value={row['night_route']}>{row['night_route']}</MenuItem>
+								) : (<div></div>)}
+							<MenuItem value={'unassigned'}>{'N/A'}</MenuItem>
+						</StyledSelect>
+					</OperatorTableCell>
+					<OperatorTableCell align="center" size="medium">
+						<StyledSelect autoWidth={true}
+							value={this.state.nightVehicleSelectValues[index + start_idx]}
+							onChange={(e) => {this.handleChange(e, 'vehicle', index, {
+								'shift': 'night',
+								'operator': row['employee_id'],
+								'route': row['night_route'],
+								'vehicle': row['night_vehicle'],
+								'completion': row['night_completion']
+							})}}>
+							{this.state.nightVehicleAvailable.map((vehicle) => 
+								<MenuItem value={vehicle}>{vehicle}</MenuItem>
+							)}
+							{row['night_vehicle'] !== null ? (
+								<MenuItem value={row['night_vehicle']}>{row['night_vehicle']}</MenuItem>
+								) : (<div></div>)}
+							<MenuItem value={'unassigned'}>{'N/A'}</MenuItem>
+						</StyledSelect>
+					</OperatorTableCell>
+					<OperatorTableCell align="center" size="medium">
+						<StyledSelect autoWidth={true}
+							value={this.state.nightCompletionSelectValues[index + start_idx]}
+							onChange={(e) => {this.handleChange(e, 'completion', index, {
+								'shift': 'night',
+								'operator': row['employee_id'],
+								'route': row['night_route'],
+								'vehicle': row['night_vehicle'],
+								'completion': row['night_completion']
+							})}}>
+							<MenuItem value="completed">Completed</MenuItem>
+							<MenuItem value="missed">Missed</MenuItem>
+							<MenuItem value="pending">Pending</MenuItem>
+						</StyledSelect>
+					</OperatorTableCell>
+					<OperatorTableCell align="center" size="small"><AddCommentDialog/></OperatorTableCell>
+				</TableRow>
+			);
+		}
+
 		let scrolls;
 		if (this.state.numPages > 1) {
 			scrolls = (
@@ -628,12 +998,12 @@ function VehiclePanelContent(props) {
 
 	useEffect(() => {
 		let len = 1;
-		if (props.tab === 'Day Shift' && props.vehiclesDay !== null) {
-			setEntries(Object.entries(props.vehiclesDay));
-			len = Object.entries(props.vehiclesDay).length;
-		} else if (props.tab === 'Night Shift' && props.vehiclesNight !== null) {
-			setEntries(Object.entries(props.vehiclesNight));
-			len = Object.entries(props.vehiclesNight).length;
+		if (props.tab === 'Day Shift') {
+			setEntries(props.vehiclesDay);
+			len = props.vehiclesDay.length;
+		} else if (props.tab === 'Night Shift') {
+			setEntries(props.vehiclesNight);
+			len = props.vehiclesNight.length;
 		}
         calculatePages(len);
     }, [props.tab, props.vehiclesDay, props.vehiclesNight]);

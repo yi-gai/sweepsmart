@@ -184,7 +184,6 @@ function RouteBlock({shift, date, route, operator_init, operator_id_init, status
         updated_status = updated_operator_id === 0 || updated_operator_id === '0' ? 'unassigned' : 'assigned';
 
         if (status_select === 'pending') {
-            console.log(updated_status);
             finishSubmit(event, updated_operator_id, updated_operator, updated_status);
             return;
         }
@@ -325,7 +324,7 @@ function RouteBlock({shift, date, route, operator_init, operator_id_init, status
 
 function GetNameFormat(name) {
     let name_split = name.split(' ');
-    return name_split[1].charAt(0) + '. ' + name_split[0];
+    return name_split[0].charAt(0) + '. ' + name_split[1];
 }
 
 function GetDateFormat(date) {

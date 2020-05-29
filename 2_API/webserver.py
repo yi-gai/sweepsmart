@@ -104,7 +104,6 @@ def get_weekly_route_schedule():
     for i in range(len(week[1:-1])):
         day = days[i]
         week_of_month = get_week_of_month(week[1:-1][i])
-        print(week_of_month, file=sys.stderr)
         for shift in shifts:
             wk_days.append(day + str(week_of_month) + '_' + shift)
 
@@ -195,11 +194,14 @@ def change_route_week():
     date = arguments.get("date")
     shift = arguments.get("shift")
     driver = arguments.get("operator")
+    vehicle = arguments.get("vehicle")
     status = arguments.get("status")
     permanent =  arguments.get("permanent")
-    if driver == '0':
+    if driver == '0' or driver == '':
         driver = 'null'
-    if status == 'assigned' or status == 'unassigned':
+    if vehicle is None or vehicle == '':
+        vehicle = 'null'
+    if status == 'assigned' or status == 'unassigned' or status == 'pending' or status == '':
         status = 'null'
     else:
         status = "'{}'".format(status)
@@ -207,9 +209,9 @@ def change_route_week():
     # if exists
     log_id = db.engine.execute("select log_id from ROUTE_LOG where route_id='{r}' and date_swept='{d}';".format(r=route, d=date)).fetchone()
     if log_id is not None:
-        query = "update ROUTE_LOG set route_id='{r}',date_swept='{d}',shift='{s}',employee_id={e},completion={c} where log_id={l_id};".format(r=route,d=date,s=shift,e=driver,c=status,l_id=log_id[0])
+        query = "update ROUTE_LOG set route_id='{r}',date_swept='{d}',shift='{s}',employee_id={e},vehicle_id={v},completion={c} where log_id={l_id};".format(r=route,d=date,s=shift,e=driver,v=vehicle,c=status,l_id=log_id[0])
     else:
-        query = "insert into `ROUTE_LOG` (date_swept,route_id,shift,employee_id,completion) VALUES ('{d}','{r}','{s}',{e},{c});".format(d=date,r=route,s=shift,e=driver,c=status)
+        query = "insert into `ROUTE_LOG` (date_swept,route_id,shift,employee_id,vehicle_id,completion) VALUES ('{d}','{r}','{s}',{e},{v},{c});".format(d=date,r=route,s=shift,e=driver,v=vehicle,c=status)
     db.engine.execute(query)
     
     if int(permanent) == 1:
@@ -277,6 +279,66 @@ def change_route_week():
 
 
 #     return Response(json.dumps(data), status=200, mimetype='application/json')
+
+# schedule weekly view
+@app.route('/schedule/day/route', methods=["GET"])
+def get_daily_route_schedule():
+    date = request.args.get('date')
+    if date == None:
+        date = datetime.now().strftime("%Y-%m-%d")
+    date_dt = datetime.strptime(date, "%Y-%m-%d")
+
+    days = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri'}
+    shifts = ['AM', 'PM', 'night']
+
+    week_of_month = get_week_of_month(date_dt)
+    weekday = days[date_dt.weekday()]
+
+    data = defaultdict(list)
+    
+    # get from database
+    day_shifts = []
+
+    for shift in shifts:
+        day_shifts.append(weekday + str(week_of_month) + '_' + shift)
+
+    for d in day_shifts:
+        d_shift = d.split('_')[1]
+        data[d_shift] = []
+        routes_assigned = db.engine.execute("select route_id from ROUTES where {d}=1;".format(d=d))
+        for r in routes_assigned:
+            route = r[0]
+            route_log_info = db.engine.execute("select d.employee_id, d.employee_name, r.completion from ROUTE_LOG r left join DRIVERS d on r.employee_id=d.employee_id where r.route_id='{r}' and r.date_swept='{d}' and r.shift='{s}';".format(r=route,d=date,s=d_shift))
+            driver_id = 0
+            driver_name = ''
+            route_status = 'unassigned'
+            for l in route_log_info:
+                driver_id = l[0]
+                driver_name = l[1]
+                route_status = l[2]
+                if not driver_id:
+                    driver_id = 0
+                    driver_name = ''
+                if not route_status:
+                    route_status = 'unassigned' if driver_id == 0 else 'assigned'
+            data[d_shift].append({'route':route, 'driver_id': driver_id, 'driver':driver_name, 'route_status':route_status})
+
+        # extra routes that were added but aren't originally assigned for the day
+        extra_query = "select route_id from ROUTES where {d}=1".format(d=d)
+        routes_extra = db.engine.execute("select r.route_id, d.employee_id, d.employee_name, r.completion from ROUTE_LOG r join DRIVERS d on r.employee_id=d.employee_id where r.route_id not in ({q}) and r.date_swept='{d}' and r.shift='{s}';".format(q=extra_query,d=date,s=d_shift))
+        for r_e in routes_extra:
+            route_id = r_e[0]
+            e_id = r_e[1]
+            e_name = r_e[2]
+            r_stat = r_e[3]
+            if not e_id:
+                e_id = 0
+                e_name = ''
+            if not r_stat:
+                r_stat = 'unassigned' if e_id == 0 else 'assigned'
+            data[d_shift].append({'route':route_id, 'driver_id': e_id, 'driver':e_name, 'route_status':r_stat})
+    
+    return Response(json.dumps(data), status=200, mimetype='application/json')
 
 # schedule daily view
 @app.route('/schedule/day/overview', methods=["GET"])
@@ -389,24 +451,66 @@ def weather_condition():
     return Response(json.dumps({'weather': weather}), status=200, mimetype='application/json')
 
 @app.route('/schedule/day/main', methods=["GET"])
-def get_daily_route_schedule():
+def get_daily_operators():
     date = request.args.get('date')
     if date == None:
         date = datetime.now().strftime("%Y-%m-%d")
+    date_dt = datetime.strptime(date, "%Y-%m-%d")
     week_of_month = pendulum.parse(date).week_of_month
-    data = defaultdict(list)
 
     # get from database
-    route_log_db_query = "select route_id,employee_id,employee_status,vehicle_id,completion,shift from ROUTE_LOG where date_swept='{d}';".format(d=date)
+    day_of_wk = date_dt.weekday()
+    days = {0:'mon',1:'tue',2:'wed',3:'thu',4:'fri',5:'sat',6:'sun'}
+
+    drivers_day = db.engine.execute("select employee_id,employee_name from DRIVERS where (shift_{d}=1 or shift_{d}_pm=1) and shift='day';".format(d=days[day_of_wk]))
+    drivers_night = db.engine.execute("select employee_id,employee_name from DRIVERS where (shift_{d}=1 or shift_{d}_pm=1) and shift='night';".format(d=days[day_of_wk]))
+    drivers_day = [dict(row.items()) for row in drivers_day]
+    drivers_night = [dict(row.items()) for row in drivers_night]
+
+    # get from database
+    route_log_db_query = "select route_id,employee_id,vehicle_id,completion,shift from ROUTE_LOG where date_swept='{d}';".format(d=date)
     route_db = db.engine.execute(route_log_db_query)
-    #route_db = db.engine.execute("select r.route_id, r.completion, r.vehicle_id, r.shift, D.employee_name from ROUTE_LOG r join DRIVERS D on r.employee_id = D.employee_id where date_swept={d} and shift='AM';".format(d=date))
+
+    for row in drivers_day:
+        row['am_route'] = ''
+        row['am_vehicle'] = None
+        row['am_completion'] = ''
+        row['pm_route'] = ''
+        row['pm_vehicle'] = None
+        row['pm_completion'] = ''
+    for row in drivers_night:
+        row['night_route'] = ''
+        row['night_vehicle'] = None
+        row['night_completion'] = ''
+
     for route_log in route_db:
-        route_id, driver, driver_status, vehicle, route_status, shift  = route_log
-        data[shift].append({'route':route_id,'driver':driver,'driver_status':driver_status,'route_status':route_status,'vehicle':vehicle})
+        route, driver, vehicle, completion, shift = route_log
+        if shift == 'AM':
+            for row in drivers_day:
+                if row['employee_id'] == driver:
+                    row['am_route'] = route
+                    row['am_vehicle'] = vehicle
+                    row['am_completion'] = completion if completion is not None else 'pending'
+        if shift == 'PM':
+            for row in drivers_day:
+                if row['employee_id'] == driver:
+                    row['pm_route'] = route
+                    row['pm_vehicle'] = vehicle
+                    row['pm_completion'] = completion if completion is not None else 'pending'
+        if shift == 'night':
+            for row in drivers_night:
+                if row['employee_id'] == driver:
+                    row['night_route'] = route
+                    row['night_vehicle'] = vehicle
+                    row['night_completion'] = completion if completion is not None else 'pending'
+    
+    data = defaultdict(list)
+    data['day'] = drivers_day
+    data['night'] = drivers_night
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/schedule/day/main/action', methods=["PUT"])
+@app.route('/schedule/day/main/action', methods=["PUT", "OPTIONS"])
 def change_route_day():
     if request.headers['Content-Type'] == 'application/json':
         arguments = request.get_json()
@@ -494,7 +598,7 @@ def get_operator_list_to_assign():
     absences_query = "select employee_id from ABSENCES where date_absence='{ds}' and shift='{shift}'".format(ds=date,shift=shift)
     assigned_query = "select employee_id from ROUTE_LOG where date_swept='{ds}' and shift='{shift}' and employee_id is not null".format(ds=date,shift=shift)
     drivers = db.engine.execute("select employee_id,employee_name from DRIVERS where (shift_{d}=1 or shift_{d}_pm=1) and shift='{shift}' and employee_id not in ({q1}) and employee_id not in ({q2});".format(d=days[day_of_wk],shift=day_night,q1=absences_query,q2=assigned_query))
-    drivers = [(dict(row.items())) for row in drivers]
+    drivers = [dict(row.items()) for row in drivers]
 
     return Response(json.dumps(drivers), status=200, mimetype='application/json')
 
