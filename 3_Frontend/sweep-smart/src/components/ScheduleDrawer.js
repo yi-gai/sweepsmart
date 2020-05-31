@@ -87,6 +87,7 @@ const UnplannedPanel = styled(Paper)({
 
 	background: '#FFFFFF',
 	borderRadius: 5,
+    overflow: 'auto',
 });
 
 const OverviewNameTableCell = styled(({column, ...other}) => <TableCell {...other}/>)({
@@ -321,11 +322,14 @@ class ScheduleDrawer extends React.Component {
 	fetchRouteData() {
 		API.get("/schedule/day/route", {
 			params: {'date': GetDateFormat(this.props.date)}
-		}).then(res => this.setState({
-			routesAM: res['data']['AM'],
-			routesPM: res['data']['PM'],
-			routesNight: res['data']['night']
-		}));
+		}).then(res => {
+            this.setState({
+                routesAM: res['data']['AM'],
+                routesPM: res['data']['PM'],
+                routesNight: res['data']['night']
+            });
+            // console.log("daily schedule:" + JSON.stringify(res));
+		})
 	}
 
 	handleWeatherClick(weather) {
@@ -392,11 +396,63 @@ class ScheduleDrawer extends React.Component {
 					</VehiclePanel>
 					<UnplannedPanel>
 						<h4> Unplanned routes </h4>
+						<UnplannedPanelContent
+                            routesAM = {this.state.routesAM}
+                            routesPM = {this.state.routesPM}
+                            routesNight = {this.state.routesNight}/>
 					</UnplannedPanel>
 				</ContainerPaper>
 				</div>
 
 			</Drawer>
+		);
+	}
+}
+
+class UnplannedPanelContent extends  React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+    	return (
+			<TableContainer>
+				<Table fullWidth={true} size="small">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell align="center">Time</TableCell>
+                            <TableCell align="center">Route</TableCell>
+                            <TableCell align="center">Status</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {this.props.routesAM.map((row) => {
+                            if(row.route_status !== 'assigned')
+                            	return<TableRow key={row.route}>
+                                <TableCell align="center">AM</TableCell>
+                                <TableCell align="center">{row.route}</TableCell>
+                                <TableCell align="center">{row.route_status}</TableCell>
+                            </TableRow>
+						})}
+                        {this.props.routesPM.map((row) => {
+                            if(row.route_status !== 'assigned')
+                                return<TableRow key={row.route}>
+                                    <TableCell align="center">PM</TableCell>
+                                    <TableCell align="center">{row.route}</TableCell>
+                                    <TableCell align="center">{row.route_status}</TableCell>
+                                </TableRow>
+						})}
+                        {this.props.routesNight.map((row) => {
+                            if(row.route_status !== 'assigned')
+                                return<TableRow key={row.route}>
+                                    <TableCell align="center">Night</TableCell>
+                                    <TableCell align="center">{row.route}</TableCell>
+                                    <TableCell align="center">{row.route_status}</TableCell>
+                                </TableRow>
+						})}
+                    </TableBody>
+				</Table>
+			</TableContainer>
 		);
 	}
 }
