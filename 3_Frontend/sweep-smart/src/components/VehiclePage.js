@@ -15,6 +15,10 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Paper from '@material-ui/core/Paper';
+import InputLabel from '@material-ui/core/InputLabel';
+import Input from '@material-ui/core/Input';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import { withStyles } from '@material-ui/styles';
 import { makeStyles } from '@material-ui/core/styles';
@@ -238,10 +242,10 @@ function VehicleTableBody (props) {
 				<NoBottomTableCell size="small" bold={true}>{value[0]}</NoBottomTableCell>
 				<NoBottomTableCell size="small">{value[1]['8-12 shift']}</NoBottomTableCell>
 				<NoBottomTableCell size="small">{value[1]['8-12 operator']}</NoBottomTableCell>
-				<NoBottomTableCell size="small"><DailyStatus status={value[1]['8-12 status']}/></NoBottomTableCell>
+				<NoBottomTableCell size="small"><DialogSelect status={value[1]['8-12 status']}/></NoBottomTableCell>
 				<NoBottomTableCell size="small">{value[1]['12-4 shift']}</NoBottomTableCell>
 				<NoBottomTableCell size="small">{value[1]['12-4 operator']}</NoBottomTableCell>
-				<NoBottomTableCell size="small"><DailyStatus status={value[1]['12-4 status']}/></NoBottomTableCell>
+				<NoBottomTableCell size="small"><DialogSelect status={value[1]['12-4 status']}/></NoBottomTableCell>
 				<NoBottomTableCell size="small"><AddCommentDialog/></NoBottomTableCell>
 			</TableRow>
 		);
@@ -251,7 +255,7 @@ function VehicleTableBody (props) {
 				<NoBottomTableCell size="small" bold={true}>{value[0]}</NoBottomTableCell>
 				<NoBottomTableCell size="small">{value[1]['night shift']}</NoBottomTableCell>
 				<NoBottomTableCell size="small">{value[1]['night operator']}</NoBottomTableCell>
-				<NoBottomTableCell size="small"><DailyStatus status={value[1]['night status']}/></NoBottomTableCell>
+				<NoBottomTableCell size="small"><DialogSelect status={value[1]['night status']}/></NoBottomTableCell>
 				<NoBottomTableCell size="small"><AddCommentDialog/></NoBottomTableCell>
 			</TableRow>
 		);
@@ -433,6 +437,77 @@ class AddCommentDialog extends React.Component {
 		);
 	}
 }
+
+///////////////////////////For daily status button drop down /////////////////////////////////
+
+const statusStyles = makeStyles((theme) => ({
+  container: {
+    display: 'flex',
+    flexWrap: 'wrap',
+  },
+  formControl: {
+    margin: theme.spacing(1),
+    minWidth: 120,
+  },
+}));
+
+function DialogSelect(props) {
+  const classes = statusStyles();
+  const [open, setOpen] = React.useState(false);
+  const [status, setStatus] = React.useState('');
+
+  const handleChange = (event) => {
+    setStatus(Number(event.target.value) || '');
+  };
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleSubmit = () => {
+  	// add POST API to update vehicle status
+    setOpen(false);
+  };
+
+  return (
+    <div>
+      <DailyStatus onClick={handleClickOpen} status={props.status}/>
+      <Dialog disableBackdropClick disableEscapeKeyDown open={open} onClose={handleClose}>
+        <DialogTitle>Change the status</DialogTitle>
+        <DialogContent>
+          <form className={classes.container}>
+            <FormControl className={classes.formControl}>
+              <InputLabel htmlFor="demo-dialog-native">Status</InputLabel>
+              <Select
+                native
+                value={status}
+                onChange={handleChange}
+                input={<Input id="demo-dialog-native" />}
+              >
+                <option aria-label="None" value="" />
+                <option value={10}>Available</option>
+                <option value={20}>Not in use</option>
+              </Select>
+            </FormControl>
+          </form>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} color="primary">
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
+}
+///////////////////////////For daily status button drop down /////////////////////////////////
 
 function DailyStatus(props) {
 	if (props.status == 'in-use') {
