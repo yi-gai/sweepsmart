@@ -158,13 +158,15 @@ class VehiclePage extends React.Component {
 		})
 	}
 
-	updateStatus(vid, shift, currentStat) {
+	updateStatus(vid, shift, currentStat, prevStat) {
+		if (currentStat === prevStat) {
+			return;
+		}
 		let res = this.state.dailyDayData;
 		if (shift == 'night') {
 			res = this.state.dailyNightData;
 			res[vid]['night status'] = currentStat;
 			this.setState({dailyNightData: res});
-			
 		} else {
 			let dayShift = '8-12 status';
 			if (shift == 'PM') {
@@ -173,6 +175,17 @@ class VehiclePage extends React.Component {
 			res[vid][dayShift] = currentStat;
 			this.setState({dailyDayData: res});
 		}
+		let params = new URLSearchParams();
+		params.append('date', GetDateFormat(this.props.date));
+		params.append('shift', shift);
+		params.append('vehicle', vid);
+		params.append('vehicle_status', currentStat);
+		API({
+			method: 'put',
+			url: '/vehicle/day/action',
+			withCredentials: false,
+			data: params
+		});
 	}
 
 	render() {
@@ -473,17 +486,14 @@ const statusStyles = makeStyles((theme) => ({
 function DialogSelect(props) {
   const classes = statusStyles();
   const [open, setOpen] = React.useState(false);
-  const [status, setStatus] = React.useState('');
+  const [optionValue, setOptionValue] = React.useState(0);
 
   const vehicleID = props.vehicle;
   const shift = props.shift;
-  var currentStat = props.status;
-  var optionValue = 0;
 
   const handleChange = (event) => {
-  	optionValue = Number(event.target.value);
-    setStatus(Number(event.target.value) || '');
-    console.log(optionValue); // 10 -> available, 20 -> out-of-service, 0 -> nothing happened
+    setOptionValue(Number(event.target.value));
+    // 10 -> available, 20 -> out-of-service, 0 -> nothing happened
   };
 
   const handleClickOpen = () => {
@@ -495,19 +505,20 @@ function DialogSelect(props) {
   };
 
   const handleSubmit = () => {
-  	if (optionValue == 20) {
+  	let currentStat = props.status;
+  	if (optionValue === 20) {
   		currentStat = "out-of-service";
-  	} else if (optionValue == 10) {
+  	} else if (optionValue === 10) {
   		currentStat = "available";
   	}
-  	props.updateState(vehicleID, shift, currentStat);
-  	// add PUT API to update vehicle status
+  	props.updateState(vehicleID, shift, currentStat, props.status);
+  	setOptionValue(0);
     setOpen(false);
   };
 
   return (
     <div>
-      <DailyStatus handleClickOpen={handleClickOpen} status={currentStat}/>
+      <DailyStatus handleClickOpen={handleClickOpen} status={props.status}/>
       <Dialog disableBackdropClick disableEscapeKeyDown open={open} onClose={handleClose}>
         <DialogTitle>Change the status</DialogTitle>
         <DialogContent>
@@ -516,10 +527,10 @@ function DialogSelect(props) {
               <InputLabel htmlFor="demo-dialog-native">Status</InputLabel>
               <Select
                 native
-                value={status}
+                value={optionValue}
                 onChange={handleChange}
                 input={<Input id="demo-dialog-native" />}>
-                <option aria-label="None" value="" />
+                <option aria-label="None" value={0}/>
                 <option value={10}>Available</option>
                 <option value={20}>Out-of-service</option>
               </Select>
