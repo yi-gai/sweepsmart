@@ -88,6 +88,7 @@ class VehiclePage extends React.Component {
 		this.handleDelete = this.handleDelete.bind(this);
 		this.handlePost = this.handlePost.bind(this);
 		this.fetchVehicleData = this.fetchVehicleData.bind(this);
+		this.updateStatus = this.updateStatus.bind(this);
 	}
 
 	componentDidMount() {
@@ -157,6 +158,23 @@ class VehiclePage extends React.Component {
 		})
 	}
 
+	updateStatus(vid, shift, currentStat) {
+		let res = this.state.dailyDayData;
+		if (shift == 'night') {
+			res = this.state.dailyNightData;
+			res[vid]['night status'] = currentStat;
+			this.setState({dailyNightData: res});
+			
+		} else {
+			let dayShift = '8-12 status';
+			if (shift == 'PM') {
+				dayShift = '12-4 status';
+			}
+			res[vid][dayShift] = currentStat;
+			this.setState({dailyDayData: res});
+		}
+	}
+
 	render() {
 		return (
 			<div className="content-container">
@@ -169,7 +187,8 @@ class VehiclePage extends React.Component {
 							weeklyData={this.state.weeklyData}
 							dailyDayData={this.state.dailyDayData}
 							dailyNightData={this.state.dailyNightData}
-							handleDelete={this.handleDelete}/>
+							handleDelete={this.handleDelete}
+							updateStatus={this.updateStatus}/>
 					</Table>
 				</TableContainer>
 			</div>
@@ -242,10 +261,10 @@ function VehicleTableBody (props) {
 				<NoBottomTableCell size="small" bold={true}>{value[0]}</NoBottomTableCell>
 				<NoBottomTableCell size="small">{value[1]['8-12 shift']}</NoBottomTableCell>
 				<NoBottomTableCell size="small">{value[1]['8-12 operator']}</NoBottomTableCell>
-				<NoBottomTableCell size="small"><DialogSelect status={value[1]['8-12 status']}/></NoBottomTableCell>
+				<NoBottomTableCell size="small"><DialogSelect status={value[1]['8-12 status']} vehicle={value[0]} shift={'AM'} updateState={props.updateStatus}/></NoBottomTableCell>
 				<NoBottomTableCell size="small">{value[1]['12-4 shift']}</NoBottomTableCell>
 				<NoBottomTableCell size="small">{value[1]['12-4 operator']}</NoBottomTableCell>
-				<NoBottomTableCell size="small"><DialogSelect status={value[1]['12-4 status']}/></NoBottomTableCell>
+				<NoBottomTableCell size="small"><DialogSelect status={value[1]['12-4 status']} vehicle={value[0]} shift={'PM'} updateState={props.updateStatus}/></NoBottomTableCell>
 				<NoBottomTableCell size="small"><AddCommentDialog/></NoBottomTableCell>
 			</TableRow>
 		);
@@ -255,7 +274,7 @@ function VehicleTableBody (props) {
 				<NoBottomTableCell size="small" bold={true}>{value[0]}</NoBottomTableCell>
 				<NoBottomTableCell size="small">{value[1]['night shift']}</NoBottomTableCell>
 				<NoBottomTableCell size="small">{value[1]['night operator']}</NoBottomTableCell>
-				<NoBottomTableCell size="small"><DialogSelect status={value[1]['night status']}/></NoBottomTableCell>
+				<NoBottomTableCell size="small"><DialogSelect status={value[1]['night status']} vehicle={value[0]} shift={'night'} updateState={props.updateStatus}/></NoBottomTableCell>
 				<NoBottomTableCell size="small"><AddCommentDialog/></NoBottomTableCell>
 			</TableRow>
 		);
@@ -456,8 +475,15 @@ function DialogSelect(props) {
   const [open, setOpen] = React.useState(false);
   const [status, setStatus] = React.useState('');
 
+  const vehicleID = props.vehicle;
+  const shift = props.shift;
+  var currentStat = props.status;
+  var optionValue = 0;
+
   const handleChange = (event) => {
+  	optionValue = Number(event.target.value);
     setStatus(Number(event.target.value) || '');
+    console.log(optionValue); // 10 -> available, 20 -> out-of-service, 0 -> nothing happened
   };
 
   const handleClickOpen = () => {
@@ -469,13 +495,19 @@ function DialogSelect(props) {
   };
 
   const handleSubmit = () => {
-  	// add POST API to update vehicle status
+  	if (optionValue == 20) {
+  		currentStat = "out-of-service";
+  	} else if (optionValue == 10) {
+  		currentStat = "available";
+  	}
+  	props.updateState(vehicleID, shift, currentStat);
+  	// add PUT API to update vehicle status
     setOpen(false);
   };
 
   return (
     <div>
-      <DailyStatus onClick={handleClickOpen} status={props.status}/>
+      <DailyStatus handleClickOpen={handleClickOpen} status={currentStat}/>
       <Dialog disableBackdropClick disableEscapeKeyDown open={open} onClose={handleClose}>
         <DialogTitle>Change the status</DialogTitle>
         <DialogContent>
@@ -486,11 +518,10 @@ function DialogSelect(props) {
                 native
                 value={status}
                 onChange={handleChange}
-                input={<Input id="demo-dialog-native" />}
-              >
+                input={<Input id="demo-dialog-native" />}>
                 <option aria-label="None" value="" />
                 <option value={10}>Available</option>
-                <option value={20}>Not in use</option>
+                <option value={20}>Out-of-service</option>
               </Select>
             </FormControl>
           </form>
@@ -513,9 +544,9 @@ function DailyStatus(props) {
 	if (props.status == 'in-use') {
 		return <InUseIcon/>;
 	} else if (props.status === 'available') {
-		return <AvailableIcon/>;
+		return <Button onClick={props.handleClickOpen}><AvailableIcon/></Button>;
 	} else if (props.status === 'out-of-service') {
-		return <OutOfServiceIcon/>;
+		return <Button onClick={props.handleClickOpen}><OutOfServiceIcon/></Button>;
 	} else {
 		return;
 	}
