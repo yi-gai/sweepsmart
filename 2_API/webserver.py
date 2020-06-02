@@ -998,18 +998,25 @@ def get_daily_vehicle_infomation():
         vehicles = db.engine.execute("select vehicle_id from VEHICLES where status_am=1 or status_pm=1;")
         for v in vehicles:
             v_data = {}
-            v_default_stat = 'available'
-            v_maint = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where (date_service='{ds}' or (date_service<'{ds}' and date_end>='{ds}')) and vehicle_id={v};".format(ds=date,v=v[0])).fetchone()[0]
-            if v_maint > 0:
-                v_default_stat = 'out-of-service'
             v_data['8-12 shift'] = ''
             v_data['8-12 operator id'] = 0
             v_data['8-12 operator'] = ''
-            v_data['8-12 status'] = v_default_stat
             v_data['12-4 shift'] = ''
             v_data['12-4 operator id'] = 0
             v_data['12-4 operator'] = ''
+            
+            v_default_stat = 'available'
+            v_maint = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where (date_service='{ds}' or (date_service<'{ds}' and date_end>='{ds}')) and vehicle_id={v} and shift='AM';".format(ds=date,v=v[0])).fetchone()[0]
+            if v_maint > 0:
+                v_default_stat = 'out-of-service'
+            v_data['8-12 status'] = v_default_stat
+
+            v_default_stat = 'available'
+            v_maint = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where (date_service='{ds}' or (date_service<'{ds}' and date_end>='{ds}')) and vehicle_id={v} and shift='PM';".format(ds=date,v=v[0])).fetchone()[0]
+            if v_maint > 0:
+                v_default_stat = 'out-of-service'
             v_data['12-4 status'] = v_default_stat
+
             v_info = db.engine.execute("select route_id,employee_id,shift from ROUTE_LOG where date_swept='{d}' and vehicle_id={v}".format(d=date,v=v[0]))
             for i in v_info:
                 if i[2].lower() == 'am':
@@ -1053,7 +1060,7 @@ def get_daily_maintenance_infomation():
     data = {}
     # get from database
     vehicles = db.engine.execute("select * from VEHICLES;")
-    maintenance_v = db.engine.execute("select vehicle_id from VEHICLE_MAINTENANCE where date_service={d} or (date_service <={d} and date_end >={d});".format(d=date))
+    maintenance_v = db.engine.execute("select vehicle_id from VEHICLE_MAINTENANCE where date_service='{d}'' or (date_service <='{d}' and date_end >='{d}');".format(d=date))
     #not sure which fields we need
     for row in vehicles:
         data[row[0]] = {
@@ -1074,26 +1081,31 @@ def get_daily_maintenance_infomation():
 
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
-@app.route('/vehicle/day/action', methods=["PUT"])
+@app.route('/vehicle/day/action', methods=["PUT", "OPTIONS"])
 def change_vehicle_day():
-    if request.headers['Content-Type'] == 'application/json':
+    if request.method == 'OPTIONS':
+        headers = {
+            'Access-Control-Allow-Methods': 'POST,GET,OPTIONS,PUT,DELETE',
+            'Access-Control-Allow-Origin': '*'
+        }
+        return Response(None, status=200, headers=headers)
+    if 'application/json' in request.headers['Content-Type'].lower():
         arguments = request.get_json()
-    if request.headers['Content-Type'] == 'application/x-www-form-urlencoded':
+    if 'application/x-www-form-urlencoded' in request.headers['Content-Type'].lower():
         arguments = request.form
     date = arguments.get("date")
+    shift = arguments.get("shift")
     vehicle = arguments.get("vehicle")
     vehicle_status = arguments.get("vehicle_status")
-    comment = arguments.get("comment", default="")
+    # comment = arguments.get("comment", default="")
     # modify database
-    if request.method == 'POST':
-        db.engine.execute("insert into `VEHICLE_MAINTENANCE` (date_service,vehicle_id,comment) VALUES ('{d}',{v},'{c}');".format(d=date,v=vehicle,c=comment))
-    elif request.method == 'PUT':
-        if vehicle_status.lower() == 'available':
-            yester = datetime.strptime(date,'%Y-%m-%d') - timedelta(days=1)
-            yesterday = datetime.strftime(yester, '%Y-%m-%d')
-            db.engine.execute("update VEHICLE_MAINTENANCE set date_end='{y}' where vehicle_id={id} and date_end>='{d}';".format(y=yesterday,id=vehicle,d=date))
-        else:
-            db.engine.execute("update VEHICLE_MAINTENANCE set comment='{c}' where vehicle_id={id} and date_service='{d}';".format(c=comment,id=vehicle,d=date))
+    cur_maint = db.engine.execute("select maint_id from VEHICLE_MAINTENANCE where vehicle_id={v} and date_service='{d}' and shift='{s}'".format(v=vehicle, d=date, s=shift)).fetchone()
+    if cur_maint is not None and vehicle_status == 'available':
+        db.engine.execute("delete from VEHICLE_MAINTENANCE where maint_id={id};".format(id=cur_maint[0]))
+    elif cur_maint is None and vehicle_status == 'out-of-service':
+        db.engine.execute("insert into VEHICLE_MAINTENANCE (vehicle_id,date_service,shift) VALUES ({v},'{d}','{s}');".format(v=vehicle, d=date, s=shift))
+
+    db.session.commit()
     return Response(None, status=200, mimetype='application/json')
 
 @app.route('/vehicle/day/comment', methods=["GET", "POST", "PUT", "DELETE"])
@@ -1132,7 +1144,8 @@ def get_weekly_vehicle_infomation():
     date_dt = datetime.strptime(date,"%Y-%m-%d")
     data = {}
 
-    wk_start, wk_end = get_wk_start_end(date_dt)
+    week = get_week(date_dt)
+    wk_start, wk_end = week[0].strftime("%Y-%m-%d"), week[-1].strftime("%Y-%m-%d")
 
     vehicles = db.engine.execute("select vehicle_id from VEHICLES;")
     for v in vehicles:
@@ -1142,13 +1155,19 @@ def get_weekly_vehicle_infomation():
         tot_maint_days = db.engine.execute("select sum(DATEDIFF(date_end,date_service)+1) from VEHICLE_MAINTENANCE where (date_service>='{ds}' or (date_service<'{ds}' and date_end>='{ds}')) and date_service<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
         if not tot_maint_days:
             tot_maint_days = 0
+        else:
+            tot_maint_days = int(tot_maint_days)
         maint_days = min(tot_maint_days,5)
         available_days = 5-maint_days
         maint_today = db.engine.execute("select count(*) from VEHICLE_MAINTENANCE where (date_service='{ds}' or (date_service<'{ds}' and date_end>='{ds}')) and vehicle_id={v};".format(ds=date,v=v[0])).fetchone()[0]
         v_status = 'available'
         if maint_today > 0:
             v_status = 'out-of-service'
-        maint_hours = db.engine.execute("select HOUR(sum(hours_service)) from VEHICLE_MAINTENANCE where date_service>='{ds}' and date_service<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
+        maint_hours = db.engine.execute("select sum(hours_service) from VEHICLE_MAINTENANCE where date_service>='{ds}' and date_service<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0])).fetchone()[0]
+        if not maint_hours:
+            maint_hours = 0
+        else:
+            maint_hours = int(maint_hours)
         v_data = {'status':v_status,'maps_swept':num_swept,'maps_missed':num_missed,'available_days':available_days,'out_of_service_days':maint_days,'hrs_maintenance':maint_hours,'logs':[]}
         v_logs = db.engine.execute("select log_date,shift,comment from VEHICLE_DAY_LOG where log_date>='{ds}' and log_date<='{de}' and vehicle_id={v};".format(ds=wk_start,de=wk_end,v=v[0]))
         for l in v_logs:
@@ -1186,7 +1205,7 @@ def get_weekly_vehicle_infomation():
     # data['data'] = availables+unavailables
     # data['num_availables'] = len(availables)
     # data['num_unavailables'] = len(unavailables)
-
+    print(data, file=sys.stderr)
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 @app.route('/vehicle/action', methods=["POST", "DELETE", "OPTIONS"])
