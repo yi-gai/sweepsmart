@@ -32,7 +32,7 @@
     font-family: Lato;
     font-style: normal;
     font-weight: 900;
-    font-size: 40px;
+    font-size: 30px;
     color: #3A423E;
     position: relative;
 }
@@ -141,4 +141,12 @@
 .operator-drawer {
     background: #E5E5E5;
     height: 100%;
+}
+
+.leave-type {
+    margin: auto;
+    width: 50%;
+    border-radius: 5px;
+    background: #80C7D6;
+    color: white;
 }

@@ -14,6 +14,7 @@ import Drawer from '@material-ui/core/Drawer';
 import Modal from '@material-ui/core/Modal';
 import SvgIcon from '@material-ui/core/SvgIcon';
 import CloseIcon from '@material-ui/icons/Close';
+import IconButton from '@material-ui/core/IconButton';
 import FaceIcon from '@material-ui/icons/Face';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -201,16 +202,16 @@ class OperatorPage extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
     // changes day/night shift tab
-    if (prevProps.tab!= this.props.tab && this.state.data) {
+    if (prevProps.tab!== this.props.tab && this.state.data) {
       if (this.props.tab === 'Day Shift')
         this.setState({onScreenData: this.state.data.day});
       else if (this.props.tab === 'Night Shift')
         this.setState({onScreenData: this.state.data.night});
     }
-    if (prevProps.viewType != this.props.viewType){
+    if (prevProps.viewType !== this.props.viewType){
       this.makeMainPageAPICall();
     }
-    if (prevProps.date != this.props.date){
+    if (prevProps.date !== this.props.date){
       this.setState({drawer_date: this.props.date})
       this.makeMainPageAPICall();
     }
@@ -232,6 +233,25 @@ class OperatorPage extends React.Component {
 
   handleModalClose(){
     this.setState({modal: false})
+  }
+  handleLeaveDelete = (shift) => {
+    let params = new URLSearchParams();
+    params.append('employee_id', this.state.drawer_data.employee_id);
+    params.append('date', this.state.drawer_date.toISOString().slice(0, 10))
+    params.append('shift', shift)
+    API({
+			method: 'post',
+			url: '/operator/individual/remove_leave',
+			withCredentials: false,
+			data: params
+		}).then(res => {
+			if (res['status'] === 200) {
+				alert("Leave removed!");
+        this.makeDrawerAPICall(this.state.drawer_data.employee_id)
+			} else {
+				alert("Error");
+			}
+		})
   }
 
   handleOperatorDelete = (eid) =>{
@@ -328,7 +348,11 @@ class OperatorPage extends React.Component {
       children.push(<StyledTableNormalCell align="center">{first.route}</StyledTableNormalCell>)
       children.push(<StyledTableNormalCell align="center">{first.working_hrs}</StyledTableNormalCell>)
       if(first.leave_hrs)
-        children.push(<StyledTableNormalCell align="center">{first.leave_hrs}</StyledTableNormalCell>)
+        children.push(<StyledTableNormalCell align="center">
+                        <div className="leave-type">{first.leave_type}</div>
+                        {first.leave_hrs}
+                        <IconButton onClick={() => this.handleLeaveDelete('AM')}><CloseIcon size="small"/></IconButton>
+                      </StyledTableNormalCell>)
       else
         children.push(<StyledTableNormalCell align="center">
                         <AddLeaveAlertDialog
@@ -353,7 +377,11 @@ class OperatorPage extends React.Component {
       children.push(<StyledTableNormalCell align="center">{second.route}</StyledTableNormalCell>)
       children.push(<StyledTableNormalCell align="center">{second.working_hrs}</StyledTableNormalCell>)
       if(second.leave_hrs)
-        children.push(<StyledTableNormalCell align="center">{second.leave_hrs}</StyledTableNormalCell>)
+        children.push(<StyledTableNormalCell align="center">
+                        <div className="leave-type">{second.leave_type}</div>
+                        {second.leave_hrs}
+                        <IconButton  onClick={() => this.handleLeaveDelete('PM')}><CloseIcon size="small"/></IconButton>
+                      </StyledTableNormalCell>)
       else
         children.push(<StyledTableNormalCell align="center">
                         <AddLeaveAlertDialog
@@ -464,7 +492,7 @@ class OperatorPage extends React.Component {
                     <FaceIcon className="user-icon"/>
                     <div className="operator-top-text">
                       <div className="name-text">
-                        <span>{this.state.drawer_data.name} R. Roger</span>
+                        <span>{this.state.drawer_data.name}</span>
                       </div>
                       <div className="shift-text">
                           {this.state.tab} Operator
@@ -666,7 +694,7 @@ class AddLeaveAlertDialog extends React.Component {
 
   handleLeaveReasonChange(event) {
     let reason = event.target.value
-    if (reason != '') {
+    if (reason !== '') {
 			this.setState({isAvailable: true});
 		} else {
 			this.setState({isAvailable: false});
@@ -739,7 +767,7 @@ class AddCommentAlertDialog extends React.Component {
 
   handleCommentChange(event) {
 		let comment = event.target.value;
-		if (comment != '') {
+		if (comment !== '') {
 			this.setState({isAvailable: true});
 		} else {
 			this.setState({isAvailable: false});

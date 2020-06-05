@@ -716,53 +716,49 @@ def get_individual_operator_info():
     wk_of_month = pendulum.parse(date).week_of_month
 
     operator_info = db.engine.execute("select e.employee_name,r.shift,e.daily_hours,r.route_id,r.notes from DRIVERS e join ROUTE_LOG r on e.employee_id=r.employee_id where r.date_swept='{d}' and e.employee_id={e};".format(d=date,e=employee_id))
-    operator_routes = []
     operator_name = ""
-    operator_shift = ""
-    operator_hours = 0
-    operator_comments = ""
+    operator_hours = []
+    assignments = []
     for operator in operator_info:
         operator_name = operator[0]
-        operator_shift = operator[1]
-        operator_hours = int(operator[2])
-        operator_routes.append(operator[3])
-        operator_comments = operator[4]
+        assignments.append({
+            'shift': operator[1],
+            'route': operator[3],
+            'working_hrs': int(operator[2]),
+            'comment':operator[4]
+        })
 
     if not operator_name:
         operator_info = db.engine.execute("select employee_name,shift,daily_hours from DRIVERS where employee_id={e};".format(e=employee_id)).fetchone()
         operator_name = operator_info[0]
-        operator_shift = operator_info[1]
-        operator_hours = int(operator_info[2])
+        assignments.append({
+            'shift': 'AM', #TODO
+            'route': '', #TODO
+            'working_hrs': int(operator_info[2]),
+            'comment': ''
+        })
+        assignments.append({
+            'shift': 'PM', #TODO
+            'route': '', #TODO
+            'working_hrs': int(operator_info[2]),
+            'comment': ''
+        })
 
     absences_query = "select HOUR(sum(time_missed)) from ABSENCES where date_absence='{d}' and employee_id={e};"
     num_leave_hrs = db.engine.execute(absences_query.format(d=date,e=employee_id)).fetchone()[0]
     if not num_leave_hrs:
         num_leave_hrs = 0
-    leave_times = db.engine.execute("select time_start,time_end from ABSENCES where date_absence='{d}' and employee_id={e};".format(d=date,e=employee_id))
-    leave_hrs = ""
+    leave_times = db.engine.execute("select time_start,time_end,shift,type from ABSENCES where date_absence='{d}' and employee_id={e};".format(d=date,e=employee_id))
     for l in leave_times:
-        if leave_hrs:
-            leave_hrs += ","
-        leave_hrs += "{s}-{e}".format(s=l[0],e=l[1])
+        for i, _ in enumerate(assignments):
+            if assignments[i]['shift'] == l[2]:
+                assignments[i]['leave_hrs'] = "{s}-{e}".format(s=str(l[0])[:-3],e=str(l[1])[:-3])
+                assignments[i]['leave_type'] = l[3]
 
-    overtime_query = "select HOUR(sum(time_over)) from OVERTIME where date_overtime='{d}' and employee_id={e};"
-    overtime_hrs = db.engine.execute(overtime_query.format(d=date,e=employee_id)).fetchone()[0]
-    if not overtime_hrs:
-        overtime_hrs = 0
 
     data['name'] = operator_name
     data['status'] = True
-
-    data['assignments'] = [{'shift': operator_shift,
-                            'route': operator_routes,
-                            'working_hrs': max(0,operator_hours+overtime_hrs-num_leave_hrs),
-                            'overtime_hrs':overtime_hrs,
-                            'leave_hrs':leave_hrs,
-                            'num_leave_hrs': num_leave_hrs,
-                            'comment':operator_comments,
-                            'acting_7.5_hrs': 0, # ANNA what are these
-                            'acting_12.5_hrs': 0,
-                            'standby_hrs': 0}]
+    data['assignments'] = assignments
     return Response(json.dumps(data), status=200, mimetype='application/json')
 
 # @app.route('/operator/individual/history', methods=["GET"])
@@ -789,10 +785,27 @@ def update_individual_operator_leave():
     date = arguments.get('date')
     start_time = arguments.get('start_time')
     end_time = arguments.get('end_time')
+    shift = arguments.get('shift')
     reason = arguments.get('reason')
     # modify database
-    db.engine.execute("insert into `ABSENCES` ( employee_id,date_absence,time_start,time_end,type) VALUES ({eid},'{d}','{ts}','{te}','{t}');".format(eid=employee_id,d=date,ts=start_time,te=end_time,t=reason))
+    db.engine.execute("insert into `ABSENCES` ( employee_id,date_absence,time_start,time_end,type,shift) VALUES ({eid},'{d}','{ts}','{te}','{t}','{s}');".format(eid=employee_id,d=date,ts=start_time,te=end_time,t=reason, s=shift))
 
+    return Response(None, status=200, mimetype='application/json')
+
+@app.route('/operator/individual/remove_leave', methods=["POST"])
+def remove_individual_operator_leave():
+    if request.headers['Content-Type'] == 'application/json':
+        arguments = request.get_json()
+    if 'application/x-www-form-urlencoded' in request.headers['Content-Type']:
+        arguments = request.form
+    
+    employee_id = arguments.get('employee_id')
+    date = arguments.get('date')
+    shift = arguments.get('shift')
+    print(employee_id, file=sys.stderr)
+    print(date, file=sys.stderr)
+    print(shift, file=sys.stderr)
+    db.engine.execute("delete from ABSENCES where employee_id={eid} and date_absence='{d}' and shift='{s}';".format(eid=employee_id, d=date, s=shift))
     return Response(None, status=200, mimetype='application/json')
 
 @app.route('/operator/day/comment', methods=["POST"])
