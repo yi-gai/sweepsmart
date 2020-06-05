@@ -43,7 +43,7 @@ function ProcessRawData(rawData) {
     });
 
     // process night operators
-    rawData["day"].forEach(staff => {
+    rawData["night"].forEach(staff => {
         processedData["night"].push(staff.name);
     });
 
@@ -89,11 +89,9 @@ class StaffPanel extends React.Component {
             .then(
                 (result) => {
                     this.setState ({data: ProcessRawData(result)});
-                    console.log("OndutyStaff: "+JSON.stringify(this.state.data));
                 },
                 (error) => {
                     this.setState ({data: dummyData});
-                    console.log("OndutyStaff: "+JSON.stringify(this.state.data));
                     console.log('week route error : ' + error)
                 }
             );
@@ -109,14 +107,11 @@ class StaffPanel extends React.Component {
                     let updateddata = this.state.data;
                     updateddata["off-duty"] = ProcessOffDutyStaffData(result);
                     this.setState ({data: updateddata});
-                    console.log("StaffPanel: "+JSON.stringify(this.state.data));
                 },
                 (error) => {
                     let updateddata = this.state.data;
-                    console.log("stateData: " + JSON.stringify(updateddata));
                     updateddata["off-duty"] = ["G", "H"];
                     this.setState ({data: updateddata});
-                    console.log("StaffPanel: "+JSON.stringify(this.state.data));
                     console.log('week route error : ' + error)
                 }
             );

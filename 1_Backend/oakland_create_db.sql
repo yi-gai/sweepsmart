@@ -137,13 +137,13 @@ CREATE TABLE `ROUTES` (
 -- `Mon1_PM` smallint(6) default 0,
 --
 
-LOCK TABLES `ROUTES` WRITE;
-/*!40000 ALTER TABLE `ROUTES` DISABLE KEYS */;
-INSERT INTO `ROUTES` (route_id, Mon1_AM, Mon3_AM, Thu1_AM, Thu3_AM)VALUES ('1A_dummy',1,1,1,1);
-INSERT INTO `ROUTES` (route_id, Mon1_AM, Mon2_AM, Mon3_AM, Mon4_AM, Thu1_AM, Thu2_AM, Thu3_AM, Thu4_AM)VALUES ('1A_dummy3',1,1,1,1,1,1,1,1);
-INSERT INTO `ROUTES` (route_id, Mon2_PM, Mon4_PM, Thu2_PM, Thu4_PM)VALUES ('1A_dummy2',1,1,1,1);
-/*!40000 ALTER TABLE `ROUTES` ENABLE KEYS */;
-UNLOCK TABLES;
+# LOCK TABLES `ROUTES` WRITE;
+# /*!40000 ALTER TABLE `ROUTES` DISABLE KEYS */;
+# INSERT INTO `ROUTES` (route_id, Mon1_AM, Mon3_AM, Thu1_AM, Thu3_AM)VALUES ('1A_dummy',1,1,1,1);
+# INSERT INTO `ROUTES` (route_id, Mon1_AM, Mon2_AM, Mon3_AM, Mon4_AM, Thu1_AM, Thu2_AM, Thu3_AM, Thu4_AM)VALUES ('1A_dummy3',1,1,1,1,1,1,1,1);
+# INSERT INTO `ROUTES` (route_id, Mon2_PM, Mon4_PM, Thu2_PM, Thu4_PM)VALUES ('1A_dummy2',1,1,1,1);
+# /*!40000 ALTER TABLE `ROUTES` ENABLE KEYS */;
+# UNLOCK TABLES;
 
 --
 -- Table structure for table `STREETS`
@@ -166,9 +166,9 @@ LOCK TABLES `STREETS` WRITE;
 /*!40000 ALTER TABLE `STREETS` DISABLE KEYS */;
 #INSERT INTO `STREETS` VALUES ('sid_1234','1A_dummy','Test Street'),
 #                             ('sid_4557','1A_dummy2','Fake Street');
-INSERT INTO `STREETS` ( route_id, street_name) VALUES ('1A_dummy','One Street');
-INSERT INTO `STREETS` ( route_id, street_name) VALUES ('1A_dummy2','Two Ave');
-INSERT INTO `STREETS` ( route_id, street_name) VALUES ('1A_dummy','Three Blvd');
+# INSERT INTO `STREETS` ( route_id, street_name) VALUES ('1A_dummy','One Street');
+# INSERT INTO `STREETS` ( route_id, street_name) VALUES ('1A_dummy2','Two Ave');
+# INSERT INTO `STREETS` ( route_id, street_name) VALUES ('1A_dummy','Three Blvd');
 
 /*!40000 ALTER TABLE `STREETS` ENABLE KEYS */;
 UNLOCK TABLES;
@@ -222,25 +222,11 @@ CREATE TABLE `ROUTE_LOG` (
   `shift` varchar(255) default NULL,
   `notes` varchar(255) default NULL,
   `completion` varchar(255) default NULL,
-  `disabled` smallint(6) default 0,
   PRIMARY KEY  (`log_id`),
   KEY `route_id` (`route_id`),
   KEY `employee_id` (`employee_id`),
   KEY `vehicle_id` (`vehicle_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
-
---
--- Dumping data for table `ROUTE_LOG`
---
-
-LOCK TABLES `ROUTE_LOG` WRITE;
-/*!40000 ALTER TABLE `ROUTE_LOG` DISABLE KEYS */;
-INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('1A_dummy',1234,1234,'2020-03-15','AM','completed');
-INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('1A_dummy2',1234,1234,'2020-03-15','PM','completed');
-INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift,completion) VALUES ('1A_dummy',4567,1234,'2020-03-20','AM','completed');
-
-/*!40000 ALTER TABLE `ROUTE_LOG` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `DAY_LOG`
@@ -261,11 +247,11 @@ CREATE TABLE `DAY_LOG` (
 -- Dumping data for table `DAY_LOG`
 --
 
-LOCK TABLES `DAY_LOG` WRITE;
-/*!40000 ALTER TABLE `DAY_LOG` DISABLE KEYS */;
-INSERT INTO `DAY_LOG` (logs,log_date,weather) VALUES ('lid_1234,lid_5678','2020-04-13','Cloudy');
-/*!40000 ALTER TABLE `DAY_LOG` ENABLE KEYS */;
-UNLOCK TABLES;
+# LOCK TABLES `DAY_LOG` WRITE;
+# /*!40000 ALTER TABLE `DAY_LOG` DISABLE KEYS */;
+# INSERT INTO `DAY_LOG` (logs,log_date,weather) VALUES ('lid_1234,lid_5678','2020-04-13','Cloudy');
+# /*!40000 ALTER TABLE `DAY_LOG` ENABLE KEYS */;
+# UNLOCK TABLES;
 
 
 --
@@ -420,15 +406,15 @@ CREATE TABLE `DRIVERS` (
 --
 -- Dumping data for table `DRIVERS`
 --
-
-LOCK TABLES `DRIVERS` WRITE;
-/*!40000 ALTER TABLE `DRIVERS` DISABLE KEYS */;
-INSERT INTO `DRIVERS` (employee_id,employee_name,hours,route_id_Mon1_AM,route_id_Mon2_PM) VALUES (1234,'Fake Driver',40,'1A_dummy','1A_dummy2');
-INSERT INTO `DRIVERS` (employee_id,employee_name,hours,route_id_Mon1_AM,route_id_Mon2_AM) VALUES (4567,'Bob Employee',40,'1A_dummy3','1A_dummy3');
-INSERT INTO `DRIVERS` (employee_id,employee_name,hours,route_id_Thu1_AM,route_id_Thu2_AM) VALUES (1111,'Joe Person',40,'1A_dummy3','1A_dummy3');
-
-/*!40000 ALTER TABLE `DRIVERS` ENABLE KEYS */;
-UNLOCK TABLES;
+#
+# LOCK TABLES `DRIVERS` WRITE;
+# /*!40000 ALTER TABLE `DRIVERS` DISABLE KEYS */;
+# INSERT INTO `DRIVERS` (employee_id,employee_name,hours,route_id_Mon1_AM,route_id_Mon2_PM) VALUES (1234,'Fake Driver',40,'1A_dummy','1A_dummy2');
+# INSERT INTO `DRIVERS` (employee_id,employee_name,hours,route_id_Mon1_AM,route_id_Mon2_AM) VALUES (4567,'Bob Employee',40,'1A_dummy3','1A_dummy3');
+# INSERT INTO `DRIVERS` (employee_id,employee_name,hours,route_id_Thu1_AM,route_id_Thu2_AM) VALUES (1111,'Joe Person',40,'1A_dummy3','1A_dummy3');
+#
+# /*!40000 ALTER TABLE `DRIVERS` ENABLE KEYS */;
+# UNLOCK TABLES;
 
 --
 -- Table structure for table `VEHICLES`
@@ -453,11 +439,11 @@ CREATE TABLE `VEHICLES` (
 -- Dumping data for table `VEHICLES`
 --
 
-LOCK TABLES `VEHICLES` WRITE;
-/*!40000 ALTER TABLE `VEHICLES` DISABLE KEYS */;
-INSERT INTO `VEHICLES` (vehicle_id) VALUES (1234);
-/*!40000 ALTER TABLE `VEHICLES` ENABLE KEYS */;
-UNLOCK TABLES;
+# LOCK TABLES `VEHICLES` WRITE;
+# /*!40000 ALTER TABLE `VEHICLES` DISABLE KEYS */;
+# INSERT INTO `VEHICLES` (vehicle_id) VALUES (1234);
+# /*!40000 ALTER TABLE `VEHICLES` ENABLE KEYS */;
+# UNLOCK TABLES;
 
 --
 -- Table structure for table `VEHICLE_MAINTENANCE`
@@ -468,10 +454,11 @@ CREATE TABLE `VEHICLE_MAINTENANCE` (
     #maint_id	vehicle_id			date_service	date_end	hours_service	type	comment
   `maint_id` int(11) NOT NULL AUTO_INCREMENT,
   `vehicle_id` int(11) NOT NULL,
-  `date_service` date default NULL,
+  `date_service` date NOT NULL,
   `date_end` date default (date_service),#NULL,
-  `hours_service` int(11) default NULL,
+  `hours_service` int(11) default 4,
   `type` varchar(255) default NULL,
+  `shift` varchar(255) default NULL,
   `comment` varchar(255) default NULL,
   PRIMARY KEY  (`maint_id`),
   KEY `vehicle_id` (`vehicle_id`)
@@ -481,11 +468,11 @@ CREATE TABLE `VEHICLE_MAINTENANCE` (
 -- Dumping data for table `VEHICLE_MAINTENANCE`
 --
 
-LOCK TABLES `VEHICLE_MAINTENANCE` WRITE;
-/*!40000 ALTER TABLE `VEHICLE_MAINTENANCE` DISABLE KEYS */;
-INSERT INTO `VEHICLE_MAINTENANCE` (vehicle_id,date_service,date_end,hours_service) VALUES (1,'2020-03-01','2020-03-02',20);
-/*!40000 ALTER TABLE `VEHICLE_MAINTENANCE` ENABLE KEYS */;
-UNLOCK TABLES;
+# LOCK TABLES `VEHICLE_MAINTENANCE` WRITE;
+# /*!40000 ALTER TABLE `VEHICLE_MAINTENANCE` DISABLE KEYS */;
+# INSERT INTO `VEHICLE_MAINTENANCE` (vehicle_id,date_service,date_end,hours_service) VALUES (1,'2020-03-01','2020-03-02',20);
+# /*!40000 ALTER TABLE `VEHICLE_MAINTENANCE` ENABLE KEYS */;
+# UNLOCK TABLES;
 
 --
 -- Table structure for table `ABSENCES`
@@ -514,12 +501,12 @@ CREATE TABLE `ABSENCES` (
 -- Dumping data for table `ABSENCES`
 --
 
-LOCK TABLES `ABSENCES` WRITE;
-/*!40000 ALTER TABLE `ABSENCES` DISABLE KEYS */;
-INSERT INTO `ABSENCES` ( employee_id,date_absence,shift,comment) VALUES (1111,'2020-03-04','PM','an absence');
-INSERT INTO `ABSENCES` ( employee_id,date_absence,shift,type,time_start,time_end) VALUES (2882,'2020-03-04','PM','sick','8:00','12:00');
-/*!40000 ALTER TABLE `ABSENCES` ENABLE KEYS */;
-UNLOCK TABLES;
+# LOCK TABLES `ABSENCES` WRITE;
+# /*!40000 ALTER TABLE `ABSENCES` DISABLE KEYS */;
+# INSERT INTO `ABSENCES` ( employee_id,date_absence,shift,comment) VALUES (1111,'2020-03-04','PM','an absence');
+# INSERT INTO `ABSENCES` ( employee_id,date_absence,shift,type,time_start,time_end) VALUES (2882,'2020-03-04','PM','sick','8:00','12:00');
+# /*!40000 ALTER TABLE `ABSENCES` ENABLE KEYS */;
+# UNLOCK TABLES;
 
 --
 -- Table structure for table `HOLIDAY`
@@ -554,11 +541,11 @@ CREATE TABLE `OVERTIME` (
 -- Dumping data for table `OVERTIME`
 --
 
-LOCK TABLES `OVERTIME` WRITE;
-/*!40000 ALTER TABLE `OVERTIME` DISABLE KEYS */;
-INSERT INTO `OVERTIME` (overtime_id, employee_id,date_overtime,time_start,time_end) VALUES (0,1111,'2020-03-04','16:00','18:00');
-/*!40000 ALTER TABLE `OVERTIME` ENABLE KEYS */;
-UNLOCK TABLES;
+# LOCK TABLES `OVERTIME` WRITE;
+# /*!40000 ALTER TABLE `OVERTIME` DISABLE KEYS */;
+# INSERT INTO `OVERTIME` (overtime_id, employee_id,date_overtime,time_start,time_end) VALUES (0,1111,'2020-03-04','16:00','18:00');
+# /*!40000 ALTER TABLE `OVERTIME` ENABLE KEYS */;
+# UNLOCK TABLES;
 
 
 --

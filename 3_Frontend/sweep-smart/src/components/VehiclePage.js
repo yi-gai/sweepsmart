@@ -15,13 +15,17 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Paper from '@material-ui/core/Paper';
+import InputLabel from '@material-ui/core/InputLabel';
+import Input from '@material-ui/core/Input';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import { withStyles } from '@material-ui/styles';
 import { makeStyles } from '@material-ui/core/styles';
 import './vehiclePage.css';
 
 const AddVehicleButton = styled(({viewType, ...other}) => <Button {...other}/>)({
-	left: (props) => props.viewType === 'week' ? 630 : 400,
+	left: (props) => props.viewType === 'week' ? 680 : 450,
 	border: 0,
 	padding: 0,
 	margin: 0,
@@ -84,6 +88,7 @@ class VehiclePage extends React.Component {
 		this.handleDelete = this.handleDelete.bind(this);
 		this.handlePost = this.handlePost.bind(this);
 		this.fetchVehicleData = this.fetchVehicleData.bind(this);
+		this.updateStatus = this.updateStatus.bind(this);
 	}
 
 	componentDidMount() {
@@ -153,6 +158,36 @@ class VehiclePage extends React.Component {
 		})
 	}
 
+	updateStatus(vid, shift, currentStat, prevStat) {
+		if (currentStat === prevStat) {
+			return;
+		}
+		let res = this.state.dailyDayData;
+		if (shift == 'night') {
+			res = this.state.dailyNightData;
+			res[vid]['night status'] = currentStat;
+			this.setState({dailyNightData: res});
+		} else {
+			let dayShift = '8-12 status';
+			if (shift == 'PM') {
+				dayShift = '12-4 status';
+			}
+			res[vid][dayShift] = currentStat;
+			this.setState({dailyDayData: res});
+		}
+		let params = new URLSearchParams();
+		params.append('date', GetDateFormat(this.props.date));
+		params.append('shift', shift);
+		params.append('vehicle', vid);
+		params.append('vehicle_status', currentStat);
+		API({
+			method: 'put',
+			url: '/vehicle/day/action',
+			withCredentials: false,
+			data: params
+		});
+	}
+
 	render() {
 		return (
 			<div className="content-container">
@@ -165,7 +200,8 @@ class VehiclePage extends React.Component {
 							weeklyData={this.state.weeklyData}
 							dailyDayData={this.state.dailyDayData}
 							dailyNightData={this.state.dailyNightData}
-							handleDelete={this.handleDelete}/>
+							handleDelete={this.handleDelete}
+							updateStatus={this.updateStatus}/>
 					</Table>
 				</TableContainer>
 			</div>
@@ -190,12 +226,12 @@ function VehicleTableHead (props) {
 		headRow = (
 			<TableRow>
 				<StyledTableHeadCell width="100">Vehicle #</StyledTableHeadCell>
-				<StyledTableHeadCell width="95">8-12<br/>shift</StyledTableHeadCell>
-				<StyledTableHeadCell width="150">8-12<br/>operator</StyledTableHeadCell>
-				<StyledTableHeadCell width="130">8-12<br/>status</StyledTableHeadCell>
-				<StyledTableHeadCell width="95">12-4<br/>shift</StyledTableHeadCell>
-				<StyledTableHeadCell width="150">12-4<br/>operator</StyledTableHeadCell>
-				<StyledTableHeadCell width="130">12-4<br/>status</StyledTableHeadCell>
+				<StyledTableHeadCell width="95">AM<br/>shift</StyledTableHeadCell>
+				<StyledTableHeadCell width="150">AM<br/>operator</StyledTableHeadCell>
+				<StyledTableHeadCell width="130">AM<br/>status</StyledTableHeadCell>
+				<StyledTableHeadCell width="95">PM<br/>shift</StyledTableHeadCell>
+				<StyledTableHeadCell width="150">PM<br/>operator</StyledTableHeadCell>
+				<StyledTableHeadCell width="130">PM<br/>status</StyledTableHeadCell>
 				<StyledTableHeadCell width="100">Comment</StyledTableHeadCell>
 			</TableRow>
 		);
@@ -203,12 +239,9 @@ function VehicleTableHead (props) {
 		headRow = (
 			<TableRow>
 				<StyledTableHeadCell width="100">Vehicle #</StyledTableHeadCell>
-				<StyledTableHeadCell width="95">0-3<br/>shift</StyledTableHeadCell>
-				<StyledTableHeadCell width="150">0-3<br/>operator</StyledTableHeadCell>
-				<StyledTableHeadCell width="130">0-3<br/>status</StyledTableHeadCell>
-				<StyledTableHeadCell width="95">3-6<br/>shift</StyledTableHeadCell>
-				<StyledTableHeadCell width="150">3-6<br/>operator</StyledTableHeadCell>
-				<StyledTableHeadCell width="130">3-6<br/>status</StyledTableHeadCell>
+				<StyledTableHeadCell width="95">night<br/>shift</StyledTableHeadCell>
+				<StyledTableHeadCell width="150">night<br/>operator</StyledTableHeadCell>
+				<StyledTableHeadCell width="130">night<br/>status</StyledTableHeadCell>
 				<StyledTableHeadCell width="100">Comment</StyledTableHeadCell>
 			</TableRow>
 		);
@@ -224,12 +257,12 @@ function VehicleTableBody (props) {
 			let status = value[1]['status'] === 'available' ? 'Available' : 'Out-of-service';
 			return (
 				<TableRow>
-					<NoBottomTableCell size="medium" bold={true}>{value[0]}</NoBottomTableCell>
-					<NoBottomTableCell size="medium" color={color} bold={true}>{status}</NoBottomTableCell>
-					<NoBottomTableCell size="medium">{value[1]['maps_swept']}</NoBottomTableCell>
-					<NoBottomTableCell size="medium">{value[1]['available_days']}</NoBottomTableCell>
-					<NoBottomTableCell size="medium">{value[1]['out_of_service_days']}</NoBottomTableCell>
-					<NoBottomTableCell size="medium">
+					<NoBottomTableCell size="small" bold={true}>{value[0]}</NoBottomTableCell>
+					<NoBottomTableCell size="small" color={color} bold={true}>{status}</NoBottomTableCell>
+					<NoBottomTableCell size="small">{value[1]['maps_swept']}</NoBottomTableCell>
+					<NoBottomTableCell size="small">{value[1]['available_days']}</NoBottomTableCell>
+					<NoBottomTableCell size="small">{value[1]['out_of_service_days']}</NoBottomTableCell>
+					<NoBottomTableCell size="small">
 						<DeleteAlertDialog handleDelete={props.handleDelete} vid={value[0]}/>
 					</NoBottomTableCell>
 				</TableRow>
@@ -238,27 +271,24 @@ function VehicleTableBody (props) {
 	} else if (props.viewType === 'day' && props.tab === 'Day Shift' && props.dailyDayData !== null) {
 		content = Object.entries(props.dailyDayData).map((value) => 
 			<TableRow>
-				<NoBottomTableCell size="medium" bold={true}>{value[0]}</NoBottomTableCell>
-				<NoBottomTableCell size="medium">{value[1]['8-12 shift']}</NoBottomTableCell>
-				<NoBottomTableCell size="medium">{value[1]['8-12 operator']}</NoBottomTableCell>
-				<NoBottomTableCell size="medium"><DailyStatus status={value[1]['8-12 status']}/></NoBottomTableCell>
-				<NoBottomTableCell size="medium">{value[1]['12-4 shift']}</NoBottomTableCell>
-				<NoBottomTableCell size="medium">{value[1]['12-4 operator']}</NoBottomTableCell>
-				<NoBottomTableCell size="medium"><DailyStatus status={value[1]['12-4 status']}/></NoBottomTableCell>
-				<NoBottomTableCell size="medium"><AddCommentDialog/></NoBottomTableCell>
+				<NoBottomTableCell size="small" bold={true}>{value[0]}</NoBottomTableCell>
+				<NoBottomTableCell size="small">{value[1]['8-12 shift']}</NoBottomTableCell>
+				<NoBottomTableCell size="small">{value[1]['8-12 operator']}</NoBottomTableCell>
+				<NoBottomTableCell size="small"><DialogSelect status={value[1]['8-12 status']} vehicle={value[0]} shift={'AM'} updateState={props.updateStatus}/></NoBottomTableCell>
+				<NoBottomTableCell size="small">{value[1]['12-4 shift']}</NoBottomTableCell>
+				<NoBottomTableCell size="small">{value[1]['12-4 operator']}</NoBottomTableCell>
+				<NoBottomTableCell size="small"><DialogSelect status={value[1]['12-4 status']} vehicle={value[0]} shift={'PM'} updateState={props.updateStatus}/></NoBottomTableCell>
+				<NoBottomTableCell size="small"><AddCommentDialog/></NoBottomTableCell>
 			</TableRow>
 		);
 	} else if (props.viewType === 'day' && props.tab === 'Night Shift' && props.dailyNightData !== null) {
 		content = Object.entries(props.dailyNightData).map((value) => 
 			<TableRow>
-				<NoBottomTableCell size="medium" bold={true}>{value[0]}</NoBottomTableCell>
-				<NoBottomTableCell size="medium">{value[1]['0-3 shift']}</NoBottomTableCell>
-				<NoBottomTableCell size="medium">{value[1]['0-3 operator']}</NoBottomTableCell>
-				<NoBottomTableCell size="medium"><DailyStatus status={value[1]['0-3 status']}/></NoBottomTableCell>
-				<NoBottomTableCell size="medium">{value[1]['3-6 shift']}</NoBottomTableCell>
-				<NoBottomTableCell size="medium">{value[1]['3-6 operator']}</NoBottomTableCell>
-				<NoBottomTableCell size="medium"><DailyStatus status={value[1]['3-6 status']}/></NoBottomTableCell>
-				<NoBottomTableCell size="medium"><AddCommentDialog/></NoBottomTableCell>
+				<NoBottomTableCell size="small" bold={true}>{value[0]}</NoBottomTableCell>
+				<NoBottomTableCell size="small">{value[1]['night shift']}</NoBottomTableCell>
+				<NoBottomTableCell size="small">{value[1]['night operator']}</NoBottomTableCell>
+				<NoBottomTableCell size="small"><DialogSelect status={value[1]['night status']} vehicle={value[0]} shift={'night'} updateState={props.updateStatus}/></NoBottomTableCell>
+				<NoBottomTableCell size="small"><AddCommentDialog/></NoBottomTableCell>
 			</TableRow>
 		);
 	}
@@ -440,13 +470,94 @@ class AddCommentDialog extends React.Component {
 	}
 }
 
+///////////////////////////For daily status button drop down /////////////////////////////////
+
+const statusStyles = makeStyles((theme) => ({
+  container: {
+    display: 'flex',
+    flexWrap: 'wrap',
+  },
+  formControl: {
+    margin: theme.spacing(1),
+    minWidth: 120,
+  },
+}));
+
+function DialogSelect(props) {
+  const classes = statusStyles();
+  const [open, setOpen] = React.useState(false);
+  const [optionValue, setOptionValue] = React.useState(0);
+
+  const vehicleID = props.vehicle;
+  const shift = props.shift;
+
+  const handleChange = (event) => {
+    setOptionValue(Number(event.target.value));
+    // 10 -> available, 20 -> out-of-service, 0 -> nothing happened
+  };
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const handleSubmit = () => {
+  	let currentStat = props.status;
+  	if (optionValue === 20) {
+  		currentStat = "out-of-service";
+  	} else if (optionValue === 10) {
+  		currentStat = "available";
+  	}
+  	props.updateState(vehicleID, shift, currentStat, props.status);
+  	setOptionValue(0);
+    setOpen(false);
+  };
+
+  return (
+    <div>
+      <DailyStatus handleClickOpen={handleClickOpen} status={props.status}/>
+      <Dialog disableBackdropClick disableEscapeKeyDown open={open} onClose={handleClose}>
+        <DialogTitle>Change the status</DialogTitle>
+        <DialogContent>
+          <form className={classes.container}>
+            <FormControl className={classes.formControl}>
+              <InputLabel htmlFor="demo-dialog-native">Status</InputLabel>
+              <Select
+                native
+                value={optionValue}
+                onChange={handleChange}
+                input={<Input id="demo-dialog-native" />}>
+                <option aria-label="None" value={0}/>
+                <option value={10}>Available</option>
+                <option value={20}>Out-of-service</option>
+              </Select>
+            </FormControl>
+          </form>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} color="primary">
+            Submit
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
+}
+///////////////////////////For daily status button drop down /////////////////////////////////
+
 function DailyStatus(props) {
 	if (props.status == 'in-use') {
 		return <InUseIcon/>;
 	} else if (props.status === 'available') {
-		return <AvailableIcon/>;
+		return <Button onClick={props.handleClickOpen}><AvailableIcon/></Button>;
 	} else if (props.status === 'out-of-service') {
-		return <OutOfServiceIcon/>;
+		return <Button onClick={props.handleClickOpen}><OutOfServiceIcon/></Button>;
 	} else {
 		return;
 	}
@@ -465,7 +576,7 @@ function TrashIcon() {
 
 function CommentIcon() {
 	return (
-		<svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<svg width="15" height="19" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<path d="M13.2776 0.603755C12.4712 -0.201252 11.1652 -0.201252 10.3588 0.603755L9.62819 1.33838L1.85072 9.11172L1.83419 9.12838C1.83019 9.13238 1.83019 9.13664 1.82593 9.13664C1.81766 9.14904 1.80527 9.16131 1.79713 9.1737C1.79713 9.17784 1.79287 9.17784 1.79287 9.18197C1.78461 9.19436 1.7806 9.20263 1.77221 9.21503C1.76821 9.21916 1.76821 9.22316 1.76407 9.22742C1.75994 9.23982 1.75581 9.24808 1.75155 9.26048C1.75155 9.26448 1.74755 9.26448 1.74755 9.26874L0.0219598 14.4578C-0.0286598 14.6055 0.00982144 14.7691 0.121004 14.8787C0.199128 14.9558 0.3045 14.999 0.414133 14.9986C0.458941 14.9978 0.503362 14.9908 0.546234 14.9779L5.73126 13.2482C5.73526 13.2482 5.73526 13.2482 5.73952 13.2442C5.75256 13.2403 5.76509 13.2348 5.77658 13.2275C5.77981 13.2271 5.78265 13.2257 5.78497 13.2235C5.79724 13.2153 5.81377 13.2069 5.82617 13.1986C5.83844 13.1905 5.85096 13.1781 5.86336 13.1698C5.86749 13.1655 5.87149 13.1655 5.87149 13.1615C5.87575 13.1574 5.88402 13.1534 5.88815 13.145L14.3962 4.63692C15.2013 3.8305 15.2013 2.52459 14.3962 1.71829L13.2776 0.603755ZM5.59915 12.278L2.72598 9.40498L9.91719 2.21377L12.7904 5.08682L5.59915 12.278ZM2.32128 10.1687L4.83134 12.6786L1.06224 13.9335L2.32128 10.1687ZM13.8142 4.05893L13.3766 4.50069L10.5033 1.62738L10.9452 1.18575C11.4285 0.702799 12.212 0.702799 12.6955 1.18575L13.8183 2.30855C14.298 2.79409 14.2962 3.57572 13.8142 4.05893Z" fill="#7A827F"/>
 		</svg>
 	);

@@ -54,7 +54,7 @@ INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUE
 INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1-1',2882,7160,'2020-05-11','AM');
 INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1-2',8097,7164,'2020-05-11','AM');
 INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('3-1',1536,7171,'2020-05-11','AM');
-INSERT INTO `ROUTE_LOG` (route_id,shift,date_swept,completion) VALUES ('3A-2','AM','2020-05-11','Disabled');
+INSERT INTO `ROUTE_LOG` (route_id,shift,date_swept,completion) VALUES ('3A-2','AM','2020-05-11','disabled');
 INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('3A-2',1627,7171,'2020-05-11','PM');
 
 INSERT INTO `ROUTE_LOG` (route_id,employee_id,vehicle_id,date_swept,shift) VALUES ('1B-1',14551,7165,'2020-05-11','PM');

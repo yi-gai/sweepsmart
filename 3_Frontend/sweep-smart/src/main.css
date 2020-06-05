@@ -48,7 +48,7 @@
 
 .week-and-day-picker {
 	position: absolute;
-	width: 650px;
+	width: 690px;
 	height: 80px;
 	left: 20px;
 	top: 50px;
@@ -56,13 +56,13 @@
 }
 
 .display-dropdown {
-	width: 650px;
+	width: 690px;
 	height: 38px;
 	float: left;
 }
 
 .week-picker {
-	width: 550px;
+	width: 570px;
 	height: 38px;
 	float: left;
 }
@@ -72,7 +72,7 @@
 }
 
 .day-picker {
-	width: 320px;
+	width: 340px;
 	height: 38px;
 	float: left;
 }
@@ -92,7 +92,7 @@
 }
 
 .week-display {
-	width: 420px;
+	width: 440px;
 	font-family:  Lato;
 	font-style: normal;
 	font-weight: 900;
@@ -102,25 +102,12 @@
 }
 
 .day-display {
-	width: 200px;
+	width: 220px;
 	font-family:  Lato;
 	font-style: normal;
 	font-weight: 900;
 	font-size: 36px;
 	line-height: 36px;
 	color: #3A423E;
-}
-
-#svg-left-arrow {
-	margin-top: 8px;
-	margin-right: 15px;
-}
-
-#svg-right-arrow {
-	margin-top: 8px;
-}
-
-#svg-down-arrow {
-	margin-top: 11px;
 }
 
